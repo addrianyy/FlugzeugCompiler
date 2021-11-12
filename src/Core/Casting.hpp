@@ -43,3 +43,8 @@ inline const To* cast(const From* from) {
   }
   return To::is_object_of_class(from) ? (const To*)from : nullptr;
 }
+
+template <typename To, typename From> inline To* cast(From& from) { return cast<To>(&from); }
+template <typename To, typename From> inline const To* cast(const From& from) {
+  return cast<To>(&from);
+}

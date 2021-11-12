@@ -1,10 +1,14 @@
+#include <Core/Log.hpp>
 #include <Core/NonInvalidatingIterator.hpp>
 #include <IR/ConsolePrinter.hpp>
 #include <IR/Context.hpp>
 #include <IR/Function.hpp>
 #include <IR/InstructionInserter.hpp>
 #include <IR/User.hpp>
+#include <Passes/DeadCodeElimination.hpp>
+#include <Passes/MemoryToSSA.hpp>
 #include <iostream>
+#include <unordered_set>
 
 using namespace flugzeug;
 
@@ -71,47 +75,40 @@ static void test_optimization(Function* function) {
 int main() {
   Context context;
 
-  auto f = context.create_function(Type::Kind::I32, "test", std::vector{Type(Type::Kind::I64)});
+  const auto i64 = Type(Type::Kind::I64);
 
-  Constant* one = context.get_constant(Type::Kind::I64, 1);
-  Constant* two = context.get_constant(Type::Kind::I64, 2);
-  Constant* six = context.get_constant(Type::Kind::I64, 6);
-  Constant* nine = context.get_constant(Type::Kind::I32, 9);
-  Constant* eight = context.get_constant(Type::Kind::I64, 8);
-  Value* undef = context.get_undef(Type::Kind::I32);
+  auto f = context.create_function(i64, "test", std::vector{i64, i64});
 
-  InstructionInserter inserter(f->create_block());
+  auto param_a = f->get_parameter(0);
+  auto param_b = f->get_parameter(1);
 
-  auto true_block = f->create_block();
-  auto false_block = f->create_block();
+  auto entry = f->create_block();
+  auto if_then = f->create_block();
+  auto if_else = f->create_block();
   auto merge = f->create_block();
 
-  auto ab = f->create_block();
-  auto bb = f->create_block();
-  auto cb = f->create_block();
+  InstructionInserter inserter(entry);
 
-  auto calculated = inserter.mul(inserter.add(f->get_parameter(0), one), eight);
-  auto x = inserter.sub(calculated, calculated);
-  calculated = inserter.add(calculated, x);
-  auto cond = inserter.compare_sgt(calculated, six);
-  inserter.cond_branch(cond, true_block, false_block);
+  auto ptr = inserter.stack_alloc(i64);
+  inserter.store(ptr, context.get_constant(i64, 1));
+  auto cond = inserter.compare_eq(param_a, param_b);
+  inserter.cond_branch(cond, if_then, if_else);
 
-  inserter.set_insertion_block(true_block);
+  inserter.set_insertion_block(if_then);
+  inserter.store(ptr, context.get_constant(i64, 2));
   inserter.branch(merge);
 
-  inserter.set_insertion_block(false_block);
+  inserter.set_insertion_block(if_else);
+  inserter.store(ptr, context.get_constant(i64, 3));
   inserter.branch(merge);
 
   inserter.set_insertion_block(merge);
-  auto v = inserter.phi({Phi::Incoming{true_block, nine}, Phi::Incoming{false_block, six}});
-  auto y = inserter.phi({Phi::Incoming{ab, nine}, Phi::Incoming{bb, six}, Phi::Incoming{cb, two}});
-  inserter.ret(v);
+  auto loaded = inserter.load(ptr);
+  inserter.add(param_a, param_b);
+  inserter.ret(loaded);
 
-  test_optimization(f);
-
-  ab->destroy();
-
-  // calculated->replace_uses(context.get_constant(calculated->get_type(), 123));
+  MemoryToSSA::run(f);
+  DeadCodeElimination::run(f);
 
   ConsolePrinter printer(ConsolePrinter::Variant::Colorful);
   f->print(printer);

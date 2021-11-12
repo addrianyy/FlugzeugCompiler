@@ -1,6 +1,7 @@
 #pragma once
 #include "Instruction.hpp"
 #include <Core/IntrusiveLinkedList.hpp>
+#include <unordered_set>
 
 namespace flugzeug {
 
@@ -60,6 +61,13 @@ public:
 
   void remove_phi_incoming();
   void destroy();
+
+  BlockTargets<Block> get_successors();
+  BlockTargets<const Block> get_successors() const;
+
+  std::unordered_set<Block*> get_predecessors();
+
+  std::vector<Block*> traverse_dfs();
 };
 
 } // namespace flugzeug

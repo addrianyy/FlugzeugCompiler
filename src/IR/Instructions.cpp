@@ -56,7 +56,7 @@ void Phi::add_incoming(Block* block, Value* value) {
   set_operand(get_value_index(index), value);
 }
 
-Value* Phi::get_incoming(const Block* block) {
+Value* Phi::get_incoming_by_block(const Block* block) {
   size_t index;
   if (!index_for_block(block, index)) {
     return nullptr;
@@ -64,7 +64,7 @@ Value* Phi::get_incoming(const Block* block) {
   return get_operand(get_value_index(index));
 }
 
-const Value* Phi::get_incoming(const Block* block) const {
+const Value* Phi::get_incoming_by_block(const Block* block) const {
   size_t index;
   if (!index_for_block(block, index)) {
     return nullptr;

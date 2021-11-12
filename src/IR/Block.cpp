@@ -1,6 +1,8 @@
 #include "Block.hpp"
 #include "Function.hpp"
 #include "Instructions.hpp"
+#include <unordered_set>
+#include <vector>
 
 using namespace flugzeug;
 
@@ -53,4 +55,56 @@ void Block::destroy() {
 
   remove_phi_incoming();
   IntrusiveNode::destroy();
+}
+
+BlockTargets<Block> Block::get_successors() {
+  if (get_last()) {
+    return get_last()->get_targets();
+  }
+  return {};
+}
+
+BlockTargets<const Block> Block::get_successors() const {
+  if (get_last()) {
+    return get_last()->get_targets();
+  }
+  return {};
+}
+
+std::unordered_set<Block*> Block::get_predecessors() {
+  std::unordered_set<Block*> predecessors;
+  predecessors.reserve(get_user_count());
+
+  for (User& user : get_users()) {
+    if (cast<Branch>(&user) || cast<CondBranch>(&user)) {
+      predecessors.insert(cast<Instruction>(&user)->get_block());
+    }
+  }
+
+  return predecessors;
+}
+
+std::vector<Block*> Block::traverse_dfs() {
+  std::vector<Block*> stack;
+  std::vector<Block*> result;
+  std::unordered_set<Block*> visited;
+
+  stack.push_back(this);
+
+  while (!stack.empty()) {
+    Block* block = stack.back();
+    stack.pop_back();
+
+    if (visited.contains(block)) {
+      continue;
+    }
+
+    result.push_back(block);
+
+    for (Block* successor : block->get_successors()) {
+      stack.push_back(successor);
+    }
+  }
+
+  return result;
 }

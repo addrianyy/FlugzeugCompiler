@@ -13,6 +13,36 @@ namespace flugzeug {
 class Context;
 class User;
 
+template <typename TUse, typename TUser> class UserIterator {
+  TUse* current;
+
+public:
+  explicit UserIterator(TUse* current) : current(current) {}
+
+  UserIterator& operator++() {
+    current++;
+    return *this;
+  }
+
+  TUser& operator*() const { return *current->user; }
+  TUser* operator->() const { return current->user; }
+
+  bool operator==(const UserIterator& rhs) const { return current == rhs.current; }
+  bool operator!=(const UserIterator& rhs) const { return current != rhs.current; }
+};
+
+template <typename TValue, typename TUse, typename TUser> class ValueUsers {
+  TValue* value;
+
+public:
+  explicit ValueUsers(TValue* value) : value(value) {}
+
+  UserIterator<TUse, TUser> begin() { return UserIterator<TUse, TUser>(value->uses.data()); }
+  UserIterator<TUse, TUser> end() {
+    return UserIterator<TUse, TUser>(value->uses.data() + value->uses.size());
+  }
+};
+
 class Value {
 public:
   // clang-format off
@@ -54,6 +84,12 @@ private:
     }
   };
 
+  friend class ValueUsers<Value, Use, User>;
+  friend class ValueUsers<const Value, const Use, const User>;
+
+  using NormalUsers = ValueUsers<Value, Use, User>;
+  using ConstUsers = ValueUsers<const Value, const Use, const User>;
+
   const Kind kind;
   const Type type;
 
@@ -92,6 +128,15 @@ public:
 
   bool is_zero() const;
   bool is_one() const;
+
+  size_t get_user_count() const { return uses.size(); }
+  bool is_used() const { return get_user_count() > 0; }
+  bool is_used_once() const { return get_user_count() == 1; }
+
+  size_t get_user_count_excluding_self();
+
+  NormalUsers get_users() { return NormalUsers(this); }
+  ConstUsers get_users() const { return ConstUsers(this); }
 
   virtual std::string format() const;
 };

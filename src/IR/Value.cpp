@@ -92,6 +92,17 @@ void Value::replace_uses_with_constant(uint64_t constant) {
   replace_uses(get_context()->get_constant(get_type(), constant));
 }
 
+size_t Value::get_user_count_excluding_self() {
+  size_t count = 0;
+  for (auto& use : uses) {
+    if (use.user != this) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
 void Constant::constrain_constant(Type type, uint64_t c, uint64_t* u, int64_t* i) {
   const auto bit_size = type.get_bit_size();
   const auto bit_mask = type.get_bit_mask();

@@ -391,8 +391,8 @@ public:
   void add_incoming(Block* block, Value* value);
   void add_incoming(const Incoming& incoming) { add_incoming(incoming.block, incoming.value); }
 
-  Value* get_incoming(const Block* block);
-  const Value* get_incoming(const Block* block) const;
+  Value* get_incoming_by_block(const Block* block);
+  const Value* get_incoming_by_block(const Block* block) const;
 
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };
