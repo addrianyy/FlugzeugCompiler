@@ -75,6 +75,8 @@ public:
   Block* get_entry_block() { return entry_block; }
   const Block* get_entry_block() const { return entry_block; }
 
+  bool is_extern() const { return is_empty(); }
+
   void reassign_display_indices();
 
   Block* create_block();

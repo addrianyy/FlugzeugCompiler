@@ -70,6 +70,10 @@ void Function::insert_block(Block* block) {
 }
 
 void Function::set_entry_block(Block* block) {
+  if (entry_block == block) {
+    return;
+  }
+
   if (entry_block) {
     entry_block->is_entry = false;
   }

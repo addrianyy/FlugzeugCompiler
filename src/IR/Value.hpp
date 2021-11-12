@@ -144,18 +144,20 @@ public:
 class Constant : public Value {
   DEFINE_INSTANCEOF(Value, Value::Kind::Constant)
 
+  friend class Context;
+
   uint64_t constant_u = 0;
   int64_t constant_i = 0;
 
   void initialize_constant(uint64_t c);
 
-public:
   static void constrain_constant(Type type, uint64_t c, uint64_t* u, int64_t* i);
 
   Constant(Context* context, Type type, uint64_t constant) : Value(context, Kind::Constant, type) {
     initialize_constant(constant);
   }
 
+public:
   uint64_t get_constant_u() const { return constant_u; }
   int64_t get_constant_i() const { return constant_i; }
 
@@ -165,16 +167,19 @@ public:
 class Parameter : public Value {
   DEFINE_INSTANCEOF(Value, Value::Kind::Parameter)
 
-public:
+  friend class Function;
+
   explicit Parameter(Context* context, Type type) : Value(context, Kind::Parameter, type) {}
 };
 
 class Undef : public Value {
   DEFINE_INSTANCEOF(Value, Value::Kind::Undef)
 
-public:
+  friend class Context;
+
   explicit Undef(Context* context, Type type) : Value(context, Kind::Undef, type) {}
 
+public:
   std::string format() const override;
 };
 

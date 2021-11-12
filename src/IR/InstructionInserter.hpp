@@ -17,11 +17,16 @@ class InstructionInserter {
   }
 
 public:
-  explicit InstructionInserter(Block* block) { set_insertion_block(block); }
+  explicit InstructionInserter(Block* block = nullptr) { set_insertion_block(block); }
 
   void set_insertion_block(Block* insertion_block) {
-    block = insertion_block;
-    context = insertion_block->get_context();
+    if (insertion_block) {
+      block = insertion_block;
+      context = insertion_block->get_context();
+    } else {
+      block = nullptr;
+      context = nullptr;
+    }
   }
 
   UnaryInstr* unary_instr(UnaryOp op, Value* val);

@@ -10,6 +10,8 @@
 #include <iostream>
 #include <unordered_set>
 
+#include "FunctionsCreator.hpp"
+
 using namespace flugzeug;
 
 static bool is_pow2(uint64_t x) { return (x != 0) && !(x & (x - 1)); }
@@ -72,7 +74,7 @@ static void test_optimization(Function* function) {
   }
 }
 
-int main() {
+void old_main() {
   Context context;
 
   const auto i64 = Type(Type::Kind::I64);
@@ -114,4 +116,25 @@ int main() {
   f->print(printer);
 
   f->destroy();
+}
+
+int main() {
+  Context context;
+
+  const auto functions = create_functions(&context);
+
+  ConsolePrinter printer(ConsolePrinter::Variant::Colorful);
+
+  for (Function* f : functions) {
+    if (f->is_extern()) {
+      continue;
+    }
+
+    f->print(printer);
+    printer.newline();
+  }
+
+  for (Function* f : functions) {
+    f->destroy();
+  }
 }
