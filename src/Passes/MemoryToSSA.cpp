@@ -44,12 +44,11 @@ std::vector<StackAlloc*> MemoryToSSA::find_optimizable_stackallocs(Function* fun
 Value* MemoryToSSA::get_value_for_first_use(Block* block, StackAlloc* stackalloc,
                                             std::vector<Phi*>& inserted_phis) {
   const auto type = stackalloc->get_allocated_type();
-  const auto context = block->get_context();
 
   if (block->is_entry_block()) {
-    return context->get_undef(type);
+    return type->get_undef();
   } else {
-    auto phi = new Phi(context, type);
+    auto phi = new Phi(block->get_context(), type);
 
     block->push_front(phi);
     inserted_phis.push_back(phi);
@@ -108,7 +107,7 @@ void MemoryToSSA::optimize_stackalloc(StackAlloc* stackalloc) {
       if (it != block_values.end()) {
         value = it->second;
       } else {
-        value = stackalloc->get_context()->get_undef(stackalloc->get_type());
+        value = stackalloc->get_type()->get_undef();
       }
 
       phi->add_incoming(pred, value);

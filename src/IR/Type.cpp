@@ -95,6 +95,12 @@ std::string Type::format() const {
   unreachable();
 }
 
+Constant* Type::get_constant(uint64_t constant) { return context->get_constant(this, constant); }
+Constant* Type::get_zero() { return get_constant(0); }
+Constant* Type::get_one() { return get_constant(1); }
+
+Undef* Type::get_undef() { return context->get_undef(this); }
+
 PointerType::PointerType(Context* context, Type* base, Type* pointee, uint32_t indirection)
     : Type(context, Kind::Pointer), base(base), pointee(pointee), indirection(indirection) {
   if (const auto pointee_p = cast<PointerType>(pointee)) {

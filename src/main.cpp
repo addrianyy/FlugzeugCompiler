@@ -27,8 +27,7 @@ static uint64_t bin_log2(uint64_t x) {
 }
 
 static Value* optimize_binary_instruction(BinaryInstr* binary) {
-  const auto context = binary->get_context();
-  const auto zero = context->get_constant(binary->get_type(), 0);
+  const auto zero = binary->get_type()->get_zero();
 
   if (binary->is(BinaryOp::Sub) && binary->get_lhs() == binary->get_rhs()) {
     // sub X, X == 0
@@ -47,8 +46,9 @@ static Value* optimize_binary_instruction(BinaryInstr* binary) {
         return binary->get_lhs();
       } else if (is_pow2(multiplier)) {
         // mul X, Y (if Y is power of 2) == shl X, log2(Y)
-        const auto shift_amount = context->get_constant(binary->get_type(), bin_log2(multiplier));
-        return new BinaryInstr(context, binary->get_lhs(), BinaryOp::Shl, shift_amount);
+        const auto shift_amount = binary->get_type()->get_constant(bin_log2(multiplier));
+        return new BinaryInstr(binary->get_context(), binary->get_lhs(), BinaryOp::Shl,
+                               shift_amount);
       }
     }
   }

@@ -7,6 +7,8 @@
 namespace flugzeug {
 
 class Context;
+class Constant;
+class Undef;
 class PointerType;
 
 class Type {
@@ -47,6 +49,12 @@ public:
   bool is_void() const { return kind == Kind::Void; }
   bool is_block() const { return kind == Kind::Block; }
   bool is_pointer() const { return kind == Kind::Pointer; }
+
+  Constant* get_constant(uint64_t constant);
+  Constant* get_zero();
+  Constant* get_one();
+
+  Undef* get_undef();
 
   size_t get_bit_size() const;
   uint64_t get_bit_mask() const;

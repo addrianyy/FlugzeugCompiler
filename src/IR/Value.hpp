@@ -130,6 +130,7 @@ public:
 
   bool is_zero() const;
   bool is_one() const;
+  bool is_undef() const { return kind == Kind::Undef; }
 
   size_t get_user_count() const { return uses.size(); }
   bool is_used() const { return get_user_count() > 0; }
