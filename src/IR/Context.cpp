@@ -5,21 +5,7 @@ using namespace flugzeug;
 
 size_t Context::ConstantKeyHash::operator()(const Context::ConstantKey& p) const {
   const auto h1 = std::hash<uint64_t>{}(p.constant);
-  const auto h2 = std::hash<uint32_t>{}(p.type.get_indirection());
-  const auto h3 = std::hash<Type::Kind>{}(p.type.get_kind());
-
-  size_t seed = 0ull;
-
-  seed ^= h1 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-  seed ^= h2 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-  seed ^= h3 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-
-  return seed;
-}
-
-size_t Context::TypeHash::operator()(const Type& p) const {
-  const auto h1 = std::hash<uint32_t>{}(p.get_indirection());
-  const auto h2 = std::hash<Type::Kind>{}(p.get_kind());
+  const auto h2 = std::hash<Type*>{}(p.type);
 
   size_t seed = 0ull;
 
@@ -31,7 +17,7 @@ size_t Context::TypeHash::operator()(const Type& p) const {
 
 size_t Context::PointerKeyHash::operator()(const Context::PointerKey& p) const {
   const auto h1 = std::hash<uint32_t>{}(p.indirection);
-  const auto h2 = std::hash<TypeX*>{}(p.base);
+  const auto h2 = std::hash<Type*>{}(p.base);
 
   size_t seed = 0ull;
 
@@ -81,9 +67,8 @@ Context::~Context() {
   verify(refcount == 0, "Context refcount is not zero");
 }
 
-Constant* Context::get_constant(Type type, uint64_t constant) {
-  verify(type.get_kind() != Type::Kind::Void && type.get_kind() != Type::Kind::Block,
-         "Cannot create constant with that type.");
+Constant* Context::get_constant(Type* type, uint64_t constant) {
+  verify(!type->is_void() && !type->is_block(), "Cannot create constant with that type.");
 
   Constant::constrain_constant(type, constant, &constant, nullptr);
 
@@ -101,9 +86,8 @@ Constant* Context::get_constant(Type type, uint64_t constant) {
   return result;
 }
 
-Undef* Context::get_undef(Type type) {
-  verify(type.get_kind() != Type::Kind::Void && type.get_kind() != Type::Kind::Block,
-         "Cannot create undef with that type.");
+Undef* Context::get_undef(Type* type) {
+  verify(!type->is_void() && !type->is_block(), "Cannot create undef with that type.");
 
   const auto it = undefs.find(type);
   if (it != undefs.end()) {
@@ -117,14 +101,14 @@ Undef* Context::get_undef(Type type) {
   return result;
 }
 
-PointerType* Context::create_pointer_type_internal(TypeX* base, uint32_t indirection) {
+PointerType* Context::create_pointer_type_internal(Type* base, uint32_t indirection) {
   verify(indirection > 0, "Cannot create pointer with no indirection");
 
   switch (base->get_kind()) {
-  case TypeX::Kind::Void:
-  case TypeX::Kind::Block:
-  case TypeX::Kind::I1:
-  case TypeX::Kind::Pointer:
+  case Type::Kind::Void:
+  case Type::Kind::Block:
+  case Type::Kind::I1:
+  case Type::Kind::Pointer:
     fatal_error("Invalid pointer base.");
 
   default:
@@ -154,10 +138,10 @@ PointerType* Context::create_pointer_type_internal(TypeX* base, uint32_t indirec
   return type;
 }
 
-PointerType* Context::create_pointer_type(TypeX* pointee, uint32_t indirection) {
+PointerType* Context::create_pointer_type(Type* pointee, uint32_t indirection) {
   verify(indirection > 0, "Cannot create pointer with no indirection");
 
-  TypeX* base = pointee;
+  Type* base = pointee;
   if (const auto pointer = cast<PointerType>(pointee)) {
     base = pointer->get_base();
     indirection += pointer->get_indirection();
@@ -166,7 +150,7 @@ PointerType* Context::create_pointer_type(TypeX* pointee, uint32_t indirection) 
   return create_pointer_type_internal(base, indirection);
 }
 
-Function* Context::create_function(Type return_type, std::string name,
-                                   const std::vector<Type>& arguments) {
+Function* Context::create_function(Type* return_type, std::string name,
+                                   const std::vector<Type*>& arguments) {
   return new Function(this, return_type, std::move(name), arguments);
 }

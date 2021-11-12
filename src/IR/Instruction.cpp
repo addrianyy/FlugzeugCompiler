@@ -6,7 +6,7 @@ using namespace flugzeug;
 
 void Instruction::print(IRPrinter& printer) const {
   auto p = printer.create_line_printer();
-  if (!get_type().is_void()) {
+  if (!get_type()->is_void()) {
     p.print(this, IRPrinter::Item::Equals);
   }
 

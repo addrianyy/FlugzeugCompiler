@@ -17,7 +17,7 @@ class Function {
 
   Context* const context;
 
-  const Type return_type;
+  Type* return_type;
   const std::string name;
 
   std::vector<Parameter*> parameters;
@@ -37,8 +37,8 @@ class Function {
   void on_removed_node(Block* block);
 
 public:
-  Function(Context* context, Type return_type, std::string name,
-           const std::vector<Type>& arguments);
+  Function(Context* context, Type* return_type, std::string name,
+           const std::vector<Type*>& arguments);
   ~Function();
 
 #pragma region block_list
@@ -64,7 +64,7 @@ public:
   Context* get_context() { return context; }
   const Context* get_context() const { return context; }
 
-  Type get_return_type() const { return return_type; }
+  Type* get_return_type() const { return return_type; }
   std::string_view get_name() const { return name; }
 
   size_t get_parameter_count() const { return parameters.size(); }

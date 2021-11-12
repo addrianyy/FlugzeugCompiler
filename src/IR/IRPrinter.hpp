@@ -38,7 +38,7 @@ public:
     void end_generic_item();
 
   private:
-    void item(Type type);
+    void item(const Type* type);
     void item(const Value* value);
     void item(const Block* block);
     void item(std::string_view keyword);

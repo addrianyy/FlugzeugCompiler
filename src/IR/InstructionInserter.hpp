@@ -37,12 +37,12 @@ public:
   Call* call(Function* function, const std::vector<Value*>& arguments);
   Branch* branch(Block* target);
   CondBranch* cond_branch(Value* cond, Block* true_target, Block* false_target);
-  StackAlloc* stack_alloc(Type type, size_t size = 1);
+  StackAlloc* stack_alloc(Type* type, size_t size = 1);
   Ret* ret(Value* val = nullptr);
   Offset* offset(Value* base, Value* index);
-  Cast* cast(Value* val, CastKind kind, Type target_type);
+  Cast* cast(Value* val, CastKind kind, Type* target_type);
   Select* select(Value* cond, Value* true_val, Value* false_val);
-  Phi* phi(Type type);
+  Phi* phi(Type* type);
   Phi* phi(const std::vector<Phi::Incoming>& incoming);
 
 #define UNARY_INSTR(name, op)                                                                      \
@@ -55,7 +55,7 @@ public:
   IntCompare* name(Value* lhs, Value* rhs) { return int_compare(lhs, pred, rhs); }
 
 #define CAST(name, kind)                                                                           \
-  Cast* name(Value* val, Type target_type) { return cast(val, kind, target_type); }
+  Cast* name(Value* val, Type* target_type) { return cast(val, kind, target_type); }
 
   UNARY_INSTR(neg, UnaryOp::Neg)
   UNARY_INSTR(not_, UnaryOp::Not)

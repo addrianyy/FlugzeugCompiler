@@ -21,12 +21,12 @@ void IRPrinter::LinePrinter::end_generic_item() {
   comma_pending = false;
 }
 
-void IRPrinter::LinePrinter::item(Type type) {
+void IRPrinter::LinePrinter::item(const Type* type) {
   begin_generic_item();
 
   ir_printer->begin_type();
 
-  const auto s = type.format();
+  const auto s = type->format();
   ir_printer->write_string(s);
 
   ir_printer->end_type();

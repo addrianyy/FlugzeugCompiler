@@ -19,7 +19,7 @@ void Value::remove_use(const Use& use) {
   uses.erase(uses.end() - 1);
 }
 
-Value::Value(Context* context, Value::Kind kind, Type type)
+Value::Value(Context* context, Value::Kind kind, Type* type)
     : context(context), kind(kind), type(type) {
   context->increase_refcount();
 }
@@ -31,7 +31,7 @@ Value::~Value() {
 }
 
 void Value::set_display_index(size_t index) {
-  verify(!type.is_void(), "Void values cannot have user index.");
+  verify(!type->is_void(), "Void values cannot have user index.");
 
   display_index = index;
 }
@@ -103,9 +103,9 @@ size_t Value::get_user_count_excluding_self() {
   return count;
 }
 
-void Constant::constrain_constant(Type type, uint64_t c, uint64_t* u, int64_t* i) {
-  const auto bit_size = type.get_bit_size();
-  const auto bit_mask = type.get_bit_mask();
+void Constant::constrain_constant(Type* type, uint64_t c, uint64_t* u, int64_t* i) {
+  const auto bit_size = type->get_bit_size();
+  const auto bit_mask = type->get_bit_mask();
 
   if (bit_size == 1) {
     const bool b = c != 0;
@@ -138,9 +138,9 @@ void Constant::initialize_constant(uint64_t c) {
 std::string Value::format() const { return "v" + std::to_string(display_index); }
 
 std::string Constant::format() const {
-  if (get_type() == Type::Kind::I1) {
+  if (get_type()->is_i1()) {
     return constant_u == 0 ? "false" : "true";
-  } else if (get_type().is_pointer()) {
+  } else if (get_type()->is_pointer()) {
     return constant_u == 0 ? "null" : fmt::format("0x{:x}", constant_u);
   } else {
     return std::to_string(constant_i);

@@ -34,7 +34,7 @@ CondBranch* InstructionInserter::cond_branch(Value* cond, Block* true_target, Bl
   return insert(new CondBranch(context, cond, true_target, false_target));
 }
 
-StackAlloc* InstructionInserter::stack_alloc(Type type, size_t size) {
+StackAlloc* InstructionInserter::stack_alloc(Type* type, size_t size) {
   return insert(new StackAlloc(context, type, size));
 }
 
@@ -44,7 +44,7 @@ Offset* InstructionInserter::offset(Value* base, Value* index) {
   return insert(new Offset(context, base, index));
 }
 
-Cast* InstructionInserter::cast(Value* val, CastKind kind, Type target_type) {
+Cast* InstructionInserter::cast(Value* val, CastKind kind, Type* target_type) {
   return insert(new Cast(context, val, kind, target_type));
 }
 
@@ -52,7 +52,7 @@ Select* InstructionInserter::select(Value* cond, Value* true_val, Value* false_v
   return insert(new Select(context, cond, true_val, false_val));
 }
 
-Phi* InstructionInserter::phi(Type type) { return insert(new Phi(context, type)); }
+Phi* InstructionInserter::phi(Type* type) { return insert(new Phi(context, type)); }
 
 Phi* InstructionInserter::phi(const std::vector<Phi::Incoming>& incoming) {
   return insert(new Phi(context, incoming));

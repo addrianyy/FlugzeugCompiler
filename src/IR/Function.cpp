@@ -16,12 +16,12 @@ void Function::on_removed_node(Block* block) {
   verify(block != entry_block, "Cannot remove entry block.");
 }
 
-Function::Function(Context* context, Type return_type, std::string name,
-                   const std::vector<Type>& arguments)
+Function::Function(Context* context, Type* return_type, std::string name,
+                   const std::vector<Type*>& arguments)
     : blocks(this), context(context), name(std::move(name)), return_type(return_type) {
   context->increase_refcount();
 
-  for (Type type : arguments) {
+  for (Type* type : arguments) {
     auto parameter = new Parameter(context, type);
     parameter->set_display_index(allocate_value_index());
 

@@ -91,8 +91,8 @@ private:
   using ConstUsers = ValueUsers<const Value, const Use, const User>;
 
   const Kind kind;
-  const Type type;
 
+  Type* const type;
   Context* const context;
 
   std::vector<Use> uses;
@@ -105,7 +105,7 @@ private:
 protected:
   const std::vector<Use>& get_uses() { return uses; }
 
-  Value(Context* context, Kind kind, Type type);
+  Value(Context* context, Kind kind, Type* type);
 
 public:
   CLASS_NON_MOVABLE_NON_COPYABLE(Value);
@@ -115,13 +115,15 @@ public:
   Context* get_context() { return context; }
   const Context* get_context() const { return context; }
 
+  Type* get_type() { return type; }
+  const Type* get_type() const { return type; }
+
   Kind get_kind() const { return kind; }
-  Type get_type() const { return type; }
 
   size_t get_display_index() const { return display_index; }
   void set_display_index(size_t index);
 
-  bool is_void() const { return get_type().is_void(); }
+  bool is_void() const { return get_type()->is_void(); }
 
   void replace_uses(Value* new_value);
   void replace_uses_with_constant(uint64_t constant);
@@ -151,9 +153,9 @@ class Constant : public Value {
 
   void initialize_constant(uint64_t c);
 
-  static void constrain_constant(Type type, uint64_t c, uint64_t* u, int64_t* i);
+  static void constrain_constant(Type* type, uint64_t c, uint64_t* u, int64_t* i);
 
-  Constant(Context* context, Type type, uint64_t constant) : Value(context, Kind::Constant, type) {
+  Constant(Context* context, Type* type, uint64_t constant) : Value(context, Kind::Constant, type) {
     initialize_constant(constant);
   }
 
@@ -169,7 +171,7 @@ class Parameter : public Value {
 
   friend class Function;
 
-  explicit Parameter(Context* context, Type type) : Value(context, Kind::Parameter, type) {}
+  explicit Parameter(Context* context, Type* type) : Value(context, Kind::Parameter, type) {}
 };
 
 class Undef : public Value {
@@ -177,7 +179,7 @@ class Undef : public Value {
 
   friend class Context;
 
-  explicit Undef(Context* context, Type type) : Value(context, Kind::Undef, type) {}
+  explicit Undef(Context* context, Type* type) : Value(context, Kind::Undef, type) {}
 
 public:
   std::string format() const override;

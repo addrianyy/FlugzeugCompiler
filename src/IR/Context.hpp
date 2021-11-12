@@ -14,7 +14,7 @@ class Undef;
 class Context {
   friend class Function;
   friend class Value;
-  friend class TypeX;
+  friend class Type;
 
   int64_t refcount = 0;
 
@@ -22,7 +22,7 @@ class Context {
   void decrease_refcount();
 
   struct ConstantKey {
-    Type type;
+    Type* type;
     uint64_t constant;
 
     bool operator==(const ConstantKey& other) const {
@@ -34,12 +34,8 @@ class Context {
     size_t operator()(const ConstantKey& p) const;
   };
 
-  struct TypeHash {
-    size_t operator()(const Type& p) const;
-  };
-
   struct PointerKey {
-    TypeX* base;
+    Type* base;
     uint32_t indirection;
 
     bool operator==(const PointerKey& other) const {
@@ -52,7 +48,7 @@ class Context {
   };
 
   std::unordered_map<ConstantKey, Constant*, ConstantKeyHash> constants;
-  std::unordered_map<Type, Undef*, TypeHash> undefs;
+  std::unordered_map<Type*, Undef*> undefs;
 
   std::unordered_map<PointerKey, PointerType*, PointerKeyHash> pointer_types;
 
@@ -64,7 +60,7 @@ class Context {
   BlockType* block_type = nullptr;
   VoidType* void_type = nullptr;
 
-  PointerType* create_pointer_type_internal(TypeX* base, uint32_t indirection);
+  PointerType* create_pointer_type_internal(Type* base, uint32_t indirection);
 
 public:
   CLASS_NON_MOVABLE_NON_COPYABLE(Context)
@@ -80,12 +76,13 @@ public:
   BlockType* get_block_ty() const { return block_type; }
   VoidType* get_void_ty() const { return void_type; }
 
-  Constant* get_constant(Type type, uint64_t constant);
-  Undef* get_undef(Type type);
+  Constant* get_constant(Type* type, uint64_t constant);
+  Undef* get_undef(Type* type);
 
-  PointerType* create_pointer_type(TypeX* pointee, uint32_t indirection = 1);
+  PointerType* create_pointer_type(Type* pointee, uint32_t indirection = 1);
 
-  Function* create_function(Type return_type, std::string name, const std::vector<Type>& arguments);
+  Function* create_function(Type* return_type, std::string name,
+                            const std::vector<Type*>& arguments);
 };
 
 } // namespace flugzeug

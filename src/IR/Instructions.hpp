@@ -109,7 +109,7 @@ class IntCompare : public Instruction {
 
 public:
   IntCompare(Context* context, Value* lhs, IntPredicate pred, Value* rhs)
-      : Instruction(context, Value::Kind::IntCompare, Type::Kind::I1), pred(pred) {
+      : Instruction(context, Value::Kind::IntCompare, context->get_i1_ty()), pred(pred) {
     set_operand_count(2);
     set_lhs(lhs);
     set_rhs(rhs);
@@ -136,7 +136,7 @@ class Load : public Instruction {
 
 public:
   explicit Load(Context* context, Value* ptr)
-      : Instruction(context, Value::Kind::Load, ptr->get_type().deref()) {
+      : Instruction(context, Value::Kind::Load, cast<PointerType>(ptr->get_type())->deref()) {
     set_operand_count(1);
     set_ptr(ptr);
   }
@@ -154,7 +154,7 @@ class Store : public Instruction {
 
 public:
   Store(Context* context, Value* ptr, Value* val)
-      : Instruction(context, Value::Kind::Store, Type::Kind::Void) {
+      : Instruction(context, Value::Kind::Store, context->get_void_ty()) {
     set_operand_count(2);
     set_ptr(ptr);
     set_val(val);
@@ -193,7 +193,7 @@ class Branch : public Instruction {
 
 public:
   explicit Branch(Context* context, Block* target)
-      : Instruction(context, Value::Kind::Branch, Type::Kind::Void) {
+      : Instruction(context, Value::Kind::Branch, context->get_void_ty()) {
     set_operand_count(1);
     set_target(target);
   }
@@ -211,7 +211,7 @@ class CondBranch : public Instruction {
 
 public:
   explicit CondBranch(Context* context, Value* cond, Block* true_target, Block* false_target)
-      : Instruction(context, Value::Kind::CondBranch, Type::Kind::Void) {
+      : Instruction(context, Value::Kind::CondBranch, context->get_void_ty()) {
     set_operand_count(3);
     set_cond(cond);
     set_true_target(true_target);
@@ -240,11 +240,11 @@ class StackAlloc : public Instruction {
   size_t size = 1;
 
 public:
-  explicit StackAlloc(Context* context, Type type, size_t size = 1)
-      : Instruction(context, Value::Kind::StackAlloc, type.ref()), size(size) {}
+  explicit StackAlloc(Context* context, Type* type, size_t size = 1)
+      : Instruction(context, Value::Kind::StackAlloc, type->ref()), size(size) {}
 
   size_t get_size() const { return size; }
-  Type get_allocated_type() const { return get_type().deref(); }
+  Type* get_allocated_type() const { return cast<PointerType>(get_type())->deref(); }
 
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };
@@ -254,7 +254,7 @@ class Ret : public Instruction {
 
 public:
   explicit Ret(Context* context, Value* val = nullptr)
-      : Instruction(context, Value::Kind::Ret, Type::Kind::Void) {
+      : Instruction(context, Value::Kind::Ret, context->get_void_ty()) {
     if (val) {
       set_operand_count(1);
       set_val(val);
@@ -303,7 +303,7 @@ class Cast : public Instruction {
   CastKind cast_kind;
 
 public:
-  Cast(Context* context, Value* val, CastKind cast_kind, Type target_type)
+  Cast(Context* context, Value* val, CastKind cast_kind, Type* target_type)
       : Instruction(context, Value::Kind::Cast, target_type), cast_kind(cast_kind) {
     set_operand_count(1);
     set_val(val);
@@ -366,7 +366,7 @@ public:
     const Value* value;
   };
 
-  explicit Phi(Context* context, Type type) : Instruction(context, Instruction::Kind::Phi, type) {}
+  explicit Phi(Context* context, Type* type) : Instruction(context, Instruction::Kind::Phi, type) {}
   explicit Phi(Context* context, const std::vector<Incoming>& incoming)
       : Phi(context, incoming[0].value->get_type()) {
     set_operand_count(incoming.size() * 2);

@@ -10,26 +10,26 @@ std::vector<Function*> create_functions(Context* context) {
   Function* f = nullptr;
 
   Function* function_1 =
-    context->create_function(Type(Type::Kind::Void, 0), "print_num", {Type(Type::Kind::I32, 0)});
+    context->create_function(context->get_void_ty(), "print_num", {context->get_i32_ty()});
   Function* function_0 =
-    context->create_function(Type(Type::Kind::Void, 0), "print", {Type(Type::Kind::I8, 1)});
-  Function* function_3 = context->create_function(
-    Type(Type::Kind::I32, 0), "test123", {Type(Type::Kind::I32, 0), Type(Type::Kind::I32, 0)});
-  Function* function_2 = context->create_function(Type(Type::Kind::I32, 0), "main", {});
+    context->create_function(context->get_void_ty(), "print", {context->get_i8_ty()->ref(1)});
+  Function* function_3 = context->create_function(context->get_i32_ty(), "test123",
+                                                  {context->get_i32_ty(), context->get_i32_ty()});
+  Function* function_2 = context->create_function(context->get_i32_ty(), "main", {});
   {
     f = function_1;
 
     Parameter* v0 = f->get_parameter(0);
 
-    Constant* v21 = context->get_constant(Type(Type::Kind::I64, 0), 1ull);
-    Constant* v22 = context->get_constant(Type(Type::Kind::I8, 0), 48ull);
-    Constant* v19 = context->get_constant(Type(Type::Kind::I32, 0), 10ull);
-    Constant* v29 = context->get_constant(Type(Type::Kind::I64, 0), 254ull);
-    Constant* v30 = context->get_constant(Type(Type::Kind::I32, 0), 0ull);
-    Constant* v25 = context->get_constant(Type(Type::Kind::I64, 0), 255ull);
-    Constant* v24 = context->get_constant(Type(Type::Kind::I8, 0), 0ull);
-    Constant* v27 = context->get_constant(Type(Type::Kind::I64, 0), 253ull);
-    Constant* v26 = context->get_constant(Type(Type::Kind::I32, 0), 48ull);
+    Constant* v21 = context->get_constant(context->get_i64_ty(), 1ull);
+    Constant* v22 = context->get_constant(context->get_i8_ty(), 48ull);
+    Constant* v19 = context->get_constant(context->get_i32_ty(), 10ull);
+    Constant* v29 = context->get_constant(context->get_i64_ty(), 254ull);
+    Constant* v30 = context->get_constant(context->get_i32_ty(), 0ull);
+    Constant* v25 = context->get_constant(context->get_i64_ty(), 255ull);
+    Constant* v24 = context->get_constant(context->get_i8_ty(), 0ull);
+    Constant* v27 = context->get_constant(context->get_i64_ty(), 253ull);
+    Constant* v26 = context->get_constant(context->get_i32_ty(), 48ull);
 
     Block* entry = f->create_block();
     Block* block_2 = f->create_block();
@@ -40,7 +40,7 @@ std::vector<Function*> create_functions(Context* context) {
     f->set_entry_block(entry);
 
     inserter.set_insertion_block(entry);
-    auto v1 = inserter.stack_alloc(Type(Type::Kind::I8, 0), 256);
+    auto v1 = inserter.stack_alloc(context->get_i8_ty(), 256);
     auto v2 = inserter.offset(v1, v25);
     inserter.store(v2, v24);
     auto v3 = inserter.compare_eq(v0, v30);
@@ -52,8 +52,8 @@ std::vector<Function*> create_functions(Context* context) {
     inserter.branch(block_4);
 
     inserter.set_insertion_block(block_4);
-    auto v5 = inserter.phi(Type(Type::Kind::I64, 0));
-    auto v6 = inserter.phi(Type(Type::Kind::I32, 0));
+    auto v5 = inserter.phi(context->get_i64_ty());
+    auto v6 = inserter.phi(context->get_i32_ty());
     auto v7 = inserter.compare_ugt(v6, v30);
     inserter.cond_branch(v7, block_5, block_6);
 
@@ -61,7 +61,7 @@ std::vector<Function*> create_functions(Context* context) {
     auto v8 = inserter.udiv(v6, v19);
     auto v9 = inserter.umod(v6, v19);
     auto v10 = inserter.add(v9, v26);
-    auto v11 = inserter.trunc(v10, Type(Type::Kind::I8, 0));
+    auto v11 = inserter.trunc(v10, context->get_i8_ty());
     auto v12 = inserter.offset(v1, v5);
     inserter.store(v12, v11);
     auto v13 = inserter.sub(v5, v21);
@@ -83,7 +83,7 @@ std::vector<Function*> create_functions(Context* context) {
   {
     f = function_3;
 
-    Constant* v6 = context->get_constant(Type(Type::Kind::I32, 0), 12ull);
+    Constant* v6 = context->get_constant(context->get_i32_ty(), 12ull);
 
     Block* entry = f->create_block();
 
@@ -95,9 +95,9 @@ std::vector<Function*> create_functions(Context* context) {
   {
     f = function_2;
 
-    Constant* v7 = context->get_constant(Type(Type::Kind::I32, 0), 1ull);
-    Constant* v9 = context->get_constant(Type(Type::Kind::I32, 0), 8ull);
-    Constant* v10 = context->get_constant(Type(Type::Kind::I32, 0), 0ull);
+    Constant* v7 = context->get_constant(context->get_i32_ty(), 1ull);
+    Constant* v9 = context->get_constant(context->get_i32_ty(), 8ull);
+    Constant* v10 = context->get_constant(context->get_i32_ty(), 0ull);
 
     Block* entry = f->create_block();
     Block* block_1 = f->create_block();
@@ -110,9 +110,9 @@ std::vector<Function*> create_functions(Context* context) {
     inserter.branch(block_1);
 
     inserter.set_insertion_block(block_1);
-    auto v0 = inserter.phi(Type(Type::Kind::I32, 0));
-    auto v1 = inserter.phi(Type(Type::Kind::I32, 0));
-    auto v2 = inserter.phi(Type(Type::Kind::I32, 0));
+    auto v0 = inserter.phi(context->get_i32_ty());
+    auto v1 = inserter.phi(context->get_i32_ty());
+    auto v2 = inserter.phi(context->get_i32_ty());
     auto v3 = inserter.compare_ult(v0, v9);
     inserter.cond_branch(v3, block_2, block_4);
 

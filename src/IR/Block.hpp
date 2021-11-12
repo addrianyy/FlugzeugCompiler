@@ -24,7 +24,7 @@ class Block : public Value, public IntrusiveNode<Block, Function> {
 
 public:
   explicit Block(Context* context)
-      : Value(context, Value::Kind::Block, Type::Kind::Block), instructions(this) {}
+      : Value(context, Value::Kind::Block, context->get_block_ty()), instructions(this) {}
   ~Block() override;
 
 #pragma region instruction_list

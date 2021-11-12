@@ -134,7 +134,7 @@ void CondBranch::print_instruction_internal(IRPrinter::LinePrinter& p) const {
 }
 
 void StackAlloc::print_instruction_internal(IRPrinter::LinePrinter& p) const {
-  p.print("stackalloc", get_type().deref());
+  p.print("stackalloc", get_allocated_type());
 
   if (size != 1) {
     p.print(SpecialItem::Comma, size);
@@ -145,7 +145,7 @@ void Ret::print_instruction_internal(IRPrinter::LinePrinter& p) const {
   p.print("ret");
 
   if (is_void()) {
-    p.print(Type::Kind::Void);
+    p.print(get_context()->get_void_ty());
   } else {
     p.print(get_val()->get_type(), get_val());
   }

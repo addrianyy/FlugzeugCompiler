@@ -74,10 +74,10 @@ static void test_optimization(Function* function) {
   }
 }
 
-void old_main() {
+int old_main() {
   Context context;
 
-  const auto i64 = Type(Type::Kind::I64);
+  Type* i64 = context.get_i64_ty();
 
   auto f = context.create_function(i64, "test", std::vector{i64, i64});
 
@@ -109,13 +109,15 @@ void old_main() {
   inserter.add(param_a, param_b);
   inserter.ret(loaded);
 
-  MemoryToSSA::run(f);
+  //  MemoryToSSA::run(f);
   DeadCodeElimination::run(f);
 
   ConsolePrinter printer(ConsolePrinter::Variant::Colorful);
   f->print(printer);
 
   f->destroy();
+
+  return 0;
 }
 
 int main() {
