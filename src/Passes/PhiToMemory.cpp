@@ -1,13 +1,15 @@
 #include "PhiToMemory.hpp"
+
 #include <IR/Function.hpp>
 #include <IR/Instructions.hpp>
+
 #include <vector>
 
 using namespace flugzeug;
 
 void PhiToMemory::convert_phi_to_memory(Phi* phi) {
-  if (phi->get_incoming_count() == 1) {
-    phi->replace_uses_and_destroy(phi->get_incoming_value(0));
+  if (const auto incoming = phi->get_single_incoming_value()) {
+    phi->replace_uses_and_destroy(incoming);
     return;
   }
 

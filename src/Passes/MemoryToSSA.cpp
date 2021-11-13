@@ -116,10 +116,10 @@ void MemoryToSSA::optimize_stackalloc(StackAlloc* stackalloc) {
 
   // Remove unused Phis and optimize Phis with only one incoming value.
   for (Phi* phi : inserted_phis) {
-    if (!phi->is_used()) {
+    if (!phi->is_used() || phi->get_incoming_count() == 0) {
       phi->destroy();
-    } else if (phi->get_incoming_count() == 1) {
-      phi->replace_uses_and_destroy(phi->get_incoming(0).value);
+    } else if (const auto incoming = phi->get_single_incoming_value()) {
+      phi->replace_uses_and_destroy(incoming);
     }
   }
 

@@ -134,6 +134,12 @@ std::string Block::format() const {
   return is_entry ? "entry" : ("block_" + std::to_string(get_display_index()));
 }
 
+void Block::clear() {
+  while (!is_empty()) {
+    get_first_instruction()->destroy();
+  }
+}
+
 void Block::destroy() {
   // If this block is used by branch instructions we cannot remove it. Value destructor will
   // throw an error.
@@ -144,6 +150,10 @@ void Block::destroy() {
 }
 
 void Block::remove_incoming_block_from_phis(Block* incoming) {
+  if (is_entry_block()) {
+    return;
+  }
+
   for (Instruction& instruction : *this) {
     if (const auto phi = cast<Phi>(instruction)) {
       phi->remove_incoming_opt(incoming);

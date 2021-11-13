@@ -404,6 +404,8 @@ public:
   Value* get_incoming_value(size_t i) { return get_operand(get_value_index(i)); }
   const Value* get_incoming_value(size_t i) const { return get_operand(get_value_index(i)); }
 
+  Value* get_single_incoming_value();
+
   bool remove_incoming_opt(const Block* block);
   void remove_incoming(const Block* block);
   void add_incoming(Block* block, Value* value);

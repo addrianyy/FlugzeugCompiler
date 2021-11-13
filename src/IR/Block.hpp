@@ -83,6 +83,7 @@ public:
 
   std::string format() const override;
 
+  void clear();
   void destroy();
 
   /// Remove `incoming` block from all Phis in this block.

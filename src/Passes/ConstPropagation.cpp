@@ -250,6 +250,7 @@ public:
 Value* ConstPropagation::constant_propagate(Instruction* instruction,
                                             Block*& removed_branch_target) {
   Propagator propagator(instruction->get_type());
+
   const auto replacement = visit_instruction(instruction, propagator);
 
   removed_branch_target = propagator.removed_branch_target;

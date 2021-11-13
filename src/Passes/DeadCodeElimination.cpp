@@ -16,17 +16,16 @@ bool DeadCodeElimination::try_to_eliminate(Instruction* instruction,
     Value* operand = instruction->get_operand(i);
     instruction->set_operand(i, nullptr);
 
-    if (instruction == operand || operand->get_user_count_excluding_self() > 0) {
-      continue;
-    }
-
     if (const auto other_inst = cast<Instruction>(operand)) {
+      if (instruction == operand || operand->get_user_count_excluding_self() > 0) {
+        continue;
+      }
+
       worklist.push_back(other_inst);
     }
   }
 
   instruction->destroy();
-
   return true;
 }
 

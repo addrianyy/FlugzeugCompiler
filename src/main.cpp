@@ -6,6 +6,7 @@
 #include <IR/InstructionInserter.hpp>
 #include <IR/User.hpp>
 #include <Passes/ConstPropagation.hpp>
+#include <Passes/DeadBlockElimination.hpp>
 #include <Passes/DeadCodeElimination.hpp>
 #include <Passes/MemoryToSSA.hpp>
 #include <Passes/PhiToMemory.hpp>
@@ -105,6 +106,9 @@ int main() {
   //  DeadCodeElimination::run(f);
 
   ConstPropagation::run(f);
+  PhiToMemory::run(f);
+  MemoryToSSA::run(f);
+  DeadBlockElimination::run(f);
 
   ConsolePrinter printer(ConsolePrinter::Variant::Colorful);
   f->print(printer);
