@@ -16,6 +16,11 @@ enum class TraversalType {
   DFS_WithoutStart,
 };
 
+enum class IncludeStart {
+  Yes,
+  No,
+};
+
 class Block : public Value, public IntrusiveNode<Block, Function> {
   DEFINE_INSTANCEOF(Value, Value::Kind::Block)
 
@@ -102,9 +107,11 @@ public:
   std::unordered_set<Block*> get_predecessors();
   std::unordered_set<const Block*> get_predecessors() const;
 
-  std::vector<Block*> get_reachable_blocks(TraversalType traversal = TraversalType::DFS_WithStart);
-  std::vector<const Block*>
-  get_reachable_blocks(TraversalType traversal = TraversalType::DFS_WithStart) const;
+  std::vector<Block*> get_reachable_blocks(TraversalType traversal);
+  std::vector<const Block*> get_reachable_blocks(TraversalType traversal) const;
+
+  std::unordered_set<Block*> get_reachable_blocks_set(IncludeStart include_start);
+  std::unordered_set<const Block*> get_reachable_blocks_set(IncludeStart include_start) const;
 };
 
 } // namespace flugzeug

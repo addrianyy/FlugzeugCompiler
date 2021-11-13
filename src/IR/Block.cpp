@@ -19,8 +19,9 @@ template <typename TBlock> std::unordered_set<TBlock*> get_predecessors_generic(
   return predecessors;
 }
 
-template <typename TBlock>
-std::vector<TBlock*> traverse_generic(TBlock* start_block, TraversalType traversal) {
+template <typename TBlock, bool ReturnVector>
+std::conditional_t<ReturnVector, std::vector<TBlock*>, std::unordered_set<TBlock*>>
+traverse_generic(TBlock* start_block, TraversalType traversal) {
   const size_t result_reserve = 8;
   const size_t visited_reserve = 8;
   const size_t worklist_reserve = 8;
@@ -28,7 +29,10 @@ std::vector<TBlock*> traverse_generic(TBlock* start_block, TraversalType travers
   std::vector<TBlock*> result;
   std::unordered_set<TBlock*> visited;
 
-  result.reserve(result_reserve);
+  if constexpr (ReturnVector) {
+    result.reserve(result_reserve);
+  }
+
   visited.reserve(visited_reserve);
 
   const bool with_start =
@@ -47,7 +51,10 @@ std::vector<TBlock*> traverse_generic(TBlock* start_block, TraversalType travers
 
       if (!first_iteration || with_start) {
         visited.insert(block);
-        result.push_back(block);
+
+        if constexpr (ReturnVector) {
+          result.push_back(block);
+        }
       }
 
       first_iteration = false;
@@ -72,7 +79,10 @@ std::vector<TBlock*> traverse_generic(TBlock* start_block, TraversalType travers
 
       if (!first_iteration || with_start) {
         visited.insert(block);
-        result.push_back(block);
+
+        if constexpr (ReturnVector) {
+          result.push_back(block);
+        }
       }
 
       first_iteration = false;
@@ -87,7 +97,11 @@ std::vector<TBlock*> traverse_generic(TBlock* start_block, TraversalType travers
     unreachable();
   }
 
-  return result;
+  if constexpr (ReturnVector) {
+    return result;
+  } else {
+    return visited;
+  }
 }
 
 void Block::on_added_node(Instruction* instruction) {
@@ -216,9 +230,23 @@ std::unordered_set<const Block*> Block::get_predecessors() const {
 }
 
 std::vector<Block*> Block::get_reachable_blocks(TraversalType traversal) {
-  return traverse_generic<Block>(this, traversal);
+  return traverse_generic<Block, true>(this, traversal);
 }
 
 std::vector<const Block*> Block::get_reachable_blocks(TraversalType traversal) const {
-  return traverse_generic<const Block>(this, traversal);
+  return traverse_generic<const Block, true>(this, traversal);
+}
+
+std::unordered_set<Block*> Block::get_reachable_blocks_set(IncludeStart include_start) {
+  // Prefer DFS as it's faster.
+  return traverse_generic<Block, false>(this, include_start == IncludeStart::Yes
+                                                ? TraversalType::DFS_WithStart
+                                                : TraversalType::DFS_WithoutStart);
+}
+
+std::unordered_set<const Block*> Block::get_reachable_blocks_set(IncludeStart include_start) const {
+  // Prefer DFS as it's faster.
+  return traverse_generic<const Block, false>(this, include_start == IncludeStart::Yes
+                                                      ? TraversalType::DFS_WithStart
+                                                      : TraversalType::DFS_WithoutStart);
 }
