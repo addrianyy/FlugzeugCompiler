@@ -2,6 +2,7 @@
 #include "Block.hpp"
 #include "Instructions.hpp"
 #include "User.hpp"
+
 #include <Core/Error.hpp>
 
 using namespace flugzeug;
@@ -39,13 +40,13 @@ void Value::set_display_index(size_t index) {
 }
 
 bool Value::is_zero() const {
-  auto c = cast<Constant>(this);
-  return c != nullptr && c->get_constant_u() == 0;
+  const auto c = cast<Constant>(this);
+  return c && c->get_constant_u() == 0;
 }
 
 bool Value::is_one() const {
-  auto c = cast<Constant>(this);
-  return c != nullptr && c->get_constant_u() == 1;
+  const auto c = cast<Constant>(this);
+  return c && c->get_constant_u() == 1;
 }
 
 void Value::replace_uses(Value* new_value) {
@@ -53,7 +54,7 @@ void Value::replace_uses(Value* new_value) {
     return;
   }
 
-  verify(new_value->get_type() == get_type(), "Replace uses type mismatch");
+  verify(new_value->get_type() == get_type(), "Cannot replace value with value of different type");
 
   const Block* block = cast<Block>(this);
 
@@ -91,12 +92,15 @@ void Value::replace_uses(Value* new_value) {
 }
 
 void Value::replace_uses_with_constant(uint64_t constant) {
-  replace_uses(get_context()->get_constant(get_type(), constant));
+  replace_uses(get_type()->get_constant(constant));
 }
 
-size_t Value::get_user_count_excluding_self() {
+void Value::replace_uses_with_undef() { replace_uses(get_type()->get_undef()); }
+
+size_t Value::get_user_count_excluding_self() const {
   size_t count = 0;
-  for (auto& use : uses) {
+
+  for (const auto& use : uses) {
     if (use.user != this) {
       count++;
     }

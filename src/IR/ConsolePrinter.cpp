@@ -1,5 +1,7 @@
 #include "ConsolePrinter.hpp"
+
 #include <Core/ConsoleColors.hpp>
+
 #include <iostream>
 
 using namespace flugzeug;

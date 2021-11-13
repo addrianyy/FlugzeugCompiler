@@ -1,6 +1,7 @@
 #pragma once
 #include <Core/Casting.hpp>
 #include <Core/ClassTraits.hpp>
+
 #include <cstdint>
 #include <string>
 

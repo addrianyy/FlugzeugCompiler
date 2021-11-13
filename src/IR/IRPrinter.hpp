@@ -1,5 +1,6 @@
 #pragma once
 #include "Type.hpp"
+
 #include <Core/ClassTraits.hpp>
 
 #include <string_view>
@@ -57,8 +58,6 @@ public:
       print(args...);
     }
   };
-
-  friend class InstructionPrinter;
 
 protected:
   virtual void begin_keyword() {}

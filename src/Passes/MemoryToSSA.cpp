@@ -61,7 +61,7 @@ void MemoryToSSA::optimize_stackalloc(StackAlloc* stackalloc) {
   std::unordered_map<Block*, Value*> block_values;
   std::vector<Phi*> inserted_phis;
 
-  const auto dfs = stackalloc->get_block()->traverse_dfs();
+  const auto dfs = stackalloc->get_block()->get_reachable_blocks(TraversalType::DFS_WithStart);
 
   for (Block* block : dfs) {
     Value* current_value = nullptr;

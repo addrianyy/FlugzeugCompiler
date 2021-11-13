@@ -1,6 +1,7 @@
 #pragma once
 #include "Block.hpp"
 #include "Type.hpp"
+
 #include <Core/IntrusiveLinkedList.hpp>
 
 #include <string_view>
@@ -19,7 +20,7 @@ class Function {
 
   Context* const context;
 
-  Type* return_type;
+  Type* const return_type;
   const std::string name;
 
   std::vector<Parameter*> parameters;
@@ -42,6 +43,8 @@ public:
   Function(Context* context, Type* return_type, std::string name,
            const std::vector<Type*>& arguments);
   ~Function();
+
+  void print(IRPrinter& printer) const;
 
 #pragma region block_list
   Block* get_first_block() { return blocks.get_first(); }
@@ -84,8 +87,6 @@ public:
   Block* create_block();
   void insert_block(Block* block);
   void set_entry_block(Block* block);
-
-  void print(IRPrinter& printer) const;
 
   void destroy();
 };

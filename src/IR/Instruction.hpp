@@ -1,6 +1,7 @@
 #pragma once
 #include "IRPrinter.hpp"
 #include "User.hpp"
+
 #include <Core/IntrusiveLinkedList.hpp>
 
 namespace flugzeug {
@@ -39,6 +40,12 @@ protected:
   virtual void print_instruction_internal(IRPrinter::LinePrinter& printer) const = 0;
 
 public:
+  using IntrusiveNode::insert_after;
+  using IntrusiveNode::insert_before;
+  using IntrusiveNode::move_after;
+  using IntrusiveNode::move_before;
+  using IntrusiveNode::unlink;
+
   void print(IRPrinter& printer) const;
 
   Block* get_block() { return get_owner(); }

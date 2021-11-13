@@ -1,5 +1,6 @@
 #include "Type.hpp"
 #include "Context.hpp"
+
 #include <Core/Error.hpp>
 
 using namespace flugzeug;
@@ -32,28 +33,23 @@ size_t Type::get_bit_size() const {
   case Kind::I64:
   case Kind::Pointer:
     return 64;
+  default:
+    unreachable();
   }
-
-  unreachable();
 }
 
 uint64_t Type::get_bit_mask() const {
   switch (get_bit_size()) {
   case 1:
     return 1ull;
-
   case 8:
     return 0xffull;
-
   case 16:
     return 0xffffull;
-
   case 32:
     return 0xffff'ffffull;
-
   case 64:
     return 0xffff'ffff'ffff'ffffull;
-
   default:
     unreachable();
   }
@@ -74,10 +70,10 @@ std::string Type::format() const {
   }
 
   switch (kind) {
-  case Kind::Pointer:
-    unreachable();
   case Kind::Void:
     return "void";
+  case Kind::Block:
+    return "block";
   case Kind::I1:
     return "i1";
   case Kind::I8:
@@ -88,11 +84,10 @@ std::string Type::format() const {
     return "i32";
   case Kind::I64:
     return "i64";
-  case Kind::Block:
-    return "block";
+  case Kind::Pointer:
+  default:
+    unreachable();
   }
-
-  unreachable();
 }
 
 Constant* Type::get_constant(uint64_t constant) { return context->get_constant(this, constant); }

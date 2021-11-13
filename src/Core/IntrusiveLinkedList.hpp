@@ -36,6 +36,7 @@ public:
   const T* get_previous() const { return static_cast<const T*>(previous); }
   const T* get_next() const { return static_cast<const T*>(next); }
 
+protected:
   void insert_before(T* before) { before->get_list().insert_before(to_underlying(), before); }
   void insert_after(T* after) { after->get_list().insert_after(to_underlying(), after); }
 
@@ -140,7 +141,8 @@ public:
 
       to_delete = node->next;
 
-      node->destroy();
+      // Make sure user can add his own logic to destroy function.
+      static_cast<T*>(node)->destroy();
     }
   }
 

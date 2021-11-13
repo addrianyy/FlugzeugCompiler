@@ -1,11 +1,20 @@
 #pragma once
 #include "Instruction.hpp"
+
 #include <Core/IntrusiveLinkedList.hpp>
+
 #include <unordered_set>
 
 namespace flugzeug {
 
 class Function;
+
+enum class TraversalType {
+  BFS_WithStart,
+  DFS_WithStart,
+  BFS_WithoutStart,
+  DFS_WithoutStart,
+};
 
 class Block : public Value, public IntrusiveNode<Block, Function> {
   DEFINE_INSTANCEOF(Value, Value::Kind::Block)
@@ -28,6 +37,8 @@ public:
   explicit Block(Context* context)
       : Value(context, Value::Kind::Block, context->get_block_ty()), instructions(this) {}
   ~Block() override;
+
+  void print(IRPrinter& printer) const;
 
 #pragma region instruction_list
   Instruction* get_first_instruction() { return instructions.get_first(); }
@@ -63,8 +74,6 @@ public:
   InstructionList ::ReversedConstRange reversed() const { return instructions.reversed(); }
 #pragma endregion
 
-  void print(IRPrinter& printer) const;
-
   bool is_entry_block() const { return is_entry; }
 
   Function* get_function() { return get_owner(); }
@@ -79,8 +88,11 @@ public:
   BlockTargets<const Block> get_successors() const;
 
   std::unordered_set<Block*> get_predecessors();
+  std::unordered_set<const Block*> get_predecessors() const;
 
-  std::vector<Block*> traverse_dfs();
+  std::vector<Block*> get_reachable_blocks(TraversalType traversal = TraversalType::DFS_WithStart);
+  std::vector<const Block*>
+  get_reachable_blocks(TraversalType traversal = TraversalType::DFS_WithStart) const;
 };
 
 } // namespace flugzeug

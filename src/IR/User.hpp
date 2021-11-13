@@ -1,7 +1,8 @@
 #pragma once
+#include "Value.hpp"
+
 #include <Core/ClassTraits.hpp>
 #include <Core/Iterator.hpp>
-#include <IR/Value.hpp>
 
 #include <vector>
 
@@ -47,12 +48,12 @@ class User : public Value {
 protected:
   using Value::Value;
 
-  ~User() override;
-
   void set_operand_count(size_t count);
   void grow_operand_count(size_t grow);
 
 public:
+  ~User() override;
+
   size_t get_operand_count() const;
 
   Value* get_operand(size_t index);

@@ -3,8 +3,6 @@
 
 using namespace flugzeug;
 
-using SpecialItem = IRPrinter::LinePrinter::SpecialItem;
-
 void IRPrinter::LinePrinter::begin_generic_item() {
   if (comma_pending) {
     ir_printer->write_string(", ");

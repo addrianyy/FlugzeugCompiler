@@ -12,7 +12,7 @@ static std::string_view to_string(UnaryOp op) {
   case UnaryOp::Not:
     return "not";
   default:
-    return "unknown";
+    unreachable();
   }
 }
 
@@ -45,7 +45,7 @@ static std::string_view to_string(BinaryOp op) {
   case BinaryOp::Xor:
     return "xor";
   default:
-    return "unknown";
+    unreachable();
   }
 }
 
@@ -72,7 +72,7 @@ static std::string_view to_string(IntPredicate pred) {
   case IntPredicate::LteS:
     return "slte";
   default:
-    return "unknown";
+    unreachable();
   }
 }
 
@@ -87,7 +87,7 @@ static std::string_view to_string(CastKind cast) {
   case CastKind::Bitcast:
     return "bitcast";
   default:
-    return "unknown";
+    unreachable();
   }
 }
 

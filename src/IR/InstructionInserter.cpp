@@ -6,6 +6,11 @@ void InstructionInserter::insert_internal(Instruction* instruction) {
   block->push_instruction_back(instruction);
 }
 
+void InstructionInserter::set_insertion_block(Block* insertion_block) {
+  block = insertion_block;
+  context = block ? block->get_context() : nullptr;
+}
+
 UnaryInstr* InstructionInserter::unary_instr(UnaryOp op, Value* val) {
   return insert(new UnaryInstr(context, op, val));
 }

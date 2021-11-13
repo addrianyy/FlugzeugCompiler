@@ -62,7 +62,6 @@ public:
   }
 
   UnaryOp get_op() const { return op; }
-
   bool is(UnaryOp other) const { return op == other; }
 
   Value* get_val() { return get_operand(0); }
@@ -70,6 +69,7 @@ public:
 
   void set_val(Value* val) { return set_operand(0, val); }
 
+protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };
 
@@ -87,7 +87,6 @@ public:
   }
 
   BinaryOp get_op() const { return op; }
-
   bool is(BinaryOp other) const { return op == other; }
 
   Value* get_lhs() { return get_operand(0); }
@@ -99,6 +98,7 @@ public:
   void set_lhs(Value* lhs) { return set_operand(0, lhs); }
   void set_rhs(Value* rhs) { return set_operand(1, rhs); }
 
+protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };
 
@@ -116,7 +116,6 @@ public:
   }
 
   IntPredicate get_pred() const { return pred; }
-
   bool is(IntPredicate other) const { return pred == other; }
 
   Value* get_lhs() { return get_operand(0); }
@@ -128,6 +127,7 @@ public:
   void set_lhs(Value* lhs) { return set_operand(0, lhs); }
   void set_rhs(Value* rhs) { return set_operand(1, rhs); }
 
+protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };
 
@@ -146,6 +146,7 @@ public:
 
   void set_ptr(Value* ptr) { return set_operand(0, ptr); }
 
+protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };
 
@@ -169,6 +170,7 @@ public:
   void set_ptr(Value* ptr) { return set_operand(0, ptr); }
   void set_val(Value* val) { return set_operand(1, val); }
 
+protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };
 
@@ -185,6 +187,7 @@ public:
   Value* get_arg(size_t i) { return get_operand(i); }
   const Value* get_arg(size_t i) const { return get_operand(i); }
 
+protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };
 
@@ -203,6 +206,7 @@ public:
 
   void set_target(Block* target) { set_operand(0, target); }
 
+protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };
 
@@ -231,6 +235,7 @@ public:
   void set_true_target(Block* true_target) { set_operand(1, true_target); }
   void set_false_target(Block* false_target) { set_operand(2, false_target); }
 
+protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };
 
@@ -246,6 +251,7 @@ public:
   size_t get_size() const { return size; }
   Type* get_allocated_type() const { return cast<PointerType>(get_type())->deref(); }
 
+protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };
 
@@ -263,14 +269,15 @@ public:
 
   bool is_ret_void() const { return get_operand_count() == 0; }
 
-  Value* get_val() { return is_void() ? nullptr : get_operand(0); }
-  const Value* get_val() const { return is_void() ? nullptr : get_operand(0); }
+  Value* get_val() { return is_ret_void() ? nullptr : get_operand(0); }
+  const Value* get_val() const { return is_ret_void() ? nullptr : get_operand(0); }
 
   void set_val(Value* val) {
     verify(!is_ret_void(), "Cannot set value for ret void.");
     return set_operand(0, val);
   }
 
+protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };
 
@@ -294,6 +301,7 @@ public:
   void set_base(Value* base) { return set_operand(0, base); }
   void set_index(Value* index) { return set_operand(1, index); }
 
+protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };
 
@@ -310,12 +318,14 @@ public:
   }
 
   CastKind get_cast_kind() const { return cast_kind; }
+  bool is(CastKind other) const { return cast_kind == other; }
 
   Value* get_val() { return get_operand(0); }
   const Value* get_val() const { return get_operand(0); }
 
   void set_val(Value* val) { return set_operand(0, val); }
 
+protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };
 
@@ -344,6 +354,7 @@ public:
   void set_true_val(Value* true_val) { return set_operand(1, true_val); }
   void set_false_val(Value* false_val) { return set_operand(2, false_val); }
 
+protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };
 
@@ -394,6 +405,7 @@ public:
   Value* get_incoming_by_block(const Block* block);
   const Value* get_incoming_by_block(const Block* block) const;
 
+protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };
 

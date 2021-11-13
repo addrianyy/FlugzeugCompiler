@@ -6,8 +6,8 @@ namespace flugzeug {
 class Instruction;
 
 class InstructionInserter {
-  class Block* block = nullptr;
-  class Context* context = nullptr;
+  Block* block = nullptr;
+  Context* context = nullptr;
 
   void insert_internal(Instruction* instruction);
 
@@ -19,15 +19,7 @@ class InstructionInserter {
 public:
   explicit InstructionInserter(Block* block = nullptr) { set_insertion_block(block); }
 
-  void set_insertion_block(Block* insertion_block) {
-    if (insertion_block) {
-      block = insertion_block;
-      context = insertion_block->get_context();
-    } else {
-      block = nullptr;
-      context = nullptr;
-    }
-  }
+  void set_insertion_block(Block* insertion_block);
 
   UnaryInstr* unary_instr(UnaryOp op, Value* val);
   BinaryInstr* binary_instr(Value* lhs, BinaryOp op, Value* rhs);

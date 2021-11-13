@@ -21,7 +21,7 @@ void Instruction::replace_instruction(Instruction* instruction) {
 
 void Instruction::destroy() {
   if (!is_void()) {
-    replace_uses(get_context()->get_undef(get_type()));
+    replace_uses(get_type()->get_undef());
   }
   IntrusiveNode::destroy();
 }

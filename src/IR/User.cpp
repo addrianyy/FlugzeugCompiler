@@ -1,4 +1,5 @@
 #include "User.hpp"
+
 #include <Core/Error.hpp>
 
 using namespace flugzeug;

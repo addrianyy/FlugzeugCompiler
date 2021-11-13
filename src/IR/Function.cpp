@@ -35,6 +35,29 @@ Function::~Function() {
   context->decrease_refcount();
 }
 
+void Function::print(IRPrinter& printer) const {
+  {
+    auto p = printer.create_line_printer();
+    p.print(return_type, IRPrinter::NonKeywordWord{name}, IRPrinter::Item::ParenOpen);
+
+    for (auto param : parameters) {
+      p.print(param->get_type(), param, IRPrinter::Item::Comma);
+    }
+
+    p.print(IRPrinter::Item::ParenClose, IRPrinter::NonKeywordWord{" {"});
+  }
+
+  for (const Block& block : *this) {
+    block.print(printer);
+
+    if (&block != get_last_block()) {
+      printer.newline();
+    }
+  }
+
+  printer.raw_write("}\n");
+}
+
 void Function::reassign_display_indices() {
   next_block_index = 0;
   next_value_index = 0;
@@ -84,29 +107,6 @@ void Function::set_entry_block(Block* block) {
   }
 
   entry_block = block;
-}
-
-void Function::print(IRPrinter& printer) const {
-  {
-    auto p = printer.create_line_printer();
-    p.print(return_type, IRPrinter::NonKeywordWord{name}, IRPrinter::Item::ParenOpen);
-
-    for (auto param : parameters) {
-      p.print(param->get_type(), param, IRPrinter::Item::Comma);
-    }
-
-    p.print(IRPrinter::Item::ParenClose, IRPrinter::NonKeywordWord{" {"});
-  }
-
-  for (const Block& block : *this) {
-    block.print(printer);
-
-    if (&block != get_last_block()) {
-      printer.newline();
-    }
-  }
-
-  printer.raw_write("}\n");
 }
 
 void Function::destroy() {

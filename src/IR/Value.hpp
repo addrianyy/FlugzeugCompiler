@@ -107,13 +107,13 @@ public:
 
   virtual ~Value();
 
+  Kind get_kind() const { return kind; }
+
   Context* get_context() { return context; }
   const Context* get_context() const { return context; }
 
   Type* get_type() { return type; }
   const Type* get_type() const { return type; }
-
-  Kind get_kind() const { return kind; }
 
   size_t get_display_index() const { return display_index; }
   void set_display_index(size_t index);
@@ -122,6 +122,7 @@ public:
 
   void replace_uses(Value* new_value);
   void replace_uses_with_constant(uint64_t constant);
+  void replace_uses_with_undef();
 
   bool is_zero() const;
   bool is_one() const;
@@ -131,7 +132,9 @@ public:
   bool is_used() const { return get_user_count() > 0; }
   bool is_used_once() const { return get_user_count() == 1; }
 
-  size_t get_user_count_excluding_self();
+  size_t get_user_count_excluding_self() const;
+
+  virtual std::string format() const;
 
   using UserIterator = UserIteratorInternal<Use, User>;
   using ConstUserIterator = UserIteratorInternal<const Use, const User>;
@@ -143,8 +146,6 @@ public:
     return IteratorRange(ConstUserIterator(uses.data()),
                          ConstUserIterator(uses.data() + uses.size()));
   }
-
-  virtual std::string format() const;
 };
 
 class Constant : public Value {
@@ -155,9 +156,9 @@ class Constant : public Value {
   uint64_t constant_u = 0;
   int64_t constant_i = 0;
 
-  void initialize_constant(uint64_t c);
-
   static void constrain_constant(Type* type, uint64_t c, uint64_t* u, int64_t* i);
+
+  void initialize_constant(uint64_t c);
 
   Constant(Context* context, Type* type, uint64_t constant) : Value(context, Kind::Constant, type) {
     initialize_constant(constant);

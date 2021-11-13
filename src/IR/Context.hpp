@@ -1,5 +1,6 @@
 #pragma once
 #include "Type.hpp"
+
 #include <Core/ClassTraits.hpp>
 
 #include <cstdint>
