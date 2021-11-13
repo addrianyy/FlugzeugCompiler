@@ -1,24 +1,20 @@
 #pragma once
 #include "ClassTraits.hpp"
 #include "Error.hpp"
+#include "Iterator.hpp"
 #include <memory>
 
 template <typename T, typename Owner> class IntrusiveNode;
 template <typename T, typename Owner> class IntrusiveLinkedList;
-template <typename T, typename Node, typename Owner> class IntrusiveLinkedListIterator;
 
 template <typename T, typename Owner> class IntrusiveNode {
   friend class IntrusiveLinkedList<T, Owner>;
-  friend class IntrusiveLinkedListIterator<T, IntrusiveNode<T, Owner>, Owner>;
-  friend class IntrusiveLinkedListIterator<const T, const IntrusiveNode<T, Owner>, Owner>;
-
-  using List = IntrusiveLinkedList<T, Owner>;
 
   Owner* owner = nullptr;
   IntrusiveNode* next = nullptr;
   IntrusiveNode* previous = nullptr;
 
-  List& get_list() {
+  IntrusiveLinkedList<T, Owner>& get_list() {
     verify(owner, "Cannot get containing list for unlinked node.");
     return owner->get_list();
   }
@@ -29,6 +25,7 @@ public:
   CLASS_NON_MOVABLE_NON_COPYABLE(IntrusiveNode);
 
   IntrusiveNode() = default;
+
   virtual ~IntrusiveNode() { verify(!owner, "Tried to destroy linked node."); }
 
   Owner* get_owner() { return owner; }
@@ -45,14 +42,14 @@ public:
   void move_before(T* before) {
     verify(before->owner == owner, "Tried to move between different lists.");
 
-    get_list().unlink(to_underlying());
+    unlink();
     insert_before(before);
   }
 
   void move_after(T* after) {
     verify(after->owner == owner, "Tried to move between different lists.");
 
-    get_list().unlink(to_underlying());
+    unlink();
     insert_after(after);
   }
 
@@ -60,7 +57,7 @@ public:
 
   void destroy() {
     if (owner) {
-      get_list().unlink(to_underlying());
+      unlink();
     }
 
     delete this;
@@ -68,6 +65,47 @@ public:
 };
 
 template <typename T, typename Owner> class IntrusiveLinkedList {
+  template <typename TValue, typename TNode, bool Reversed> class IteratorInternal {
+    TNode* node;
+
+  public:
+    using iterator_category = std::bidirectional_iterator_tag;
+    using difference_type = std::ptrdiff_t;
+    using value_type = TValue;
+    using pointer = value_type*;
+    using reference = value_type&;
+
+    explicit IteratorInternal(TNode* node) : node(node) {}
+
+    IteratorInternal& operator++() {
+      node = Reversed ? node->get_previous() : node->get_next();
+      return *this;
+    }
+
+    IteratorInternal operator++(int) {
+      const auto before = *this;
+      ++(*this);
+      return before;
+    }
+
+    IteratorInternal& operator--() {
+      node = Reversed ? node->get_next() : node->get_previous();
+      return *this;
+    }
+
+    IteratorInternal operator--(int) {
+      const auto before = *this;
+      --(*this);
+      return before;
+    }
+
+    reference operator*() const { return static_cast<reference>(*node); }
+    pointer operator->() { return static_cast<pointer>(node); }
+
+    bool operator==(const IteratorInternal& rhs) const { return node == rhs.node; }
+    bool operator!=(const IteratorInternal& rhs) const { return node != rhs.node; }
+  };
+
   using Node = IntrusiveNode<T, Owner>;
 
   Owner* owner = nullptr;
@@ -94,14 +132,6 @@ public:
 
   explicit IntrusiveLinkedList(Owner* owner) : owner(owner) {}
 
-  T* get_first() { return static_cast<T*>(first); }
-  T* get_last() { return static_cast<T*>(last); }
-
-  const T* get_first() const { return static_cast<const T*>(first); }
-  const T* get_last() const { return static_cast<const T*>(last); }
-
-  size_t get_size() const { return size; }
-
   ~IntrusiveLinkedList() {
     auto to_delete = first;
 
@@ -113,6 +143,15 @@ public:
       node->destroy();
     }
   }
+
+  T* get_first() { return static_cast<T*>(first); }
+  T* get_last() { return static_cast<T*>(last); }
+
+  const T* get_first() const { return static_cast<const T*>(first); }
+  const T* get_last() const { return static_cast<const T*>(last); }
+
+  size_t get_size() const { return size; }
+  bool is_empty() const { return size == 0; }
 
   void insert_before(T* node, T* before) {
     const auto list_node = to_node(node);
@@ -235,47 +274,27 @@ public:
     return insert_node;
   }
 
-  bool is_empty() const { return first == nullptr; }
+  using iterator = IteratorInternal<T, Node, false>;
+  using const_iterator = IteratorInternal<const T, const Node, false>;
 
-  using iterator = IntrusiveLinkedListIterator<T, IntrusiveNode<T, Owner>, Owner>;
-  using const_iterator = IntrusiveLinkedListIterator<const T, const IntrusiveNode<T, Owner>, Owner>;
+  using reverse_iterator = IteratorInternal<T, Node, true>;
+  using const_reverse_iterator = IteratorInternal<const T, const Node, true>;
+
+  using ReversedRange = IteratorRange<reverse_iterator>;
+  using ReversedConstRange = IteratorRange<const_reverse_iterator>;
 
   iterator begin() { return iterator(first); }
   iterator end() { return iterator(nullptr); }
 
   const_iterator begin() const { return const_iterator(first); }
   const_iterator end() const { return const_iterator(nullptr); }
-};
 
-template <typename T, typename Node, typename Owner> class IntrusiveLinkedListIterator {
-  Node* current = nullptr;
+  reverse_iterator rbegin() { return reverse_iterator(last); }
+  reverse_iterator rend() { return reverse_iterator(nullptr); }
 
-public:
-  using Item = T;
+  const_reverse_iterator rbegin() const { return const_reverse_iterator(last); }
+  const_reverse_iterator rend() const { return const_reverse_iterator(nullptr); }
 
-  IntrusiveLinkedListIterator() = default;
-  explicit IntrusiveLinkedListIterator(Node* node) : current(node) {}
-
-  IntrusiveLinkedListIterator& operator++() {
-    current = current->next;
-    return *this;
-  }
-
-  T& operator*() const { return static_cast<T&>(*current); }
-  T* operator->() const { return static_cast<T*>(current); }
-
-  IntrusiveLinkedListIterator get_next_iterator() const {
-    return IntrusiveLinkedListIterator(current->next);
-  }
-
-  IntrusiveLinkedListIterator& operator=(const IntrusiveLinkedListIterator& other) {
-    if (&other != this) {
-      current = other.current;
-    }
-
-    return *this;
-  }
-
-  bool operator==(const IntrusiveLinkedListIterator& rhs) const { return current == rhs.current; }
-  bool operator!=(const IntrusiveLinkedListIterator& rhs) const { return current != rhs.current; }
+  ReversedRange reversed() { return IteratorRange(rbegin(), rend()); }
+  ReversedConstRange reversed() const { return IteratorRange(rbegin(), rend()); }
 };

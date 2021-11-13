@@ -261,13 +261,13 @@ public:
     }
   }
 
-  bool is_void() const { return get_operand_count() == 0; }
+  bool is_ret_void() const { return get_operand_count() == 0; }
 
   Value* get_val() { return is_void() ? nullptr : get_operand(0); }
   const Value* get_val() const { return is_void() ? nullptr : get_operand(0); }
 
   void set_val(Value* val) {
-    verify(!is_void(), "Cannot set value for ret void.");
+    verify(!is_ret_void(), "Cannot set value for ret void.");
     return set_operand(0, val);
   }
 

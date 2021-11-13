@@ -101,7 +101,7 @@ void Function::print(IRPrinter& printer) const {
   for (const Block& block : *this) {
     block.print(printer);
 
-    if (&block != get_last()) {
+    if (&block != get_last_block()) {
       printer.newline();
     }
   }
@@ -114,12 +114,12 @@ void Function::destroy() {
 
   for (Block& block : *this) {
     while (!block.is_empty()) {
-      block.get_first()->destroy();
+      block.get_first_instruction()->destroy();
     }
   }
 
   while (!is_empty()) {
-    get_first()->destroy();
+    get_first_block()->destroy();
   }
 
   for (Parameter* param : parameters) {

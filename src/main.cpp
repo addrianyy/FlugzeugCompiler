@@ -1,5 +1,5 @@
+#include <Core/Iterator.hpp>
 #include <Core/Log.hpp>
-#include <Core/NonInvalidatingIterator.hpp>
 #include <IR/ConsolePrinter.hpp>
 #include <IR/Context.hpp>
 #include <IR/Function.hpp>
@@ -74,7 +74,7 @@ static void test_optimization(Function* function) {
   }
 }
 
-int old_main() {
+int main() {
   Context context;
 
   Type* i64 = context.get_i64_ty();
@@ -107,9 +107,12 @@ int old_main() {
   inserter.set_insertion_block(merge);
   auto loaded = inserter.load(ptr);
   inserter.add(param_a, param_b);
-  inserter.ret(loaded);
+  auto res = inserter.mul(loaded, i64->get_constant(4));
+  inserter.ret(res);
 
-  //  MemoryToSSA::run(f);
+  test_optimization(f);
+
+  MemoryToSSA::run(f);
   DeadCodeElimination::run(f);
 
   ConsolePrinter printer(ConsolePrinter::Variant::Colorful);
@@ -120,7 +123,7 @@ int old_main() {
   return 0;
 }
 
-int main() {
+int xmain() {
   Context context;
 
   const auto functions = create_functions(&context);
@@ -139,4 +142,5 @@ int main() {
   for (Function* f : functions) {
     f->destroy();
   }
+  return 0;
 }

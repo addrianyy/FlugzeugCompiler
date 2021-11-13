@@ -4,6 +4,7 @@
 
 #include <Core/Casting.hpp>
 #include <Core/ClassTraits.hpp>
+#include <Core/Iterator.hpp>
 
 #include <string>
 #include <vector>
@@ -12,36 +13,6 @@ namespace flugzeug {
 
 class Context;
 class User;
-
-template <typename TUse, typename TUser> class UserIterator {
-  TUse* current;
-
-public:
-  explicit UserIterator(TUse* current) : current(current) {}
-
-  UserIterator& operator++() {
-    current++;
-    return *this;
-  }
-
-  TUser& operator*() const { return *current->user; }
-  TUser* operator->() const { return current->user; }
-
-  bool operator==(const UserIterator& rhs) const { return current == rhs.current; }
-  bool operator!=(const UserIterator& rhs) const { return current != rhs.current; }
-};
-
-template <typename TValue, typename TUse, typename TUser> class ValueUsers {
-  TValue* value;
-
-public:
-  explicit ValueUsers(TValue* value) : value(value) {}
-
-  UserIterator<TUse, TUser> begin() { return UserIterator<TUse, TUser>(value->uses.data()); }
-  UserIterator<TUse, TUser> end() {
-    return UserIterator<TUse, TUser>(value->uses.data() + value->uses.size());
-  }
-};
 
 class Value {
 public:
@@ -84,12 +55,6 @@ private:
     }
   };
 
-  friend class ValueUsers<Value, Use, User>;
-  friend class ValueUsers<const Value, const Use, const User>;
-
-  using NormalUsers = ValueUsers<Value, Use, User>;
-  using ConstUsers = ValueUsers<const Value, const Use, const User>;
-
   const Kind kind;
 
   Type* const type;
@@ -98,6 +63,36 @@ private:
   std::vector<Use> uses;
 
   size_t display_index = 0;
+
+  template <typename TUse, typename TUser> class UserIteratorInternal {
+    TUse* current;
+
+  public:
+    using iterator_category = std::forward_iterator_tag;
+    using difference_type = std::ptrdiff_t;
+    using value_type = TUser;
+    using pointer = value_type*;
+    using reference = value_type&;
+
+    explicit UserIteratorInternal(TUse* current) : current(current) {}
+
+    UserIteratorInternal& operator++() {
+      current++;
+      return *this;
+    }
+
+    UserIteratorInternal operator++(int) {
+      const auto before = *this;
+      ++(*this);
+      return before;
+    }
+
+    reference operator*() const { return *current->user; }
+    pointer operator->() const { return current->user; }
+
+    bool operator==(const UserIteratorInternal& rhs) const { return current == rhs.current; }
+    bool operator!=(const UserIteratorInternal& rhs) const { return current != rhs.current; }
+  };
 
   void add_use(const Use& use);
   void remove_use(const Use& use);
@@ -138,8 +133,16 @@ public:
 
   size_t get_user_count_excluding_self();
 
-  NormalUsers get_users() { return NormalUsers(this); }
-  ConstUsers get_users() const { return ConstUsers(this); }
+  using UserIterator = UserIteratorInternal<Use, User>;
+  using ConstUserIterator = UserIteratorInternal<const Use, const User>;
+
+  IteratorRange<UserIterator> get_users() {
+    return IteratorRange(UserIterator(uses.data()), UserIterator(uses.data() + uses.size()));
+  }
+  IteratorRange<ConstUserIterator> get_users() const {
+    return IteratorRange(ConstUserIterator(uses.data()),
+                         ConstUserIterator(uses.data() + uses.size()));
+  }
 
   virtual std::string format() const;
 };

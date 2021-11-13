@@ -15,6 +15,8 @@ class Function {
   friend class IntrusiveNode<Block, Function>;
   friend class Block;
 
+  using BlockList = IntrusiveLinkedList<Block, Function>;
+
   Context* const context;
 
   Type* return_type;
@@ -22,7 +24,7 @@ class Function {
 
   std::vector<Parameter*> parameters;
 
-  IntrusiveLinkedList<Block, Function> blocks;
+  BlockList blocks;
   Block* entry_block = nullptr;
 
   size_t next_value_index = 0;
@@ -31,7 +33,7 @@ class Function {
   size_t allocate_value_index() { return next_value_index++; }
   size_t allocate_block_index() { return next_block_index++; }
 
-  decltype(blocks)& get_list() { return blocks; }
+  BlockList& get_list() { return blocks; }
 
   void on_added_node(Block* block);
   void on_removed_node(Block* block);
@@ -42,17 +44,17 @@ public:
   ~Function();
 
 #pragma region block_list
-  Block* get_first() { return blocks.get_first(); }
-  Block* get_last() { return blocks.get_last(); }
+  Block* get_first_block() { return blocks.get_first(); }
+  Block* get_last_block() { return blocks.get_last(); }
 
-  const Block* get_first() const { return blocks.get_first(); }
-  const Block* get_last() const { return blocks.get_last(); }
+  const Block* get_first_block() const { return blocks.get_first(); }
+  const Block* get_last_block() const { return blocks.get_last(); }
 
   size_t get_block_count() const { return blocks.get_size(); }
   bool is_empty() const { return blocks.is_empty(); }
 
-  using const_iterator = IntrusiveLinkedList<Block, Function>::const_iterator;
-  using iterator = IntrusiveLinkedList<Block, Function>::iterator;
+  using const_iterator = BlockList::const_iterator;
+  using iterator = BlockList::iterator;
 
   iterator begin() { return blocks.begin(); }
   iterator end() { return blocks.end(); }

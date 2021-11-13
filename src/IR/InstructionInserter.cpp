@@ -3,7 +3,7 @@
 using namespace flugzeug;
 
 void InstructionInserter::insert_internal(Instruction* instruction) {
-  block->push_back(instruction);
+  block->push_instruction_back(instruction);
 }
 
 UnaryInstr* InstructionInserter::unary_instr(UnaryOp op, Value* val) {

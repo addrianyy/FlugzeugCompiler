@@ -1,6 +1,7 @@
 #include "Block.hpp"
 #include "Function.hpp"
 #include "Instructions.hpp"
+
 #include <unordered_set>
 #include <vector>
 
@@ -58,15 +59,15 @@ void Block::destroy() {
 }
 
 BlockTargets<Block> Block::get_successors() {
-  if (get_last()) {
-    return get_last()->get_targets();
+  if (get_last_instruction()) {
+    return get_last_instruction()->get_targets();
   }
   return {};
 }
 
 BlockTargets<const Block> Block::get_successors() const {
-  if (get_last()) {
-    return get_last()->get_targets();
+  if (get_last_instruction()) {
+    return get_last_instruction()->get_targets();
   }
   return {};
 }

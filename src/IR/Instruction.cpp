@@ -6,7 +6,7 @@ using namespace flugzeug;
 
 void Instruction::print(IRPrinter& printer) const {
   auto p = printer.create_line_printer();
-  if (!get_type()->is_void()) {
+  if (!is_void()) {
     p.print(this, IRPrinter::Item::Equals);
   }
 
@@ -26,28 +26,23 @@ void Instruction::destroy() {
   IntrusiveNode::destroy();
 }
 
-BlockTargets<Block> Instruction::get_targets() {
-  auto result = BlockTargets<Block>();
-  if (const auto bcond = cast<CondBranch>(this)) {
+template <typename TBlock, typename TInstruction>
+BlockTargets<TBlock> get_targets_generic(TInstruction* instruction) {
+  BlockTargets<TBlock> result;
+  if (const auto bcond = cast<CondBranch>(instruction)) {
     result.insert(bcond->get_true_target());
     result.insert(bcond->get_false_target());
-  } else if (const auto branch = cast<Branch>(this)) {
+  } else if (const auto branch = cast<Branch>(instruction)) {
     result.insert(branch->get_target());
   }
 
   return result;
 }
 
-BlockTargets<const Block> Instruction::get_targets() const {
-  auto result = BlockTargets<const Block>();
-  if (const auto bcond = cast<CondBranch>(this)) {
-    result.insert(bcond->get_true_target());
-    result.insert(bcond->get_false_target());
-  } else if (const auto branch = cast<Branch>(this)) {
-    result.insert(branch->get_target());
-  }
+BlockTargets<Block> Instruction::get_targets() { return get_targets_generic<Block>(this); }
 
-  return result;
+BlockTargets<const Block> Instruction::get_targets() const {
+  return get_targets_generic<const Block>(this);
 }
 
 bool Instruction::is_volatile() const {

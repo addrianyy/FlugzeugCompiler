@@ -1,5 +1,5 @@
 #include "DeadCodeElimination.hpp"
-#include <Core/NonInvalidatingIterator.hpp>
+#include <Core/Iterator.hpp>
 #include <IR/Block.hpp>
 #include <IR/Function.hpp>
 

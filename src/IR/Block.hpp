@@ -14,10 +14,12 @@ class Block : public Value, public IntrusiveNode<Block, Function> {
   friend class IntrusiveNode<Instruction, Block>;
   friend class Function;
 
-  IntrusiveLinkedList<Instruction, Block> instructions;
+  using InstructionList = IntrusiveLinkedList<Instruction, Block>;
+
+  InstructionList instructions;
   bool is_entry = false;
 
-  decltype(instructions)& get_list() { return instructions; }
+  InstructionList& get_list() { return instructions; }
 
   void on_added_node(Instruction* instruction);
   void on_removed_node(Instruction* instruction);
@@ -28,26 +30,37 @@ public:
   ~Block() override;
 
 #pragma region instruction_list
-  Instruction* get_first() { return instructions.get_first(); }
-  Instruction* get_last() { return instructions.get_last(); }
+  Instruction* get_first_instruction() { return instructions.get_first(); }
+  Instruction* get_last_instruction() { return instructions.get_last(); }
 
-  const Instruction* get_first() const { return instructions.get_first(); }
-  const Instruction* get_last() const { return instructions.get_last(); }
+  const Instruction* get_first_instruction() const { return instructions.get_first(); }
+  const Instruction* get_last_instruction() const { return instructions.get_last(); }
 
   size_t get_instruction_count() const { return instructions.get_size(); }
   bool is_empty() const { return instructions.is_empty(); }
 
-  void push_front(Instruction* instruction) { instructions.push_front(instruction); }
-  void push_back(Instruction* instruction) { instructions.push_back(instruction); }
+  void push_instruction_front(Instruction* instruction) { instructions.push_front(instruction); }
+  void push_instruction_back(Instruction* instruction) { instructions.push_back(instruction); }
 
-  using const_iterator = IntrusiveLinkedList<Instruction, Block>::const_iterator;
-  using iterator = IntrusiveLinkedList<Instruction, Block>::iterator;
+  using const_iterator = InstructionList::const_iterator;
+  using iterator = InstructionList::iterator;
+  using const_reverse_iterator = InstructionList::const_reverse_iterator;
+  using reverse_iterator = InstructionList::reverse_iterator;
 
   iterator begin() { return instructions.begin(); }
   iterator end() { return instructions.end(); }
 
   const_iterator begin() const { return instructions.begin(); }
   const_iterator end() const { return instructions.end(); }
+
+  reverse_iterator rbegin() { return instructions.rbegin(); }
+  reverse_iterator rend() { return instructions.rend(); }
+
+  const_reverse_iterator rbegin() const { return instructions.rbegin(); }
+  const_reverse_iterator rend() const { return instructions.rend(); }
+
+  InstructionList ::ReversedRange reversed() { return instructions.reversed(); }
+  InstructionList ::ReversedConstRange reversed() const { return instructions.reversed(); }
 #pragma endregion
 
   void print(IRPrinter& printer) const;

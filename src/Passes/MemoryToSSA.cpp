@@ -1,5 +1,5 @@
 #include "MemoryToSSA.hpp"
-#include <Core/NonInvalidatingIterator.hpp>
+#include <Core/Iterator.hpp>
 #include <IR/Function.hpp>
 #include <IR/Instructions.hpp>
 
@@ -50,7 +50,7 @@ Value* MemoryToSSA::get_value_for_first_use(Block* block, StackAlloc* stackalloc
   } else {
     auto phi = new Phi(block->get_context(), type);
 
-    block->push_front(phi);
+    block->push_instruction_front(phi);
     inserted_phis.push_back(phi);
 
     return phi;
