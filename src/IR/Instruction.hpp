@@ -51,6 +51,9 @@ public:
   Block* get_block() { return get_owner(); }
   const Block* get_block() const { return get_owner(); }
 
+  Function* get_function();
+  const Function* get_function() const;
+
   void replace_instruction(Instruction* instruction);
   void destroy();
 

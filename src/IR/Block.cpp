@@ -11,8 +11,8 @@ template <typename TBlock> std::unordered_set<TBlock*> get_predecessors_generic(
   predecessors.reserve(block->get_user_count());
 
   for (auto& user : block->get_users()) {
-    if (cast<Branch>(&user) || cast<CondBranch>(&user)) {
-      predecessors.insert(cast<Instruction>(&user)->get_block());
+    if (cast<Branch>(user) || cast<CondBranch>(user)) {
+      predecessors.insert(cast<Instruction>(user)->get_block());
     }
   }
 

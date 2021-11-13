@@ -231,6 +231,9 @@ public:
   Block* get_false_target() { return cast<Block>(get_operand(2)); }
   const Block* get_false_target() const { return cast<Block>(get_operand(2)); }
 
+  Block* get_target(bool b) { return b ? get_true_target() : get_false_target(); }
+  const Block* get_target(bool b) const { return b ? get_true_target() : get_false_target(); }
+
   void set_cond(Value* cond) { set_operand(0, cond); }
   void set_true_target(Block* true_target) { set_operand(1, true_target); }
   void set_false_target(Block* false_target) { set_operand(2, false_target); }
@@ -350,6 +353,9 @@ public:
   Value* get_false_val() { return get_operand(2); }
   const Value* get_false_val() const { return get_operand(2); }
 
+  Value* get_val(bool b) { return b ? get_true_val() : get_false_val(); }
+  const Value* get_val(bool b) const { return b ? get_true_val() : get_false_val(); }
+
   void set_cond(Value* cond) { return set_operand(0, cond); }
   void set_true_val(Value* true_val) { return set_operand(1, true_val); }
   void set_false_val(Value* false_val) { return set_operand(2, false_val); }
@@ -397,6 +403,9 @@ public:
     return ConstIncoming{cast<Block>(get_operand(get_block_index(i))),
                          get_operand(get_value_index(i))};
   }
+
+  Value* get_incoming_value(size_t i) { return get_operand(get_value_index(i)); }
+  const Value* get_incoming_value(size_t i) const { return get_operand(get_value_index(i)); }
 
   void remove_incoming(const Block* block);
   void add_incoming(Block* block, Value* value);

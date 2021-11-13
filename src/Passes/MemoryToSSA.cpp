@@ -30,7 +30,7 @@ std::vector<StackAlloc*> MemoryToSSA::find_optimizable_stackallocs(Function* fun
 
   for (Block& block : *function) {
     for (Instruction& instruction : block) {
-      if (const auto stackalloc = cast<StackAlloc>(&instruction)) {
+      if (const auto stackalloc = cast<StackAlloc>(instruction)) {
         if (is_stackalloc_optimizable(stackalloc)) {
           stackallocs.push_back(stackalloc);
         }
@@ -67,7 +67,7 @@ void MemoryToSSA::optimize_stackalloc(StackAlloc* stackalloc) {
     Value* current_value = nullptr;
 
     for (Instruction& instruction : dont_invalidate_current(*block)) {
-      if (const auto load = cast<Load>(&instruction)) {
+      if (const auto load = cast<Load>(instruction)) {
         if (load->get_ptr() == stackalloc) {
           // Pointer wasn't written to in this block. We will need to take value from PHI
           // instruction (or make it undef for entry block).
@@ -78,7 +78,7 @@ void MemoryToSSA::optimize_stackalloc(StackAlloc* stackalloc) {
           // This load will use currently known value.
           load->replace_uses_and_destroy(current_value);
         }
-      } else if (const auto store = cast<Store>(&instruction)) {
+      } else if (const auto store = cast<Store>(instruction)) {
         if (store->get_ptr() == stackalloc) {
           // Source next loads of pointer from stored value.
           current_value = store->get_val();

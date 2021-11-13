@@ -144,7 +144,7 @@ void StackAlloc::print_instruction_internal(IRPrinter::LinePrinter& p) const {
 void Ret::print_instruction_internal(IRPrinter::LinePrinter& p) const {
   p.print("ret");
 
-  if (is_void()) {
+  if (is_ret_void()) {
     p.print(get_context()->get_void_ty());
   } else {
     p.print(get_val()->get_type(), get_val());

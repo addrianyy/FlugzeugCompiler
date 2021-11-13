@@ -13,6 +13,14 @@ void Instruction::print(IRPrinter& printer) const {
   print_instruction_internal(p);
 }
 
+Function* Instruction::get_function() {
+  return get_block() ? get_block()->get_function() : nullptr;
+}
+
+const Function* Instruction::get_function() const {
+  return get_block() ? get_block()->get_function() : nullptr;
+}
+
 void Instruction::replace_instruction(Instruction* instruction) {
   instruction->insert_after(this);
   replace_uses(instruction);

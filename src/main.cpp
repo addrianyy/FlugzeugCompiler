@@ -5,8 +5,10 @@
 #include <IR/Function.hpp>
 #include <IR/InstructionInserter.hpp>
 #include <IR/User.hpp>
+#include <Passes/ConstPropagation.hpp>
 #include <Passes/DeadCodeElimination.hpp>
 #include <Passes/MemoryToSSA.hpp>
+#include <Passes/PhiToMemory.hpp>
 #include <iostream>
 #include <unordered_set>
 
@@ -90,30 +92,18 @@ int main() {
   auto merge = f->create_block();
 
   InstructionInserter inserter(entry);
+  auto zero = context.get_i8_ty()->get_constant(129);
+  auto one = i64->get_constant(1);
+  auto x = inserter.sext(zero, i64);
 
-  auto ptr = inserter.stack_alloc(i64);
-  inserter.store(ptr, context.get_constant(i64, 1));
-  auto cond = inserter.compare_eq(param_a, param_b);
-  inserter.cond_branch(cond, if_then, if_else);
+  inserter.ret(x);
 
-  inserter.set_insertion_block(if_then);
-  inserter.store(ptr, context.get_constant(i64, 2));
-  inserter.branch(merge);
+  //  test_optimization(f);
 
-  inserter.set_insertion_block(if_else);
-  inserter.store(ptr, context.get_constant(i64, 3));
-  inserter.branch(merge);
+  //  MemoryToSSA::run(f);
+  //  DeadCodeElimination::run(f);
 
-  inserter.set_insertion_block(merge);
-  auto loaded = inserter.load(ptr);
-  inserter.add(param_a, param_b);
-  auto res = inserter.mul(loaded, i64->get_constant(4));
-  inserter.ret(res);
-
-  test_optimization(f);
-
-  MemoryToSSA::run(f);
-  DeadCodeElimination::run(f);
+  ConstPropagation::run(f);
 
   ConsolePrinter printer(ConsolePrinter::Variant::Colorful);
   f->print(printer);
@@ -123,7 +113,9 @@ int main() {
   return 0;
 }
 
-int xmain() {
+#include <Core/DynamicVisitor.hpp>
+
+int mainx() {
   Context context;
 
   const auto functions = create_functions(&context);
@@ -135,6 +127,9 @@ int xmain() {
       continue;
     }
 
+    PhiToMemory::run(f);
+
+    f->reassign_display_indices();
     f->print(printer);
     printer.newline();
   }
@@ -142,5 +137,6 @@ int xmain() {
   for (Function* f : functions) {
     f->destroy();
   }
+
   return 0;
 }
