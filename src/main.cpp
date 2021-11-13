@@ -86,11 +86,18 @@ int main() {
   auto merge = f->create_block();
 
   InstructionInserter inserter(entry);
-  auto zero = context.get_i8_ty()->get_constant(129);
-  auto one = i64->get_constant(1);
-  auto x = inserter.sext(zero, i64);
+  auto cond = context.get_i1_ty()->get_constant(0); // inserter.compare_eq(param_a, param_b);
+  inserter.cond_branch(cond, merge, if_else);
 
-  inserter.ret(x);
+  inserter.set_insertion_block(if_then);
+  inserter.branch(merge);
+
+  inserter.set_insertion_block(if_else);
+  inserter.branch(merge);
+
+  inserter.set_insertion_block(merge);
+  auto res = inserter.phi({{entry, i64->get_constant(1)}, {if_else, i64->get_constant(2)}});
+  inserter.ret(res);
 
   //  test_optimization(f);
 

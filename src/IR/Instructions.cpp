@@ -25,9 +25,11 @@ bool Phi::index_for_block(const Block* block, size_t& index) const {
   return false;
 }
 
-void Phi::remove_incoming(const Block* block) {
+bool Phi::remove_incoming_opt(const Block* block) {
   size_t index;
-  verify(index_for_block(block, index), "Unknown block passed to remove incoming");
+  if (!index_for_block(block, index)) {
+    return false;
+  }
 
   const size_t last_index = get_incoming_count() - 1;
 
@@ -40,6 +42,12 @@ void Phi::remove_incoming(const Block* block) {
   set_operand(get_block_index(last_index), nullptr);
   set_operand(get_value_index(last_index), nullptr);
   set_operand_count(get_operand_count() - 2);
+
+  return true;
+}
+
+void Phi::remove_incoming(const Block* block) {
+  verify(remove_incoming_opt(block), "Unknown block passed to remove incoming");
 }
 
 void Phi::add_incoming(Block* block, Value* value) {

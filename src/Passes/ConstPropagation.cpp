@@ -6,7 +6,9 @@
 using namespace flugzeug;
 
 class Propagator : public InstructionVisitor {
+public:
   Type* type;
+  Block* removed_branch_target = nullptr;
 
   static bool get_constant(const Value* value, uint64_t& result) {
     const auto c = cast<Constant>(value);
@@ -127,7 +129,6 @@ class Propagator : public InstructionVisitor {
     }
   }
 
-public:
   explicit Propagator(Type* type) : type(type) {}
 
   Value* visit_unary_instr(Argument<UnaryInstr> unary) {
@@ -222,9 +223,14 @@ public:
 
   Value* visit_cond_branch(Argument<CondBranch> cond_branch) {
     uint64_t cond;
-    return get_constant(cond_branch->get_cond(), cond)
-             ? new Branch(cond_branch->get_context(), cond_branch->get_target(cond))
-             : nullptr;
+    if (!get_constant(cond_branch->get_cond(), cond)) {
+      return nullptr;
+    }
+
+    // We may have modified CFG so we need to update Phis.
+    removed_branch_target = cond_branch->get_target(!cond);
+
+    return new Branch(cond_branch->get_context(), cond_branch->get_target(cond));
   }
 
   Value* visit_select(Argument<Select> select) {
@@ -241,9 +247,14 @@ public:
   Value* visit_offset(Argument<Offset> offset) { return nullptr; }
 };
 
-Value* ConstPropagation::constant_propagate(Instruction* instruction) {
+Value* ConstPropagation::constant_propagate(Instruction* instruction,
+                                            Block*& removed_branch_target) {
   Propagator propagator(instruction->get_type());
-  return visit_instruction(instruction, propagator);
+  const auto replacement = visit_instruction(instruction, propagator);
+
+  removed_branch_target = propagator.removed_branch_target;
+
+  return replacement;
 }
 
 bool ConstPropagation::run(Function* function) {
@@ -251,8 +262,16 @@ bool ConstPropagation::run(Function* function) {
 
   for (Block& block : *function) {
     for (Instruction& instruction : dont_invalidate_current(block)) {
-      if (const auto propagated = constant_propagate(&instruction)) {
+      Block* removed_branch_target = nullptr;
+
+      if (const auto propagated = constant_propagate(&instruction, removed_branch_target)) {
         instruction.replace_instruction_or_uses_and_destroy(propagated);
+
+        // Update Phis.
+        if (removed_branch_target) {
+          block.on_removed_branch_to(removed_branch_target);
+        }
+
         did_something = true;
       }
     }

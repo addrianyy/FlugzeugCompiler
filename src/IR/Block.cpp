@@ -98,6 +98,20 @@ void Block::on_added_node(Instruction* instruction) {
 
 void Block::on_removed_node(Instruction* instruction) { (void)instruction; }
 
+void Block::remove_all_references_in_phis() {
+  size_t index = 0;
+
+  // We have to watch out for iterator invalidation here.
+  while (index < get_uses().size()) {
+    User* user = get_uses()[index].user;
+    if (Phi* phi = cast<Phi>(user)) {
+      phi->remove_incoming(this);
+    } else {
+      index++;
+    }
+  }
+}
+
 Block::~Block() {
   verify(instructions.is_empty(), "Cannot remove non-empty block.");
   verify(!get_function(), "Cannot remove block that is attached to the function.");
@@ -119,26 +133,38 @@ std::string Block::format() const {
   return is_entry ? "entry" : ("block_" + std::to_string(get_display_index()));
 }
 
-void Block::remove_phi_incoming() {
-  size_t index = 0;
-
-  // We have to watch out for iterator invalidation here.
-  while (index < get_uses().size()) {
-    User* user = get_uses()[index].user;
-    if (Phi* phi = cast<Phi>(user)) {
-      phi->remove_incoming(this);
-    } else {
-      index++;
-    }
-  }
-}
-
 void Block::destroy() {
   // If this block is used by branch instructions we cannot remove it. Value destructor will
   // throw an error.
 
-  remove_phi_incoming();
+  remove_all_references_in_phis();
   IntrusiveNode::destroy();
+}
+
+void Block::remove_incoming_block_from_phis(Block* incoming) {
+  for (Instruction& instruction : dont_invalidate_current(*this)) {
+    if (const auto phi = cast<Phi>(instruction)) {
+      if (phi->remove_incoming_opt(incoming)) {
+        // TODO: Remove if empty?
+      }
+    }
+  }
+}
+
+void Block::on_removed_branch_to(Block* to) {
+  // We don't want to do anything if we haven't actually removed CFG edge between `this` and `to`.
+  const auto terminator = get_last_instruction();
+  if (const auto branch = cast<Branch>(terminator)) {
+    if (branch->get_target() == to) {
+      return;
+    }
+  } else if (const auto cond_branch = cast<CondBranch>(terminator)) {
+    if (cond_branch->get_true_target() == to || cond_branch->get_false_target() == to) {
+      return;
+    }
+  }
+
+  to->remove_incoming_block_from_phis(this);
 }
 
 BlockTargets<Block> Block::get_successors() {

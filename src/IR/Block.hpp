@@ -33,6 +33,8 @@ class Block : public Value, public IntrusiveNode<Block, Function> {
   void on_added_node(Instruction* instruction);
   void on_removed_node(Instruction* instruction);
 
+  void remove_all_references_in_phis();
+
 public:
   explicit Block(Context* context)
       : Value(context, Value::Kind::Block, context->get_block_ty()), instructions(this) {}
@@ -81,8 +83,10 @@ public:
 
   std::string format() const override;
 
-  void remove_phi_incoming();
   void destroy();
+
+  void remove_incoming_block_from_phis(Block* incoming);
+  void on_removed_branch_to(Block* to);
 
   BlockTargets<Block> get_successors();
   BlockTargets<const Block> get_successors() const;
