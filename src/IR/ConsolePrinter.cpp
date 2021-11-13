@@ -30,3 +30,5 @@ ConsolePrinter::ConsolePrinter(ConsolePrinter::Variant variant) : variant(varian
   console_colors::ensure_initialized();
   reset();
 }
+
+ConsolePrinter::~ConsolePrinter() { std::cout.flush(); }

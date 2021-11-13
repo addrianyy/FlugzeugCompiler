@@ -30,6 +30,7 @@ private:
 
 public:
   explicit ConsolePrinter(Variant variant);
+  ~ConsolePrinter() override;
 
   void write_string(std::string_view string) override;
 };

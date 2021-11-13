@@ -85,8 +85,15 @@ public:
 
   void destroy();
 
+  /// Remove `incoming` block from all Phis in this block.
   void remove_incoming_block_from_phis(Block* incoming);
+
+  /// Call when branch from `this` to `to` was removed. This function will Phi incoming values in
+  /// `to` when needed.
   void on_removed_branch_to(Block* to);
+
+  bool has_successor(const Block* successor) const;
+  bool has_predecessor(const Block* predecessor) const;
 
   BlockTargets<Block> get_successors();
   BlockTargets<const Block> get_successors() const;

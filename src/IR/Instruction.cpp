@@ -4,6 +4,25 @@
 
 using namespace flugzeug;
 
+template <typename TBlock, typename TInstruction>
+BlockTargets<TBlock> get_targets_generic(TInstruction* instruction) {
+  BlockTargets<TBlock> result;
+  if (const auto bcond = cast<CondBranch>(instruction)) {
+    const auto true_target = bcond->get_true_target();
+    const auto false_target = bcond->get_false_target();
+
+    result.insert(true_target);
+
+    if (true_target != false_target) {
+      result.insert(false_target);
+    }
+  } else if (const auto branch = cast<Branch>(instruction)) {
+    result.insert(branch->get_target());
+  }
+
+  return result;
+}
+
 void Instruction::print(IRPrinter& printer) const {
   auto p = printer.create_line_printer();
   if (!is_void()) {
@@ -57,19 +76,6 @@ void Instruction::replace_instruction_or_uses_and_destroy(Value* new_value) {
   } else {
     replace_uses_and_destroy(new_value);
   }
-}
-
-template <typename TBlock, typename TInstruction>
-BlockTargets<TBlock> get_targets_generic(TInstruction* instruction) {
-  BlockTargets<TBlock> result;
-  if (const auto bcond = cast<CondBranch>(instruction)) {
-    result.insert(bcond->get_true_target());
-    result.insert(bcond->get_false_target());
-  } else if (const auto branch = cast<Branch>(instruction)) {
-    result.insert(branch->get_target());
-  }
-
-  return result;
 }
 
 BlockTargets<Block> Instruction::get_targets() { return get_targets_generic<Block>(this); }

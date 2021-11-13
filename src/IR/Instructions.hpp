@@ -245,7 +245,7 @@ protected:
 class StackAlloc : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::StackAlloc)
 
-  size_t size = 1;
+  size_t size;
 
 public:
   explicit StackAlloc(Context* context, Type* type, size_t size = 1)
@@ -386,11 +386,8 @@ public:
   explicit Phi(Context* context, Type* type) : Instruction(context, Instruction::Kind::Phi, type) {}
   explicit Phi(Context* context, const std::vector<Incoming>& incoming)
       : Phi(context, incoming[0].value->get_type()) {
-    set_operand_count(incoming.size() * 2);
-
-    for (size_t i = 0; i < get_incoming_count(); ++i) {
-      set_operand(get_block_index(i), incoming[i].block);
-      set_operand(get_value_index(i), incoming[i].value);
+    for (const auto& i : incoming) {
+      add_incoming(i);
     }
   }
 

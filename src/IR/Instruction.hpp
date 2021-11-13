@@ -20,6 +20,7 @@ public:
 
   void insert(TBlock* block) {
     verify(target_count < max_targets, "Already filled.");
+
     targets[target_count++] = block;
   }
 
