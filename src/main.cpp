@@ -87,7 +87,7 @@ int main() {
 
   InstructionInserter inserter(entry);
   auto cond = context.get_i1_ty()->get_constant(0); // inserter.compare_eq(param_a, param_b);
-  inserter.cond_branch(cond, merge, if_else);
+  inserter.cond_branch(cond, if_then, if_else);
 
   inserter.set_insertion_block(if_then);
   inserter.branch(merge);
@@ -96,7 +96,7 @@ int main() {
   inserter.branch(merge);
 
   inserter.set_insertion_block(merge);
-  auto res = inserter.phi({{entry, i64->get_constant(1)}, {if_else, i64->get_constant(2)}});
+  auto res = inserter.phi({{if_then, i64->get_constant(1)}, {if_else, i64->get_constant(2)}});
   inserter.ret(res);
 
   //  test_optimization(f);

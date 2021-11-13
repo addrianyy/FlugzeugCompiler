@@ -28,6 +28,15 @@ void ConsolePrinter::write_string(std::string_view string) { std::cout << string
 
 ConsolePrinter::ConsolePrinter(ConsolePrinter::Variant variant) : variant(variant) {
   console_colors::ensure_initialized();
+
+  if (variant == Variant::ColorfulIfSupported) {
+    if (console_colors::are_allowed()) {
+      variant = Variant::Colorful;
+    } else {
+      variant = Variant::Simple;
+    }
+  }
+
   reset();
 }
 

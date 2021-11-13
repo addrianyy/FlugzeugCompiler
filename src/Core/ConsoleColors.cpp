@@ -31,4 +31,7 @@ void console_colors::ensure_initialized() {
 #endif
 }
 
-bool console_colors::are_allowed() { return true; }
+bool console_colors::are_allowed() {
+  // TODO
+  return true;
+}

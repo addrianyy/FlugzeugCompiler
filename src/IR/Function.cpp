@@ -1,9 +1,15 @@
 #include "Function.hpp"
+#include "ConsolePrinter.hpp"
 
 using namespace flugzeug;
 
 void Function::on_added_node(Block* block) {
   block->set_display_index(allocate_block_index());
+
+  if (block->is_entry) {
+    // We cannot check if size() == 0 because it's already updated before calling `on_added_node`.
+    verify(!get_list().get_first(), "Entry block must be first one in the list.");
+  }
 
   for (Instruction& instruction : *block) {
     if (!instruction.is_void()) {
@@ -13,7 +19,12 @@ void Function::on_added_node(Block* block) {
 }
 
 void Function::on_removed_node(Block* block) {
-  verify(block != entry_block, "Cannot remove entry block.");
+  if (block == entry_block) {
+    verify(get_list().is_empty(), "Entry block must be removed last");
+
+    block->is_entry = false;
+    entry_block = nullptr;
+  }
 }
 
 Function::Function(Context* context, Type* return_type, std::string name,
@@ -30,9 +41,20 @@ Function::Function(Context* context, Type* return_type, std::string name,
 }
 
 Function::~Function() {
+  verify(!entry_block, "There cannot be entry block before removing function.");
   verify(blocks.is_empty(), "Block list must be empty before removing function.");
 
   context->decrease_refcount();
+}
+
+void Function::print(bool newline) const {
+  ConsolePrinter printer(ConsolePrinter::Variant::ColorfulIfSupported);
+
+  print(printer);
+
+  if (newline) {
+    printer.newline();
+  }
 }
 
 void Function::print(IRPrinter& printer) const {
@@ -92,34 +114,16 @@ void Function::insert_block(Block* block) {
   blocks.push_back(block);
 }
 
-void Function::set_entry_block(Block* block) {
-  if (entry_block == block) {
-    return;
-  }
-
-  if (entry_block) {
-    entry_block->is_entry = false;
-  }
-
-  if (block) {
-    verify(block->get_function() == this, "Entry block must be inserted.");
-    block->is_entry = true;
-  }
-
-  entry_block = block;
-}
-
 void Function::destroy() {
-  set_entry_block(nullptr);
-
   for (Block& block : *this) {
     while (!block.is_empty()) {
       block.get_first_instruction()->destroy();
     }
   }
 
+  // Remove from last block so entry block will be removed last.
   while (!is_empty()) {
-    get_first_block()->destroy();
+    get_last_block()->destroy();
   }
 
   for (Parameter* param : parameters) {

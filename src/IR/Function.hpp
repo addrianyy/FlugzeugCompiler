@@ -22,10 +22,11 @@ class Function {
 
   Type* const return_type;
   const std::string name;
-
   std::vector<Parameter*> parameters;
 
   BlockList blocks;
+
+  /// Always first block in the list.
   Block* entry_block = nullptr;
 
   size_t next_value_index = 0;
@@ -44,6 +45,7 @@ public:
            const std::vector<Type*>& arguments);
   ~Function();
 
+  void print(bool newline = false) const;
   void print(IRPrinter& printer) const;
 
 #pragma region block_list
@@ -77,8 +79,8 @@ public:
   Parameter* get_parameter(size_t i) { return parameters[i]; }
   const Parameter* get_parameter(size_t i) const { return parameters[i]; }
 
-  Block* get_entry_block() { return entry_block; }
-  const Block* get_entry_block() const { return entry_block; }
+  Block* get_entry_block() { return get_first_block(); }
+  const Block* get_entry_block() const { return get_first_block(); }
 
   bool is_extern() const { return is_empty(); }
 
@@ -86,7 +88,6 @@ public:
 
   Block* create_block();
   void insert_block(Block* block);
-  void set_entry_block(Block* block);
 
   void destroy();
 };

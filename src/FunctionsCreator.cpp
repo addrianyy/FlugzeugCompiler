@@ -37,8 +37,6 @@ std::vector<Function*> create_functions(Context* context) {
     Block* block_5 = f->create_block();
     Block* block_6 = f->create_block();
 
-    f->set_entry_block(entry);
-
     inserter.set_insertion_block(entry);
     auto v1 = inserter.stack_alloc(context->get_i8_ty(), 256);
     auto v2 = inserter.offset(v1, v25);
@@ -87,8 +85,6 @@ std::vector<Function*> create_functions(Context* context) {
 
     Block* entry = f->create_block();
 
-    f->set_entry_block(entry);
-
     inserter.set_insertion_block(entry);
     inserter.ret(v6);
   }
@@ -103,8 +99,6 @@ std::vector<Function*> create_functions(Context* context) {
     Block* block_1 = f->create_block();
     Block* block_2 = f->create_block();
     Block* block_4 = f->create_block();
-
-    f->set_entry_block(entry);
 
     inserter.set_insertion_block(entry);
     inserter.branch(block_1);

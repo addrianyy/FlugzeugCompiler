@@ -8,6 +8,7 @@ public:
   enum class Variant {
     Simple,
     Colorful,
+    ColorfulIfSupported,
   };
 
 private:
