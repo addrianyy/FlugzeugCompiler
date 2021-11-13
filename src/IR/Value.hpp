@@ -6,6 +6,7 @@
 #include <Core/ClassTraits.hpp>
 #include <Core/Iterator.hpp>
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -127,6 +128,8 @@ public:
   bool is_zero() const;
   bool is_one() const;
   bool is_undef() const { return kind == Kind::Undef; }
+
+  std::optional<uint64_t> get_constant_opt() const;
 
   size_t get_user_count() const { return uses.size(); }
   bool is_used() const { return get_user_count() > 0; }

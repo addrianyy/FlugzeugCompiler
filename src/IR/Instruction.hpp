@@ -54,18 +54,16 @@ public:
   Function* get_function();
   const Function* get_function() const;
 
-  void replace_instruction(Instruction* instruction);
   void destroy();
 
-  void replace_uses_and_destroy(Value* new_value) {
-    replace_uses(new_value);
-    destroy();
-  }
+  void replace_instruction_and_destroy(Instruction* instruction);
+  void replace_uses_and_destroy(Value* new_value);
+  void replace_uses_with_constant_and_destroy(uint64_t constant);
 
-  void replace_uses_with_constant_and_destroy(uint64_t constant) {
-    replace_uses_with_constant(constant);
-    destroy();
-  }
+  /// If value is an uninserted instruction then replace it.
+  /// If value is constant/undef/inserted instruction then replace all uses.
+  /// In both cases current instruction will be destroyed.
+  void replace_instruction_or_uses_and_destroy(Value* new_value);
 
   BlockTargets<Block> get_targets();
   BlockTargets<const Block> get_targets() const;

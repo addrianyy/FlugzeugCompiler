@@ -214,28 +214,22 @@ public:
       return nullptr;
     }
 
-    const auto source_type = cast->get_val()->get_type();
-    const uint64_t propagated = propagate_cast(val, source_type, type, cast->get_cast_kind());
+    const uint64_t propagated =
+      propagate_cast(val, cast->get_val()->get_type(), type, cast->get_cast_kind());
 
     return type->get_constant(propagated);
   }
 
   Value* visit_cond_branch(Argument<CondBranch> cond_branch) {
     uint64_t cond;
-    if (!get_constant(cond_branch->get_cond(), cond)) {
-      return nullptr;
-    }
-
-    return new Branch(cond_branch->get_context(), cond_branch->get_target(cond));
+    return get_constant(cond_branch->get_cond(), cond)
+             ? new Branch(cond_branch->get_context(), cond_branch->get_target(cond))
+             : nullptr;
   }
 
   Value* visit_select(Argument<Select> select) {
     uint64_t cond;
-    if (!get_constant(select->get_cond(), cond)) {
-      return nullptr;
-    }
-
-    return select->get_val(cond);
+    return get_constant(select->get_cond(), cond) ? select->get_val(cond) : nullptr;
   }
 
   Value* visit_phi(Argument<Phi> phi) { return nullptr; }
@@ -257,14 +251,8 @@ bool ConstPropagation::run(Function* function) {
 
   for (Block& block : *function) {
     for (Instruction& instruction : dont_invalidate_current(block)) {
-      if (const auto value = constant_propagate(&instruction)) {
-        const auto prop_instruction = cast<Instruction>(value);
-        if (prop_instruction && !prop_instruction->get_block()) {
-          instruction.replace_instruction(prop_instruction);
-        } else {
-          instruction.replace_uses_and_destroy(value);
-        }
-
+      if (const auto propagated = constant_propagate(&instruction)) {
+        instruction.replace_instruction_or_uses_and_destroy(propagated);
         did_something = true;
       }
     }

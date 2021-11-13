@@ -21,17 +21,42 @@ const Function* Instruction::get_function() const {
   return get_block() ? get_block()->get_function() : nullptr;
 }
 
-void Instruction::replace_instruction(Instruction* instruction) {
-  instruction->insert_after(this);
-  replace_uses(instruction);
-  destroy();
-}
-
 void Instruction::destroy() {
   if (!is_void()) {
     replace_uses(get_type()->get_undef());
   }
   IntrusiveNode::destroy();
+}
+
+void Instruction::replace_instruction_and_destroy(Instruction* instruction) {
+  verify(instruction != this, "Cannot replace instruction with itself");
+
+  instruction->insert_after(this);
+  replace_uses(instruction);
+  destroy();
+}
+
+void Instruction::replace_uses_with_constant_and_destroy(uint64_t constant) {
+  replace_uses_with_constant(constant);
+  destroy();
+}
+
+void Instruction::replace_uses_and_destroy(Value* new_value) {
+  verify(new_value != this, "Cannot replace instruction with itself");
+
+  replace_uses(new_value);
+  destroy();
+}
+
+void Instruction::replace_instruction_or_uses_and_destroy(Value* new_value) {
+  verify(new_value != this, "Cannot replace instruction with itself");
+
+  const auto other = cast<Instruction>(new_value);
+  if (other && !other->get_block()) {
+    replace_instruction_and_destroy(other);
+  } else {
+    replace_uses_and_destroy(new_value);
+  }
 }
 
 template <typename TBlock, typename TInstruction>

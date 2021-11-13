@@ -63,13 +63,7 @@ static void test_optimization(Function* function) {
     for (Instruction& instruction : dont_invalidate_current(block)) {
       if (auto binary = cast<BinaryInstr>(&instruction)) {
         if (auto replacement = optimize_binary_instruction(binary)) {
-          const auto i = cast<Instruction>(replacement);
-
-          if (i && !i->get_block()) {
-            binary->replace_instruction(i);
-          } else {
-            binary->replace_uses_and_destroy(replacement);
-          }
+          binary->replace_instruction_or_uses_and_destroy(replacement);
         }
       }
     }

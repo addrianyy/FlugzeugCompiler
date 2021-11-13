@@ -49,6 +49,11 @@ bool Value::is_one() const {
   return c && c->get_constant_u() == 1;
 }
 
+std::optional<uint64_t> Value::get_constant_opt() const {
+  const auto c = cast<Constant>(this);
+  return c ? std::optional(c->get_constant_u()) : std::nullopt;
+}
+
 void Value::replace_uses(Value* new_value) {
   if (this == new_value) {
     return;
