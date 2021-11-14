@@ -156,7 +156,7 @@ int main() {
   PhiToMemory::run(f);
   MemoryToSSA::run(f);
   CFGSimplification::run(f);
-  //  DeadBlockElimination::run(f);
+  DeadBlockElimination::run(f);
 
   ConsolePrinter printer(ConsolePrinter::Variant::Colorful);
   f->print(printer);

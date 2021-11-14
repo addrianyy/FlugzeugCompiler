@@ -11,7 +11,10 @@ User::~User() {
 
   for (Use* use : uses_for_operands) {
     verify(!use->next && !use->previous && !use->valid, "Use is still inserted at destructor");
-    delete use;
+
+    if (use->heap_allocated) {
+      delete use;
+    }
   }
 }
 
@@ -25,6 +28,37 @@ Value* User::get_operand(size_t index) {
 const Value* User::get_operand(size_t index) const {
   verify(index < get_operand_count(), "Tried to use out of bounds operand.");
   return operands[index];
+}
+
+void User::adjust_uses_count(size_t count) {
+  if (count > uses_for_operands.size()) {
+    const auto previous_size = uses_for_operands.size();
+
+    uses_for_operands.resize(count);
+
+    for (size_t i = previous_size; i < count; ++i) {
+      if (i < static_use_count) {
+        Use* use = &static_uses[i];
+
+        use->user = this;
+        use->operand_index = i;
+        use->heap_allocated = false;
+
+        uses_for_operands[i] = use;
+      } else {
+        uses_for_operands[i] = new Use(this, i);
+        uses_for_operands[i]->heap_allocated = true;
+      }
+    }
+  }
+}
+
+void User::reserve_operands(size_t count) {
+  if (count > operands.capacity()) {
+    operands.reserve(count);
+  }
+
+  adjust_uses_count(count);
 }
 
 void User::set_operand_count(size_t count) {
@@ -41,13 +75,7 @@ void User::set_operand_count(size_t count) {
 
   operands.resize(count, nullptr);
 
-  if (count > before_count) {
-    uses_for_operands.resize(count);
-
-    for (size_t i = before_count; i < count; ++i) {
-      uses_for_operands[i] = new Use(this, i);
-    }
-  }
+  adjust_uses_count(count);
 }
 
 void User::remove_phi_incoming_helper(size_t incoming_index) {

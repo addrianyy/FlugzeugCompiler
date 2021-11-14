@@ -389,6 +389,8 @@ public:
   explicit Phi(Context* context, Type* type) : Instruction(context, Instruction::Kind::Phi, type) {}
   explicit Phi(Context* context, const std::vector<Incoming>& incoming)
       : Phi(context, incoming[0].value->get_type()) {
+    reserve_operands(incoming.size());
+
     for (const auto& i : incoming) {
       add_incoming(i);
     }

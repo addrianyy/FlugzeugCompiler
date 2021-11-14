@@ -22,8 +22,10 @@ class Use {
   Use* previous = nullptr;
 
   bool valid = false;
+  bool heap_allocated = false;
 
 public:
+  Use() = default;
   Use(User* user, size_t operand_index) : user(user), operand_index(operand_index) {}
 
   bool is_valid() const { return valid; }

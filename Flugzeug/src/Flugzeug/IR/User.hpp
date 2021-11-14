@@ -14,6 +14,9 @@ class User : public Value {
 
   friend class Value;
 
+  constexpr static size_t static_use_count = 3;
+  Use static_uses[static_use_count]{};
+
   std::vector<Value*> operands;
   std::vector<Use*> uses_for_operands;
 
@@ -51,6 +54,9 @@ protected:
   using Value::Value;
 
   void remove_phi_incoming_helper(size_t incoming_index);
+
+  void adjust_uses_count(size_t count);
+  void reserve_operands(size_t count);
 
   void set_operand_count(size_t count);
   void grow_operand_count(size_t grow);
