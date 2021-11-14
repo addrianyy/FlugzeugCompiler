@@ -3,7 +3,7 @@
 
 namespace dynamic_visitor_detail {
 
-template <typename T> struct VisitedType { using ArgumentType = std::remove_cvref_t<T>; };
+template <typename T> struct VisitedType { using ArgumentType = std::remove_cvref<T>; };
 
 } // namespace dynamic_visitor_detail
 

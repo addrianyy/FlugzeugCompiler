@@ -130,7 +130,7 @@ void Constant::constrain_constant(Type* type, uint64_t c, uint64_t* u, int64_t* 
     }
   } else {
     const auto masked = c & bit_mask;
-    const auto sign_bit = (c & (1 << (bit_size - 1))) != 0;
+    const auto sign_bit = (c & (1ull << (bit_size - 1))) != 0;
 
     if (u) {
       *u = masked;

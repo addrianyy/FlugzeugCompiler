@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.19)
-project(IRDecompiler)
+cmake_minimum_required(VERSION 3.8)
+project(FlugzeugCompiler)
 
 set(CMAKE_CXX_STANDARD 20)
 

@@ -18,18 +18,18 @@ public:
     return c;
   }
 
-  template <typename T> static T propagate_unary(UnaryOp op, T value) {
+  template <typename T> static T propagate_unary(UnaryOp op, uint64_t value) {
     switch (op) {
     case UnaryOp::Neg:
-      return -value;
+      return T(-std::make_signed_t<T>(value));
     case UnaryOp::Not:
-      return ~value;
+      return ~T(value);
     default:
       unreachable();
     }
   }
 
-  template <typename T> static T propagate_binary(T lhs, BinaryOp op, T rhs) {
+  template <typename T> static T propagate_binary(uint64_t lhs, BinaryOp op, uint64_t rhs) {
     static_assert(std::is_unsigned_v<T>);
 
     using Signed = std::make_signed_t<T>;
@@ -72,7 +72,8 @@ public:
     }
   }
 
-  template <typename T> static T propagate_int_compare(T lhs, IntPredicate pred, T rhs) {
+  template <typename T>
+  static bool propagate_int_compare(uint64_t lhs, IntPredicate pred, uint64_t rhs) {
     static_assert(std::is_unsigned_v<T>);
 
     using Signed = std::make_signed_t<T>;
@@ -114,7 +115,7 @@ public:
     const uint64_t from_mask = from_type->get_bit_mask();
     const uint64_t to_mask = to_type->get_bit_mask();
 
-    const bool sign_bit = (from & (1 << (from_type->get_bit_size() - 1))) != 0;
+    const bool sign_bit = (from & (1ull << (from_type->get_bit_size() - 1))) != 0;
 
     switch (cast_kind) {
     case CastKind::Bitcast:
@@ -142,13 +143,13 @@ public:
     const uint64_t propagated = [&]() -> uint64_t {
       switch (type->get_kind()) {
       case Type::Kind::I8:
-        return propagate_unary<uint8_t>(op, val);
+        return uint64_t(propagate_unary<uint8_t>(op, val));
       case Type::Kind::I16:
-        return propagate_unary<uint16_t>(op, val);
+        return uint64_t(propagate_unary<uint16_t>(op, val));
       case Type::Kind::I32:
-        return propagate_unary<uint32_t>(op, val);
+        return uint64_t(propagate_unary<uint32_t>(op, val));
       case Type::Kind::I64:
-        return propagate_unary<uint64_t>(op, val);
+        return uint64_t(propagate_unary<uint64_t>(op, val));
       default:
         unreachable();
       }
@@ -168,13 +169,13 @@ public:
     const uint64_t propagated = [&]() -> uint64_t {
       switch (type->get_kind()) {
       case Type::Kind::I8:
-        return propagate_binary<uint8_t>(lhs, op, rhs);
+        return uint64_t(propagate_binary<uint8_t>(lhs, op, rhs));
       case Type::Kind::I16:
-        return propagate_binary<uint16_t>(lhs, op, rhs);
+        return uint64_t(propagate_binary<uint16_t>(lhs, op, rhs));
       case Type::Kind::I32:
-        return propagate_binary<uint32_t>(lhs, op, rhs);
+        return uint64_t(propagate_binary<uint32_t>(lhs, op, rhs));
       case Type::Kind::I64:
-        return propagate_binary<uint64_t>(lhs, op, rhs);
+        return uint64_t(propagate_binary<uint64_t>(lhs, op, rhs));
       default:
         unreachable();
       }
@@ -191,7 +192,7 @@ public:
 
     const auto pred = int_compare->get_pred();
 
-    const uint64_t propagated = [&]() -> uint64_t {
+    const bool propagated = [&]() -> bool {
       switch (type->get_kind()) {
       case Type::Kind::I8:
         return propagate_int_compare<uint8_t>(lhs, pred, rhs);
