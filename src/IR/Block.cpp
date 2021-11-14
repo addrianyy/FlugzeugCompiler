@@ -163,23 +163,24 @@ void Block::destroy() {
   IntrusiveNode::destroy();
 }
 
-void Block::remove_incoming_block_from_phis(Block* incoming) {
+void Block::remove_incoming_block_from_phis(Block* incoming, bool destroy_empty_phis) {
   if (is_entry_block()) {
     return;
   }
 
-  for (Instruction& instruction : *this) {
+  for (Instruction& instruction : dont_invalidate_current(*this)) {
     if (const auto phi = cast<Phi>(instruction)) {
-      phi->remove_incoming_opt(incoming);
-      // TODO: Remove Phi if empty?
+      if (phi->remove_incoming_opt(incoming) && destroy_empty_phis && phi->is_empty()) {
+        phi->destroy();
+      }
     }
   }
 }
 
-void Block::on_removed_branch_to(Block* to) {
+void Block::on_removed_branch_to(Block* to, bool destroy_empty_phis) {
   // We don't want to do anything if we haven't actually removed CFG edge between `this` and `to`.
   if (!has_successor(to)) {
-    to->remove_incoming_block_from_phis(this);
+    to->remove_incoming_block_from_phis(this, destroy_empty_phis);
   }
 }
 
@@ -196,7 +197,7 @@ bool Block::has_successor(const Block* successor) const {
 }
 
 bool Block::has_predecessor(const Block* predecessor) const {
-  for (auto& user : get_users()) {
+  for (const User& user : get_users()) {
     if (cast<Branch>(user) || cast<CondBranch>(user)) {
       if (cast<Instruction>(user)->get_block() == predecessor) {
         return true;

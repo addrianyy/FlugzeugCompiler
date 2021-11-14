@@ -32,7 +32,7 @@ void User::set_operand_count(size_t count) {
     operands.resize(count, nullptr);
   }
 
-  for (unsigned i = count; i < current_count; ++i) {
+  for (size_t i = count; i < current_count; ++i) {
     verify(get_operand(i) == nullptr, "Tried to remove exsiting operand.");
   }
 

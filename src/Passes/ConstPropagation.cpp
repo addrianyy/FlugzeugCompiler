@@ -270,7 +270,8 @@ bool ConstPropagation::run(Function* function) {
 
         // Update Phis.
         if (removed_branch_target) {
-          block.on_removed_branch_to(removed_branch_target);
+          const bool destroy_empty_phis = removed_branch_target != &block;
+          block.on_removed_branch_to(removed_branch_target, destroy_empty_phis);
         }
 
         did_something = true;

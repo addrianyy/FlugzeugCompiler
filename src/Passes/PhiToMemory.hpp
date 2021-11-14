@@ -2,10 +2,7 @@
 
 namespace flugzeug {
 
-class StackAlloc;
 class Function;
-class Block;
-class Value;
 class Phi;
 
 class PhiToMemory {

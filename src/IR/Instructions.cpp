@@ -26,21 +26,22 @@ bool Phi::index_for_block(const Block* block, size_t& index) const {
 }
 
 Value* Phi::get_single_incoming_value() {
-  if (get_incoming_count() == 1) {
-    return get_incoming_value(0);
-  } else if (get_incoming_count() == 2) {
-    // Self-referential Phi.
-    const auto i0 = get_incoming_value(0);
-    const auto i1 = get_incoming_value(1);
+  Value* single_incoming = nullptr;
 
-    if (i0 == this) {
-      return i1;
-    } else if (i1 == this) {
-      return i0;
+  for (size_t i = 0; i < get_incoming_count(); ++i) {
+    const auto value = get_incoming_value(i);
+    if (value == this) {
+      continue;
     }
+
+    if (single_incoming && value != single_incoming) {
+      return nullptr;
+    }
+
+    single_incoming = value;
   }
 
-  return nullptr;
+  return single_incoming;
 }
 
 bool Phi::remove_incoming_opt(const Block* block) {

@@ -1,14 +1,20 @@
 #include "Value.hpp"
 #include "Block.hpp"
 #include "Instructions.hpp"
-#include "User.hpp"
-
-#include <Core/Error.hpp>
 
 using namespace flugzeug;
 
-void Value::add_use(const Use& use) { uses.push_back(use); }
+void Value::add_use(const Use& use) {
+  // TODO: Store uses in linked list.
+  uses.push_back(use);
+
+  if (use.user != this) {
+    user_count_excluding_self++;
+  }
+}
+
 void Value::remove_use(const Use& use) {
+  // TODO: Store uses in linked list.
   const auto iterator = std::find(uses.begin(), uses.end(), use);
 
   verify(iterator != uses.end(), "Tried to remove invalid use.");
@@ -18,24 +24,25 @@ void Value::remove_use(const Use& use) {
   std::iter_swap(iterator, uses.end() - 1);
 
   uses.erase(uses.end() - 1);
+
+  if (use.user != this) {
+    user_count_excluding_self--;
+  }
 }
 
 Value::Value(Context* context, Value::Kind kind, Type* type)
     : context(context), kind(kind), type(type) {
   verify(type->get_context() == context, "Context mismatch");
-
   context->increase_refcount();
 }
 
 Value::~Value() {
   verify(uses.empty(), "Cannot destroy value that has active users.");
-
   context->decrease_refcount();
 }
 
 void Value::set_display_index(size_t index) {
   verify(!type->is_void(), "Void values cannot have user index.");
-
   display_index = index;
 }
 
@@ -49,9 +56,14 @@ bool Value::is_one() const {
   return c && c->get_constant_u() == 1;
 }
 
-std::optional<uint64_t> Value::get_constant_opt() const {
+std::optional<uint64_t> Value::get_constant_u_opt() const {
   const auto c = cast<Constant>(this);
   return c ? std::optional(c->get_constant_u()) : std::nullopt;
+}
+
+std::optional<int64_t> Value::get_constant_i_opt() const {
+  const auto c = cast<Constant>(this);
+  return c ? std::optional(c->get_constant_i()) : std::nullopt;
 }
 
 void Value::replace_uses(Value* new_value) {
@@ -61,7 +73,7 @@ void Value::replace_uses(Value* new_value) {
 
   verify(new_value->get_type() == get_type(), "Cannot replace value with value of different type");
 
-  const Block* block = cast<Block>(this);
+  const auto block = cast<Block>(this);
 
   while (!uses.empty()) {
     const Use use = uses.back();
@@ -101,18 +113,6 @@ void Value::replace_uses_with_constant(uint64_t constant) {
 }
 
 void Value::replace_uses_with_undef() { replace_uses(get_type()->get_undef()); }
-
-size_t Value::get_user_count_excluding_self() const {
-  size_t count = 0;
-
-  for (const auto& use : uses) {
-    if (use.user != this) {
-      count++;
-    }
-  }
-
-  return count;
-}
 
 void Constant::constrain_constant(Type* type, uint64_t c, uint64_t* u, int64_t* i) {
   const auto bit_size = type->get_bit_size();

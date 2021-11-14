@@ -1,4 +1,5 @@
 #include "PhiToMemory.hpp"
+#include "Utils/SimplifyPhi.hpp"
 
 #include <IR/Function.hpp>
 #include <IR/Instructions.hpp>
@@ -8,8 +9,7 @@
 using namespace flugzeug;
 
 void PhiToMemory::convert_phi_to_memory(Phi* phi) {
-  if (const auto incoming = phi->get_single_incoming_value()) {
-    phi->replace_uses_and_destroy(incoming);
+  if (utils::simplify_phi(phi, true)) {
     return;
   }
 

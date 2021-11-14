@@ -87,6 +87,7 @@ int main() {
   auto merge = f->create_block();
 
   InstructionInserter inserter(entry);
+  inserter.add(param_a, param_b);
   auto cond = context.get_i1_ty()->get_constant(0); // inserter.compare_eq(param_a, param_b);
   inserter.cond_branch(cond, if_then, if_else);
 
@@ -106,6 +107,7 @@ int main() {
   //  DeadCodeElimination::run(f);
 
   ConstPropagation::run(f);
+  DeadCodeElimination::run(f);
   PhiToMemory::run(f);
   MemoryToSSA::run(f);
   DeadBlockElimination::run(f);

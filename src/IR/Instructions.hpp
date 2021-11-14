@@ -392,6 +392,7 @@ public:
   }
 
   size_t get_incoming_count() const { return get_operand_count() / 2; }
+  bool is_empty() const { return get_operand_count() == 0; }
 
   Incoming get_incoming(size_t i) {
     return Incoming{cast<Block>(get_operand(get_block_index(i))), get_operand(get_value_index(i))};

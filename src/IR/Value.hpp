@@ -62,6 +62,7 @@ private:
   Context* const context;
 
   std::vector<Use> uses;
+  size_t user_count_excluding_self = 0;
 
   size_t display_index = 0;
 
@@ -129,13 +130,14 @@ public:
   bool is_one() const;
   bool is_undef() const { return kind == Kind::Undef; }
 
-  std::optional<uint64_t> get_constant_opt() const;
+  std::optional<uint64_t> get_constant_u_opt() const;
+  std::optional<int64_t> get_constant_i_opt() const;
 
   size_t get_user_count() const { return uses.size(); }
+  size_t get_user_count_excluding_self() const { return user_count_excluding_self; }
+
   bool is_used() const { return get_user_count() > 0; }
   bool is_used_once() const { return get_user_count() == 1; }
-
-  size_t get_user_count_excluding_self() const;
 
   virtual std::string format() const;
 

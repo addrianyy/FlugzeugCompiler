@@ -92,11 +92,11 @@ public:
   void destroy();
 
   /// Remove `incoming` block from all Phis in this block.
-  void remove_incoming_block_from_phis(Block* incoming);
+  void remove_incoming_block_from_phis(Block* incoming, bool destroy_empty_phis);
 
   /// Call when branch from `this` to `to` was removed. This function will Phi incoming values in
   /// `to` when needed.
-  void on_removed_branch_to(Block* to);
+  void on_removed_branch_to(Block* to, bool destroy_empty_phis);
 
   bool has_successor(const Block* successor) const;
   bool has_predecessor(const Block* predecessor) const;

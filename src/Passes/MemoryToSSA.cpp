@@ -1,4 +1,6 @@
 #include "MemoryToSSA.hpp"
+#include "Utils/SimplifyPhi.hpp"
+
 #include <Core/Iterator.hpp>
 #include <IR/Function.hpp>
 #include <IR/Instructions.hpp>
@@ -61,9 +63,9 @@ void MemoryToSSA::optimize_stackalloc(StackAlloc* stackalloc) {
   std::unordered_map<Block*, Value*> block_values;
   std::vector<Phi*> inserted_phis;
 
-  const auto dfs = stackalloc->get_block()->get_reachable_blocks(TraversalType::DFS_WithStart);
+  const auto reachable = stackalloc->get_block()->get_reachable_blocks_set(IncludeStart::Yes);
 
-  for (Block* block : dfs) {
+  for (Block* block : reachable) {
     Value* current_value = nullptr;
 
     for (Instruction& instruction : dont_invalidate_current(*block)) {
@@ -114,13 +116,9 @@ void MemoryToSSA::optimize_stackalloc(StackAlloc* stackalloc) {
     }
   }
 
-  // Remove unused Phis and optimize Phis with only one incoming value.
+  // Remove unused Phis and optimize Phis with zero or one incoming values.
   for (Phi* phi : inserted_phis) {
-    if (!phi->is_used() || phi->get_incoming_count() == 0) {
-      phi->destroy();
-    } else if (const auto incoming = phi->get_single_incoming_value()) {
-      phi->replace_uses_and_destroy(incoming);
-    }
+    utils::simplify_phi(phi, true);
   }
 
   stackalloc->destroy();
