@@ -86,66 +86,76 @@ int main() {
   auto param_b = f->get_parameter(1);
 
   auto entry = f->create_block();
-  //  auto if_then = f->create_block();
-  //  auto if_else = f->create_block();
-  //  auto merge = f->create_block();
+  auto if_then = f->create_block();
+  auto if_else = f->create_block();
+  auto merge = f->create_block();
+
+  //  InstructionInserter inserter(entry);
+  //  //  auto cond = inserter.compare_slt(param_a, param_b);
+  //  //  auto tv = i64->get_constant(23);
+  //  //  auto fv = i64->get_constant(88);
+  //  //  auto cc = inserter.select(cond, tv, fv);
+  //  //  auto dv = inserter.compare_ne(cc, fv);
+  //  //  inserter.ret(dv);
+  //
+  //  auto instr = inserter.phi({
+  //    {entry, i64->get_constant(2)},
+  //    {if_then, i64->get_constant(2)},
+  //    {if_else, i64->get_constant(2)},
+  //  });
+  //
+  //  bool x = false;
+  //  for (User& user : dont_invalidate_current(i64->get_constant(2)->get_users())) {
+  //    std::cout << &user << std::endl;
+  //
+  //    if (!x) {
+  //      instr->remove_incoming(entry);
+  //      x = true;
+  //    }
+  //}
+  /*
+  auto instr = inserter.phi({
+    {entry, i64->get_constant(0)},
+  });
+  auto instr2 = inserter.phi({
+    {entry, i64->get_constant(0)},
+  });
+  auto instr3 = inserter.phi({
+    {entry, i64->get_constant(0)},
+  });
+
+  for (User& user : dont_invalidate_current(entry->get_users())) {
+    std::cout << "XDDD\n";
+    std::cout << &user << std::endl;
+
+    if (const auto phi = cast<Phi>(user)) {
+      phi->remove_incoming(entry);
+      std::cout << "AAA\n";
+    }
+  }
+   */
+
+  //  CmpSimplification::run(f);
 
   InstructionInserter inserter(entry);
-  auto cond = inserter.compare_slt(param_a, param_b);
-  auto tv = i64->get_constant(23);
-  auto fv = i64->get_constant(88);
-  auto cc = inserter.select(cond, tv, fv);
-  auto dv = inserter.compare_ne(cc, fv);
-  inserter.ret(dv);
+  auto cond = inserter.compare_eq(param_a, param_b);
+  inserter.cond_branch(cond, if_then, if_else);
 
-  CmpSimplification::run(f);
+  inserter.set_insertion_block(if_then);
+  inserter.branch(merge);
 
-  //  InstructionInserter inserter(entry);
-  //  auto cond = inserter.compare_eq(param_a, param_b);
-  //  inserter.cond_branch(cond, if_then, if_else);
-  //
-  //  inserter.set_insertion_block(if_then);
-  //  inserter.branch(merge);
-  //
-  //  inserter.set_insertion_block(if_else);
-  //  inserter.branch(merge);
-  //
-  //  inserter.set_insertion_block(merge);
-  //  auto res = inserter.phi({{if_then, i64->get_constant(1)}, {if_else, i64->get_constant(2)}});
-  //  inserter.ret(res);
+  inserter.set_insertion_block(if_else);
+  inserter.branch(merge);
 
-  //  auto param_a = f->get_parameter(0);
-  //  auto param_b = f->get_parameter(1);
-  //
-  //  auto one = i64->get_constant(1);
-  //  auto two = i64->get_constant(2);
-  //  auto three = i64->get_constant(3);
-  //  auto four = i64->get_constant(4);
-  //  auto five = i64->get_constant(5);
-  //
-  //  auto entry = f->create_block();
-  //  auto x = f->create_block();
-  //  auto y = f->create_block();
-  //
-  //  InstructionInserter inserter(entry);
-  //  inserter.add(param_a, one);
-  //  inserter.add(param_b, one);
-  //  inserter.branch(x);
-  //
-  //  inserter.set_insertion_block(x);
-  //  inserter.add(param_a, two);
-  //  inserter.add(param_b, two);
-  //  inserter.branch(y);
-  //
-  //  inserter.set_insertion_block(y);
-  //  inserter.add(param_a, three);
-  //  inserter.add(param_b, three);
-  //  inserter.ret(four);
+  inserter.set_insertion_block(merge);
+  auto res = inserter.phi({{if_then, i64->get_constant(1)}, {if_else, i64->get_constant(2)}});
+  inserter.ret(res);
 
-  //  ConstPropagation::run(f);
-  //  DeadCodeElimination::run(f);
-  //  PhiToMemory::run(f);
-  //  MemoryToSSA::run(f);
+  ConstPropagation::run(f);
+  DeadCodeElimination::run(f);
+  PhiToMemory::run(f);
+  MemoryToSSA::run(f);
+  CFGSimplification::run(f);
   //  DeadBlockElimination::run(f);
 
   ConsolePrinter printer(ConsolePrinter::Variant::Colorful);

@@ -53,17 +53,8 @@ bool Phi::index_for_block(const Block* block, size_t& index) const {
 }
 
 void Phi::remove_incoming_by_index(size_t index) {
-  const size_t last_index = get_incoming_count() - 1;
-
-  if (index != last_index) {
-    set_operand(get_block_index(index), get_operand(get_block_index(last_index)));
-    set_operand(get_value_index(index), get_operand(get_value_index(last_index)));
-  }
-
-  // Remove last entry.
-  set_operand(get_block_index(last_index), nullptr);
-  set_operand(get_value_index(last_index), nullptr);
-  set_operand_count(get_operand_count() - 2);
+  // This needs special handling in User class.
+  remove_phi_incoming_helper(index);
 }
 
 Value* Phi::get_single_incoming_value() {

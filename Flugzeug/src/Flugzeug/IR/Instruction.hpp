@@ -56,8 +56,7 @@ public:
   const Function* get_function() const;
 
   void destroy();
-
-  void destroy_if_unused();
+  bool destroy_if_unused();
 
   void replace_instruction_and_destroy(Instruction* instruction);
   void replace_uses_and_destroy(Value* new_value);

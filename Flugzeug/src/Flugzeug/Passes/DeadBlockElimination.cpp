@@ -22,20 +22,11 @@ bool DeadBlockElimination::run(Function* function) {
       // Remove all instructions from this block.
       block.clear();
 
-      // Remove all users of the instruction. We need to watch out for iterator invalidation
-      // in users list.
-      while (block.is_used()) {
-        User& user = *block.get_users().begin();
-
-        if (const auto phi = cast<Phi>(user)) {
-          // Phis would be handled by block.destroy() anyway but we need to do this here
-          // because of iterator invalidation...
-          phi->remove_incoming(&block);
-        } else if (cast<Branch>(user) || cast<CondBranch>(user)) {
+      // Remove branches to this block (they are in dead blocks anyway).
+      for (User& user : dont_invalidate_current(block.get_users())) {
+        if (cast<Branch>(user) || cast<CondBranch>(user)) {
           // These branches are in dead blocks so we can remove them.
           cast<Instruction>(user)->destroy();
-        } else {
-          unreachable();
         }
       }
 

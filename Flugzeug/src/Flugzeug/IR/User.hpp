@@ -1,4 +1,5 @@
 #pragma once
+#include "Use.hpp"
 #include "Value.hpp"
 
 #include <Flugzeug/Core/ClassTraits.hpp>
@@ -14,6 +15,7 @@ class User : public Value {
   friend class Value;
 
   std::vector<Value*> operands;
+  std::vector<Use*> uses_for_operands;
 
   template <typename TOperand> class OperandIteratorInternal {
     TOperand* const* current;
@@ -47,6 +49,8 @@ class User : public Value {
 
 protected:
   using Value::Value;
+
+  void remove_phi_incoming_helper(size_t incoming_index);
 
   void set_operand_count(size_t count);
   void grow_operand_count(size_t grow);

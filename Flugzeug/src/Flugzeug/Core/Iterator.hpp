@@ -1,4 +1,5 @@
 #pragma once
+#include <type_traits>
 
 template <typename T> class IteratorRange {
   T begin_it;
@@ -59,7 +60,14 @@ public:
   bool operator!=(const NonInvalidatingIterator& rhs) const { return current != rhs.current; }
 };
 
-template <typename T>
+template <typename T, typename std::enable_if_t<std::is_trivially_copyable_v<T>, int> = 0>
+inline IteratorRange<NonInvalidatingIterator<typename T::iterator>>
+dont_invalidate_current(T object) {
+  return IteratorRange(NonInvalidatingIterator(object.begin()),
+                       NonInvalidatingIterator(object.end()));
+}
+
+template <typename T, typename std::enable_if_t<!std::is_trivially_copyable_v<T>, int> = 0>
 inline IteratorRange<NonInvalidatingIterator<typename T::iterator>>
 dont_invalidate_current(T& object) {
   return IteratorRange(NonInvalidatingIterator(object.begin()),
@@ -68,7 +76,7 @@ dont_invalidate_current(T& object) {
 
 template <typename T>
 inline IteratorRange<NonInvalidatingIterator<typename T::const_iterator>>
-dont_invalidate_current(const T& object) {
+dont_invalidate_current(const T&& object) {
   return IteratorRange(NonInvalidatingIterator(object.begin()),
                        NonInvalidatingIterator(object.end()));
 }

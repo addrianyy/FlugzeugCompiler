@@ -1,6 +1,7 @@
 #pragma once
 #include "Context.hpp"
 #include "Type.hpp"
+#include "Use.hpp"
 
 #include <Flugzeug/Core/Casting.hpp>
 #include <Flugzeug/Core/ClassTraits.hpp>
@@ -47,61 +48,20 @@ public:
 private:
   friend class User;
 
-  struct Use {
-    User* user = nullptr;
-    size_t operand_index = 0;
-
-    bool operator==(const Use& other) const {
-      return user == other.user && operand_index == other.operand_index;
-    }
-  };
-
   const Kind kind;
 
   Type* const type;
   Context* const context;
 
-  std::vector<Use> uses;
+  ValueUses uses;
   size_t user_count_excluding_self = 0;
 
   size_t display_index = 0;
 
-  template <typename TUse, typename TUser> class UserIteratorInternal {
-    TUse* current;
-
-  public:
-    using iterator_category = std::forward_iterator_tag;
-    using difference_type = std::ptrdiff_t;
-    using value_type = TUser;
-    using pointer = value_type*;
-    using reference = value_type&;
-
-    explicit UserIteratorInternal(TUse* current) : current(current) {}
-
-    UserIteratorInternal& operator++() {
-      current++;
-      return *this;
-    }
-
-    UserIteratorInternal operator++(int) {
-      const auto before = *this;
-      ++(*this);
-      return before;
-    }
-
-    reference operator*() const { return *current->user; }
-    pointer operator->() const { return current->user; }
-
-    bool operator==(const UserIteratorInternal& rhs) const { return current == rhs.current; }
-    bool operator!=(const UserIteratorInternal& rhs) const { return current != rhs.current; }
-  };
-
-  void add_use(const Use& use);
-  void remove_use(const Use& use);
+  void add_use(Use* use);
+  void remove_use(Use* use);
 
 protected:
-  const std::vector<Use>& get_uses() { return uses; }
-
   Value(Context* context, Kind kind, Type* type);
 
 public:
@@ -133,7 +93,7 @@ public:
   std::optional<uint64_t> get_constant_u_opt() const;
   std::optional<int64_t> get_constant_i_opt() const;
 
-  size_t get_user_count() const { return uses.size(); }
+  size_t get_user_count() const { return uses.get_size(); }
   size_t get_user_count_excluding_self() const { return user_count_excluding_self; }
 
   bool is_used() const { return get_user_count() > 0; }
@@ -141,15 +101,12 @@ public:
 
   virtual std::string format() const;
 
-  using UserIterator = UserIteratorInternal<Use, User>;
-  using ConstUserIterator = UserIteratorInternal<const Use, const User>;
+  using UserIterator = ValueUses::iterator;
+  using ConstUserIterator = ValueUses::const_iterator;
 
-  IteratorRange<UserIterator> get_users() {
-    return IteratorRange(UserIterator(uses.data()), UserIterator(uses.data() + uses.size()));
-  }
+  IteratorRange<UserIterator> get_users() { return IteratorRange(uses.begin(), uses.end()); }
   IteratorRange<ConstUserIterator> get_users() const {
-    return IteratorRange(ConstUserIterator(uses.data()),
-                         ConstUserIterator(uses.data() + uses.size()));
+    return IteratorRange(ConstUserIterator(uses.begin()), ConstUserIterator(uses.end()));
   }
 };
 

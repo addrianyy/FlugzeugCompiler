@@ -4,28 +4,18 @@
 
 using namespace flugzeug;
 
-void Value::add_use(const Use& use) {
-  // TODO: Store uses in linked list.
-  uses.push_back(use);
+void Value::add_use(Use* use) {
+  uses.add_use(use);
 
-  if (use.user != this) {
+  if (use->get_user() != this) {
     user_count_excluding_self++;
   }
 }
 
-void Value::remove_use(const Use& use) {
-  // TODO: Store uses in linked list.
-  const auto iterator = std::find(uses.begin(), uses.end(), use);
+void Value::remove_use(Use* use) {
+  uses.remove_use(use);
 
-  verify(iterator != uses.end(), "Tried to remove invalid use.");
-
-  // We don't care about the order so we move the element to the end and remove
-  // it. This avoids copying vector's tail.
-  std::iter_swap(iterator, uses.end() - 1);
-
-  uses.erase(uses.end() - 1);
-
-  if (use.user != this) {
+  if (use->get_user() != this) {
     user_count_excluding_self--;
   }
 }
@@ -37,7 +27,7 @@ Value::Value(Context* context, Value::Kind kind, Type* type)
 }
 
 Value::~Value() {
-  verify(uses.empty(), "Cannot destroy value that has active users.");
+  verify(uses.get_size() == 0, "Cannot destroy value that has active users.");
   context->decrease_refcount();
 }
 
@@ -75,12 +65,13 @@ void Value::replace_uses(Value* new_value) {
 
   const auto block = cast<Block>(this);
 
-  while (!uses.empty()) {
-    const Use use = uses.back();
-    use.user->set_operand(use.operand_index, new_value);
+  while (!uses.is_empty()) {
+    Use* use = uses.get_first();
+    User* user = use->get_user();
+    user->set_operand(use->get_operand_index(), new_value);
 
     if (block) {
-      if (const auto phi = cast<Phi>(use.user)) {
+      if (const auto phi = cast<Phi>(user)) {
         // Make sure there is only one entry for this block in Phi instruction.
         // If there is more then one entry then make sure value is common and remove redundant ones.
 

@@ -133,16 +133,9 @@ void Block::on_added_node(Instruction* instruction) {
 void Block::on_removed_node(Instruction* instruction) { (void)instruction; }
 
 void Block::remove_all_references_in_phis() {
-  const auto& uses = get_uses();
-
-  size_t index = 0;
-
-  // We have to watch out for iterator invalidation here.
-  while (index < uses.size()) {
-    if (const auto phi = cast<Phi>(uses[index].user)) {
+  for (User& user : dont_invalidate_current(get_users())) {
+    if (const auto phi = cast<Phi>(user)) {
       phi->remove_incoming(this);
-    } else {
-      index++;
     }
   }
 }
