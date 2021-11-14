@@ -8,7 +8,7 @@ using namespace flugzeug;
 class Propagator : public InstructionVisitor {
 public:
   Type* type;
-  Block* removed_branch_target = nullptr;
+  bool& did_something;
 
   static bool get_constant(const Value* value, uint64_t& result) {
     const auto c = cast<Constant>(value);
@@ -130,7 +130,7 @@ public:
     }
   }
 
-  explicit Propagator(Type* type) : type(type) {}
+  explicit Propagator(Type* type, bool& did_something) : type(type), did_something(did_something) {}
 
   Value* visit_unary_instr(Argument<UnaryInstr> unary) {
     uint64_t val;
@@ -228,10 +228,23 @@ public:
       return nullptr;
     }
 
-    // We may have modified CFG so we need to update Phis.
-    removed_branch_target = cond_branch->get_target(!cond);
+    // We will manually replace instruction here and not rely on run().
+    // This is done here because we need to fix up Phis afterwards.
 
-    return new Branch(cond_branch->get_context(), cond_branch->get_target(cond));
+    const auto actual_target = cond_branch->get_target(cond);
+    const auto removed_target = cond_branch->get_target(!cond);
+
+    const auto block = cond_branch->get_block();
+    const auto branch = new Branch(cond_branch->get_context(), actual_target);
+
+    cond_branch->replace_instruction_and_destroy(branch);
+
+    const bool destroy_empty_phis = removed_target != block;
+    block->on_removed_branch_to(removed_target, destroy_empty_phis);
+
+    did_something = true;
+
+    return nullptr;
   }
 
   Value* visit_select(Argument<Select> select) {
@@ -248,15 +261,9 @@ public:
   Value* visit_offset(Argument<Offset> offset) { return nullptr; }
 };
 
-Value* ConstPropagation::constant_propagate(Instruction* instruction,
-                                            Block*& removed_branch_target) {
-  Propagator propagator(instruction->get_type());
-
-  const auto replacement = visit_instruction(instruction, propagator);
-
-  removed_branch_target = propagator.removed_branch_target;
-
-  return replacement;
+Value* ConstPropagation::constant_propagate(Instruction* instruction, bool& did_something) {
+  Propagator propagator(instruction->get_type(), did_something);
+  return visit_instruction(instruction, propagator);
 }
 
 bool ConstPropagation::run(Function* function) {
@@ -264,17 +271,8 @@ bool ConstPropagation::run(Function* function) {
 
   for (Block& block : *function) {
     for (Instruction& instruction : dont_invalidate_current(block)) {
-      Block* removed_branch_target = nullptr;
-
-      if (const auto propagated = constant_propagate(&instruction, removed_branch_target)) {
+      if (const auto propagated = constant_propagate(&instruction, did_something)) {
         instruction.replace_instruction_or_uses_and_destroy(propagated);
-
-        // Update Phis.
-        if (removed_branch_target) {
-          const bool destroy_empty_phis = removed_branch_target != &block;
-          block.on_removed_branch_to(removed_branch_target, destroy_empty_phis);
-        }
-
         did_something = true;
       }
     }

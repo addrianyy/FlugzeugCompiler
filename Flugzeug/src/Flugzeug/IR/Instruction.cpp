@@ -42,7 +42,7 @@ const Function* Instruction::get_function() const {
 
 void Instruction::destroy() {
   if (!is_void()) {
-    replace_uses(get_type()->get_undef());
+    replace_uses_with_undef();
   }
   IntrusiveNode::destroy();
 }

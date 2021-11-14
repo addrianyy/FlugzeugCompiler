@@ -163,11 +163,7 @@ class Constant : public Value {
 
   static void constrain_constant(Type* type, uint64_t c, uint64_t* u, int64_t* i);
 
-  void initialize_constant(uint64_t c);
-
-  Constant(Context* context, Type* type, uint64_t constant) : Value(context, Kind::Constant, type) {
-    initialize_constant(constant);
-  }
+  Constant(Context* context, Type* type, uint64_t constant);
 
 public:
   uint64_t get_constant_u() const { return constant_u; }

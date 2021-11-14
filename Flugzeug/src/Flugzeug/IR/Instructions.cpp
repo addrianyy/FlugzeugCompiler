@@ -65,7 +65,6 @@ bool Phi::remove_incoming_opt(const Block* block) {
   }
 
   remove_incoming_by_index(index);
-
   return true;
 }
 

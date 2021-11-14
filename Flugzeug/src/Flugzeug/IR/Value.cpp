@@ -96,7 +96,7 @@ void Value::replace_uses(Value* new_value) {
               previous = incoming.value;
             }
 
-            verify(previous == incoming.value, "Phi mismatched values");
+            verify(previous == incoming.value, "Phi value isn't common for the same blocks");
           }
         }
 
@@ -142,8 +142,9 @@ void Constant::constrain_constant(Type* type, uint64_t c, uint64_t* u, int64_t* 
   }
 }
 
-void Constant::initialize_constant(uint64_t c) {
-  constrain_constant(get_type(), c, &constant_u, &constant_i);
+Constant::Constant(Context* context, Type* type, uint64_t constant)
+    : Value(context, Kind::Constant, type) {
+  constrain_constant(type, constant, &constant_u, &constant_i);
 }
 
 std::string Value::format() const { return "v" + std::to_string(display_index); }
