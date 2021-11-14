@@ -47,6 +47,12 @@ void Instruction::destroy() {
   IntrusiveNode::destroy();
 }
 
+void Instruction::destroy_if_unused() {
+  if (get_user_count_excluding_self() == 0) {
+    destroy();
+  }
+}
+
 void Instruction::replace_instruction_and_destroy(Instruction* instruction) {
   verify(instruction != this, "Cannot replace instruction with itself");
 

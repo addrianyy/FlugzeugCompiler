@@ -57,6 +57,8 @@ public:
 
   void destroy();
 
+  void destroy_if_unused();
+
   void replace_instruction_and_destroy(Instruction* instruction);
   void replace_uses_and_destroy(Value* new_value);
   void replace_uses_with_constant_and_destroy(uint64_t constant);

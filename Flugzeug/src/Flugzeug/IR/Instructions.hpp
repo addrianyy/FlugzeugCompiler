@@ -127,6 +127,8 @@ public:
   void set_lhs(Value* lhs) { return set_operand(0, lhs); }
   void set_rhs(Value* rhs) { return set_operand(1, rhs); }
 
+  static IntPredicate inverted_predicate(IntPredicate pred);
+
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };

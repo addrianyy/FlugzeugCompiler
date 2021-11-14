@@ -73,6 +73,8 @@ static void test_optimization(Function* function) {
   }
 }
 
+#include <Flugzeug/Passes/CmpSimplification.hpp>
+
 int main() {
   Context context;
 
@@ -84,23 +86,33 @@ int main() {
   auto param_b = f->get_parameter(1);
 
   auto entry = f->create_block();
-  auto if_then = f->create_block();
-  auto if_else = f->create_block();
-  auto merge = f->create_block();
+  //  auto if_then = f->create_block();
+  //  auto if_else = f->create_block();
+  //  auto merge = f->create_block();
 
   InstructionInserter inserter(entry);
-  auto cond = inserter.compare_eq(param_a, param_b);
-  inserter.cond_branch(cond, if_then, if_else);
+  auto cond = inserter.compare_slt(param_a, param_b);
+  auto tv = i64->get_constant(23);
+  auto fv = i64->get_constant(88);
+  auto cc = inserter.select(cond, tv, fv);
+  auto dv = inserter.compare_ne(cc, fv);
+  inserter.ret(dv);
 
-  inserter.set_insertion_block(if_then);
-  inserter.branch(merge);
+  CmpSimplification::run(f);
 
-  inserter.set_insertion_block(if_else);
-  inserter.branch(merge);
-
-  inserter.set_insertion_block(merge);
-  auto res = inserter.phi({{if_then, i64->get_constant(1)}, {if_else, i64->get_constant(2)}});
-  inserter.ret(res);
+  //  InstructionInserter inserter(entry);
+  //  auto cond = inserter.compare_eq(param_a, param_b);
+  //  inserter.cond_branch(cond, if_then, if_else);
+  //
+  //  inserter.set_insertion_block(if_then);
+  //  inserter.branch(merge);
+  //
+  //  inserter.set_insertion_block(if_else);
+  //  inserter.branch(merge);
+  //
+  //  inserter.set_insertion_block(merge);
+  //  auto res = inserter.phi({{if_then, i64->get_constant(1)}, {if_else, i64->get_constant(2)}});
+  //  inserter.ret(res);
 
   //  auto param_a = f->get_parameter(0);
   //  auto param_b = f->get_parameter(1);
@@ -135,9 +147,6 @@ int main() {
   //  PhiToMemory::run(f);
   //  MemoryToSSA::run(f);
   //  DeadBlockElimination::run(f);
-
-  CFGSimplification::run(f);
-  DeadBlockElimination::run(f);
 
   ConsolePrinter printer(ConsolePrinter::Variant::Colorful);
   f->print(printer);

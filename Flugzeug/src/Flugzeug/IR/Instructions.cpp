@@ -3,6 +3,33 @@
 
 using namespace flugzeug;
 
+IntPredicate IntCompare::inverted_predicate(IntPredicate pred) {
+  switch (pred) {
+  case IntPredicate::Equal:
+    return IntPredicate::NotEqual;
+  case IntPredicate::NotEqual:
+    return IntPredicate::Equal;
+  case IntPredicate::GtS:
+    return IntPredicate::LteS;
+  case IntPredicate::GteS:
+    return IntPredicate::LtS;
+  case IntPredicate::GtU:
+    return IntPredicate::LteU;
+  case IntPredicate::GteU:
+    return IntPredicate::LtU;
+  case IntPredicate::LtS:
+    return IntPredicate::GteS;
+  case IntPredicate::LteS:
+    return IntPredicate::GtS;
+  case IntPredicate::LtU:
+    return IntPredicate::GteU;
+  case IntPredicate::LteU:
+    return IntPredicate::GtU;
+  default:
+    unreachable();
+  }
+}
+
 Call::Call(Context* context, Function* function, const std::vector<Value*>& arguments)
     : Instruction(context, Value::Kind::Call, function->get_return_type()), target(function) {
   set_operand_count(arguments.size());
