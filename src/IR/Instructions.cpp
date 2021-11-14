@@ -25,6 +25,20 @@ bool Phi::index_for_block(const Block* block, size_t& index) const {
   return false;
 }
 
+void Phi::remove_incoming_by_index(size_t index) {
+  const size_t last_index = get_incoming_count() - 1;
+
+  if (index != last_index) {
+    set_operand(get_block_index(index), get_operand(get_block_index(last_index)));
+    set_operand(get_value_index(index), get_operand(get_value_index(last_index)));
+  }
+
+  // Remove last entry.
+  set_operand(get_block_index(last_index), nullptr);
+  set_operand(get_value_index(last_index), nullptr);
+  set_operand_count(get_operand_count() - 2);
+}
+
 Value* Phi::get_single_incoming_value() {
   Value* single_incoming = nullptr;
 
@@ -50,17 +64,7 @@ bool Phi::remove_incoming_opt(const Block* block) {
     return false;
   }
 
-  const size_t last_index = get_incoming_count() - 1;
-
-  if (index != last_index) {
-    set_operand(get_block_index(index), get_operand(get_block_index(last_index)));
-    set_operand(get_value_index(index), get_operand(get_value_index(last_index)));
-  }
-
-  // Remove last entry.
-  set_operand(get_block_index(last_index), nullptr);
-  set_operand(get_value_index(last_index), nullptr);
-  set_operand_count(get_operand_count() - 2);
+  remove_incoming_by_index(index);
 
   return true;
 }
@@ -104,15 +108,21 @@ bool Phi::replace_incoming_block_opt(const Block* old_incoming, Block* new_incom
     return false;
   }
 
-  size_t index;
-  if (!index_for_block(old_incoming, index)) {
+  size_t old_incoming_index;
+  if (!index_for_block(old_incoming, old_incoming_index)) {
     return false;
   }
 
-  size_t tmp;
-  verify(!index_for_block(new_incoming, tmp), "Cannot duplicate blocks in Phi.");
+  size_t new_incoming_index;
+  if (index_for_block(new_incoming, new_incoming_index)) {
+    verify(get_operand(get_value_index(new_incoming_index)) ==
+             get_operand(get_value_index(old_incoming_index)),
+           "Cannot duplicate blocks in Phi.");
+    remove_incoming_by_index(old_incoming_index);
+    return true;
+  }
 
-  set_operand(get_block_index(index), new_incoming);
+  set_operand(get_block_index(old_incoming_index), new_incoming);
   return true;
 }
 

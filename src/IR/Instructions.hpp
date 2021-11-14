@@ -371,6 +371,7 @@ class Phi : public Instruction {
   static inline size_t get_value_index(size_t i) { return i * 2 + 1; }
 
   bool index_for_block(const Block* block, size_t& index) const;
+  void remove_incoming_by_index(size_t index);
 
 public:
   struct Incoming {
