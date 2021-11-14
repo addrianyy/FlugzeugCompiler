@@ -6,6 +6,26 @@
 
 using namespace flugzeug;
 
+template <typename TBlock> TBlock* get_single_predecessor_generic(TBlock* block) {
+  TBlock* predecessor = nullptr;
+
+  for (auto& user : block->get_users()) {
+    if (cast<Branch>(user) || cast<CondBranch>(user)) {
+      const auto user_block = cast<Instruction>(user)->get_block();
+
+      if (!predecessor) {
+        predecessor = user_block;
+      }
+
+      if (predecessor != user_block) {
+        return nullptr;
+      }
+    }
+  }
+
+  return predecessor;
+}
+
 template <typename TBlock> std::unordered_set<TBlock*> get_predecessors_generic(TBlock* block) {
   std::unordered_set<TBlock*> predecessors;
   predecessors.reserve(block->get_user_count());
@@ -163,6 +183,18 @@ void Block::destroy() {
   IntrusiveNode::destroy();
 }
 
+void Block::replace_incoming_blocks_in_phis(const Block* old_incoming, Block* new_incoming) {
+  if (is_entry_block()) {
+    return;
+  }
+
+  for (Instruction& instruction : *this) {
+    if (const auto phi = cast<Phi>(instruction)) {
+      phi->replace_incoming_block_opt(old_incoming, new_incoming);
+    }
+  }
+}
+
 void Block::remove_incoming_block_from_phis(Block* incoming, bool destroy_empty_phis) {
   if (is_entry_block()) {
     return;
@@ -206,6 +238,12 @@ bool Block::has_predecessor(const Block* predecessor) const {
   }
 
   return false;
+}
+
+Block* Block::get_single_predecessor() { return get_single_predecessor_generic<Block>(this); }
+
+const Block* Block::get_single_predecessor() const {
+  return get_single_predecessor_generic<const Block>(this);
 }
 
 BlockTargets<Block> Block::get_successors() {

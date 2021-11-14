@@ -91,6 +91,8 @@ public:
   void clear();
   void destroy();
 
+  void replace_incoming_blocks_in_phis(const Block* old_incoming, Block* new_incoming);
+
   /// Remove `incoming` block from all Phis in this block.
   void remove_incoming_block_from_phis(Block* incoming, bool destroy_empty_phis);
 
@@ -100,6 +102,9 @@ public:
 
   bool has_successor(const Block* successor) const;
   bool has_predecessor(const Block* predecessor) const;
+
+  Block* get_single_predecessor();
+  const Block* get_single_predecessor() const;
 
   BlockTargets<Block> get_successors();
   BlockTargets<const Block> get_successors() const;

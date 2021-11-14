@@ -98,3 +98,29 @@ const Value* Phi::get_incoming_by_block(const Block* block) const {
   }
   return get_operand(get_value_index(index));
 }
+
+bool Phi::replace_incoming_block_opt(const Block* old_incoming, Block* new_incoming) {
+  if (old_incoming == new_incoming) {
+    return false;
+  }
+
+  size_t index;
+  if (!index_for_block(old_incoming, index)) {
+    return false;
+  }
+
+  size_t tmp;
+  verify(!index_for_block(new_incoming, tmp), "Cannot duplicate blocks in Phi.");
+
+  set_operand(get_block_index(index), new_incoming);
+  return true;
+}
+
+void Phi::replace_incoming_block(const Block* old_incoming, Block* new_incoming) {
+  if (old_incoming == new_incoming) {
+    return;
+  }
+
+  verify(replace_incoming_block_opt(old_incoming, new_incoming),
+         "Unknown block passed to replace incoming");
+}

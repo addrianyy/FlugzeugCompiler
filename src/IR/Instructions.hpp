@@ -412,6 +412,9 @@ public:
   void add_incoming(Block* block, Value* value);
   void add_incoming(const Incoming& incoming) { add_incoming(incoming.block, incoming.value); }
 
+  bool replace_incoming_block_opt(const Block* old_incoming, Block* new_incoming);
+  void replace_incoming_block(const Block* old_incoming, Block* new_incoming);
+
   Value* get_incoming_by_block(const Block* block);
   const Value* get_incoming_by_block(const Block* block) const;
 
