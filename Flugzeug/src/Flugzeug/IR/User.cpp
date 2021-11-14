@@ -41,7 +41,7 @@ void User::adjust_uses_count(size_t count) {
         Use* use = &static_uses[i];
 
         use->user = this;
-        use->operand_index = i;
+        use->operand_index = uint32_t(i);
         use->heap_allocated = false;
 
         uses_for_operands[i] = use;
@@ -108,7 +108,7 @@ void User::remove_phi_incoming_helper(size_t incoming_index) {
     uses_for_operands[get_operand_count() - 1] = saved_u2;
 
     for (size_t i = start_operand; i < get_operand_count(); ++i) {
-      uses_for_operands[i]->operand_index = i;
+      uses_for_operands[i]->operand_index = uint32_t(i);
     }
   }
 

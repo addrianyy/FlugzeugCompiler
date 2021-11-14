@@ -16,21 +16,22 @@ class Use {
   friend class User;
 
   User* user = nullptr;
-  size_t operand_index = 0;
 
   Use* next = nullptr;
   Use* previous = nullptr;
+
+  uint32_t operand_index = 0;
 
   bool valid = false;
   bool heap_allocated = false;
 
 public:
   Use() = default;
-  Use(User* user, size_t operand_index) : user(user), operand_index(operand_index) {}
+  Use(User* user, size_t operand_index) : user(user), operand_index(uint32_t(operand_index)) {}
 
   bool is_valid() const { return valid; }
 
-  size_t get_operand_index() const { return operand_index; }
+  size_t get_operand_index() const { return size_t(operand_index); }
 
   User* get_user() { return user; }
   const User* get_user() const { return user; }
