@@ -97,7 +97,8 @@ void User::remove_phi_incoming_helper(size_t incoming_index) {
 
     const auto offset = std::ptrdiff_t(start_operand);
     std::copy(operands.begin() + offset + 2, operands.end(), operands.begin() + offset);
-    std::copy(uses_for_operands.begin() + offset + 2, uses_for_operands.end(),
+    std::copy(uses_for_operands.begin() + offset + 2,
+              uses_for_operands.begin() + std::ptrdiff_t(get_operand_count()),
               uses_for_operands.begin() + offset);
 
     operands[get_operand_count() - 2] = nullptr;
