@@ -9,10 +9,20 @@ using namespace flugzeug;
 bool CmpSimplification::simplify_cmp(IntCompare* cmp) {
   // In sequence of `cmp`, `select`, `cmp` we are matching on last compare.
 
-  const auto select = cast<Select>(cmp->get_lhs());
-  const auto compared_to = cast<Constant>(cmp->get_rhs());
-  if (!select || !compared_to) {
+  const IntPredicate pred = cmp->get_pred();
+  if (pred != IntPredicate::Equal && pred != IntPredicate::NotEqual) {
     return false;
+  }
+
+  // Order doesn't matter because we care only about EQ na NE predicates.
+  auto select = cast<Select>(cmp->get_lhs());
+  auto compared_to = cast<Constant>(cmp->get_rhs());
+  if (!select || !compared_to) {
+    select = cast<Select>(cmp->get_rhs());
+    compared_to = cast<Constant>(cmp->get_lhs());
+    if (!select || !compared_to) {
+      return false;
+    }
   }
 
   const auto select_true = cast<Constant>(select->get_true_val());
@@ -28,7 +38,6 @@ bool CmpSimplification::simplify_cmp(IntCompare* cmp) {
   // 1. second `cmp` result ==  first `cmp` result. (inverted = false)
   // 2. second `cmp` result == !first `cmp` result. (inverted = true)
   // 3. `cmps` are not corelated (in this case we exit).
-  // For simplicity we only handle EQ and NE predicates in the second `cmp`.
   if (compared_to == select_true) {
     inverted = false;
   } else if (compared_to == select_false) {
@@ -37,10 +46,8 @@ bool CmpSimplification::simplify_cmp(IntCompare* cmp) {
     return false;
   }
 
-  if (cmp->get_pred() == IntPredicate::NotEqual) {
+  if (pred == IntPredicate::NotEqual) {
     inverted = !inverted;
-  } else if (cmp->get_pred() != IntPredicate::Equal) {
-    return false;
   }
 
   // We know that both `cmps` are corelated with each other.
