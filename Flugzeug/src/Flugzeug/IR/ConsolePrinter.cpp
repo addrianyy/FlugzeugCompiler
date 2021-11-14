@@ -1,6 +1,6 @@
 #include "ConsolePrinter.hpp"
 
-#include <Core/ConsoleColors.hpp>
+#include <Flugzeug/Core/ConsoleColors.hpp>
 
 #include <iostream>
 

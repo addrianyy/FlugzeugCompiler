@@ -1,9 +1,9 @@
 #include "CFGSimplification.hpp"
 #include "Utils/SimplifyPhi.hpp"
 
-#include <IR/Block.hpp>
-#include <IR/Function.hpp>
-#include <IR/Instructions.hpp>
+#include <Flugzeug/IR/Block.hpp>
+#include <Flugzeug/IR/Function.hpp>
+#include <Flugzeug/IR/Instructions.hpp>
 
 using namespace flugzeug;
 

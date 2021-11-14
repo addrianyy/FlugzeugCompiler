@@ -2,9 +2,9 @@
 #include "Context.hpp"
 #include "Type.hpp"
 
-#include <Core/Casting.hpp>
-#include <Core/ClassTraits.hpp>
-#include <Core/Iterator.hpp>
+#include <Flugzeug/Core/Casting.hpp>
+#include <Flugzeug/Core/ClassTraits.hpp>
+#include <Flugzeug/Core/Iterator.hpp>
 
 #include <optional>
 #include <string>

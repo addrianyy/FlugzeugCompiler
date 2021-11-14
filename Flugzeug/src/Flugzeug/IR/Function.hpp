@@ -2,7 +2,7 @@
 #include "Block.hpp"
 #include "Type.hpp"
 
-#include <Core/IntrusiveLinkedList.hpp>
+#include <Flugzeug/Core/IntrusiveLinkedList.hpp>
 
 #include <string_view>
 #include <vector>

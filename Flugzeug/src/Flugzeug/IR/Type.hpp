@@ -1,6 +1,6 @@
 #pragma once
-#include <Core/Casting.hpp>
-#include <Core/ClassTraits.hpp>
+#include <Flugzeug/Core/Casting.hpp>
+#include <Flugzeug/Core/ClassTraits.hpp>
 
 #include <cstdint>
 #include <string>

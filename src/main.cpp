@@ -1,20 +1,21 @@
-#include <Core/Iterator.hpp>
-#include <Core/Log.hpp>
-#include <IR/ConsolePrinter.hpp>
-#include <IR/Context.hpp>
-#include <IR/Function.hpp>
-#include <IR/InstructionInserter.hpp>
-#include <IR/User.hpp>
-#include <Passes/ConstPropagation.hpp>
-#include <Passes/DeadBlockElimination.hpp>
-#include <Passes/DeadCodeElimination.hpp>
-#include <Passes/MemoryToSSA.hpp>
-#include <Passes/PhiToMemory.hpp>
+#include <Flugzeug/Core/Iterator.hpp>
+#include <Flugzeug/Core/Log.hpp>
+#include <Flugzeug/IR/ConsolePrinter.hpp>
+#include <Flugzeug/IR/Context.hpp>
+#include <Flugzeug/IR/Function.hpp>
+#include <Flugzeug/IR/InstructionInserter.hpp>
+#include <Flugzeug/IR/User.hpp>
+#include <Flugzeug/Passes/CFGSimplification.hpp>
+#include <Flugzeug/Passes/ConstPropagation.hpp>
+#include <Flugzeug/Passes/DeadBlockElimination.hpp>
+#include <Flugzeug/Passes/DeadCodeElimination.hpp>
+#include <Flugzeug/Passes/MemoryToSSA.hpp>
+#include <Flugzeug/Passes/PhiToMemory.hpp>
+
 #include <iostream>
 #include <unordered_set>
 
 #include "FunctionsCreator.hpp"
-#include <Passes/CFGSimplification.hpp>
 
 using namespace flugzeug;
 
@@ -145,8 +146,6 @@ int main() {
 
   return 0;
 }
-
-#include <Core/DynamicVisitor.hpp>
 
 int mainx() {
   Context context;

@@ -1,9 +1,9 @@
 #include "MemoryToSSA.hpp"
 #include "Utils/SimplifyPhi.hpp"
 
-#include <Core/Iterator.hpp>
-#include <IR/Function.hpp>
-#include <IR/Instructions.hpp>
+#include <Flugzeug/Core/Iterator.hpp>
+#include <Flugzeug/IR/Function.hpp>
+#include <Flugzeug/IR/Instructions.hpp>
 
 using namespace flugzeug;
 

@@ -1,8 +1,8 @@
 #pragma once
 #include "Value.hpp"
 
-#include <Core/ClassTraits.hpp>
-#include <Core/Iterator.hpp>
+#include <Flugzeug/Core/ClassTraits.hpp>
+#include <Flugzeug/Core/Iterator.hpp>
 
 #include <vector>
 

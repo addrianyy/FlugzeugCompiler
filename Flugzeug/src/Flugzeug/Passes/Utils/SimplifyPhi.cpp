@@ -1,5 +1,5 @@
 #include "SimplifyPhi.hpp"
-#include <IR/Instructions.hpp>
+#include <Flugzeug/IR/Instructions.hpp>
 
 using namespace flugzeug;
 

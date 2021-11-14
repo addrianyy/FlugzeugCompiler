@@ -2,7 +2,7 @@
 #include "IRPrinter.hpp"
 #include "User.hpp"
 
-#include <Core/IntrusiveLinkedList.hpp>
+#include <Flugzeug/Core/IntrusiveLinkedList.hpp>
 
 namespace flugzeug {
 

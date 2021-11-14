@@ -1,9 +1,9 @@
 #include "DeadCodeElimination.hpp"
 
-#include <Core/Iterator.hpp>
+#include <Flugzeug/Core/Iterator.hpp>
 
-#include <IR/Block.hpp>
-#include <IR/Function.hpp>
+#include <Flugzeug/IR/Block.hpp>
+#include <Flugzeug/IR/Function.hpp>
 
 using namespace flugzeug;
 

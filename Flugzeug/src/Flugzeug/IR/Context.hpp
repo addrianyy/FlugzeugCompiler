@@ -1,7 +1,7 @@
 #pragma once
 #include "Type.hpp"
 
-#include <Core/ClassTraits.hpp>
+#include <Flugzeug/Core/ClassTraits.hpp>
 
 #include <cstdint>
 #include <unordered_map>
