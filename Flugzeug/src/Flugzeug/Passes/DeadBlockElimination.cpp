@@ -7,6 +7,21 @@
 
 using namespace flugzeug;
 
+void DeadBlockElimination::destroy_dead_block(Block* block) {
+  // Remove all instructions from this block.
+  block->clear();
+
+  // Remove branches to this block (they are in dead blocks anyway).
+  for (User& user : dont_invalidate_current(block->get_users())) {
+    if (cast<Branch>(user) || cast<CondBranch>(user)) {
+      // These branches are in dead blocks so we can remove them.
+      cast<Instruction>(user)->destroy();
+    }
+  }
+
+  block->destroy();
+}
+
 bool DeadBlockElimination::run(Function* function) {
   // Do DFS traversal on the CFG to find blocks reachable from entry block.
   const auto reachable_blocks =
@@ -15,22 +30,9 @@ bool DeadBlockElimination::run(Function* function) {
   const bool dead_blocks_found = reachable_blocks.size() != function->get_block_count();
   if (dead_blocks_found) {
     for (Block& block : dont_invalidate_current(*function)) {
-      if (reachable_blocks.contains(&block)) {
-        continue;
+      if (!reachable_blocks.contains(&block)) {
+        destroy_dead_block(&block);
       }
-
-      // Remove all instructions from this block.
-      block.clear();
-
-      // Remove branches to this block (they are in dead blocks anyway).
-      for (User& user : dont_invalidate_current(block.get_users())) {
-        if (cast<Branch>(user) || cast<CondBranch>(user)) {
-          // These branches are in dead blocks so we can remove them.
-          cast<Instruction>(user)->destroy();
-        }
-      }
-
-      block.destroy();
     }
 
     // We may have ended up with trivially optimizable Phis. Handle them here to save time.

@@ -21,7 +21,7 @@ void Value::remove_use(Use* use) {
 }
 
 Value::Value(Context* context, Value::Kind kind, Type* type)
-    : context(context), kind(kind), type(type) {
+    : context(context), kind(kind), type(type), uses(this) {
   verify(type->get_context() == context, "Context mismatch");
   context->increase_refcount();
 }

@@ -1,19 +1,28 @@
 #pragma once
 #include <cstdint>
-#include <xutility>
+#include <iterator>
+
+#define FLUGZEUG_VALIDATE_USE_ITERATORS
 
 namespace flugzeug {
 
+class Value;
 class User;
 class Use;
 
+#ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
 namespace detail {
-void validate_use(const Use* use);
+void validate_use(const Value* used_value, const Use* use);
 }
+#endif
 
 class Use {
   friend class ValueUses;
   friend class User;
+
+#ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
+  Value* used_value = nullptr;
+#endif
 
   User* user = nullptr;
 
@@ -22,14 +31,11 @@ class Use {
 
   uint32_t operand_index = 0;
 
-  bool valid = false;
   bool heap_allocated = false;
 
 public:
   Use() = default;
   Use(User* user, size_t operand_index) : user(user), operand_index(uint32_t(operand_index)) {}
-
-  bool is_valid() const { return valid; }
 
   size_t get_operand_index() const { return size_t(operand_index); }
 
@@ -41,15 +47,27 @@ public:
 
   Use* get_next() { return next; }
   const Use* get_next() const { return next; }
+
+#ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
+  Value* get_used_value() { return used_value; }
+  const Value* get_used_value() const { return used_value; }
+#endif
 };
 
 class ValueUses {
+#ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
+  Value* value;
+#endif
+
   Use* first = nullptr;
   Use* last = nullptr;
   size_t size = 0;
 
   template <typename TUse, typename TUser> class UserIteratorInternal {
     TUse* current;
+#ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
+    const Value* used_value = nullptr;
+#endif
 
   public:
     using iterator_category = std::forward_iterator_tag;
@@ -58,12 +76,20 @@ class ValueUses {
     using pointer = value_type*;
     using reference = value_type&;
 
-    explicit UserIteratorInternal(TUse* current) : current(current) {}
+    explicit UserIteratorInternal(TUse* current) : current(current) {
+#ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
+      if (current) {
+        used_value = current->get_used_value();
+      }
+#endif
+    }
 
     UserIteratorInternal& operator++() {
-      detail::validate_use(current);
+#ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
+      detail::validate_use(used_value, current);
+#endif
+
       current = current->get_next();
-      detail::validate_use(current);
       return *this;
     }
 
@@ -81,6 +107,12 @@ class ValueUses {
   };
 
 public:
+  explicit ValueUses(Value* value) {
+#ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
+    this->value = value;
+#endif
+  }
+
   void add_use(Use* use);
   void remove_use(Use* use);
 

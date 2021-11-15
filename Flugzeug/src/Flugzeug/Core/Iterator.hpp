@@ -76,7 +76,7 @@ dont_invalidate_current(T& object) {
 
 template <typename T>
 inline IteratorRange<NonInvalidatingIterator<typename T::const_iterator>>
-dont_invalidate_current(const T&& object) {
+dont_invalidate_current(const T& object) {
   return IteratorRange(NonInvalidatingIterator(object.begin()),
                        NonInvalidatingIterator(object.end()));
 }

@@ -10,7 +10,7 @@ User::~User() {
   }
 
   for (Use* use : uses_for_operands) {
-    verify(!use->next && !use->previous && !use->valid, "Use is still inserted at destructor");
+    verify(!use->next && !use->previous, "Use is still inserted at destructor");
 
     if (use->heap_allocated) {
       delete use;
@@ -82,7 +82,7 @@ void User::remove_phi_incoming_helper(size_t incoming_index) {
   const auto incoming_count = get_operand_count() / 2;
   const auto start_operand = incoming_index * 2;
 
-  // Remove 2 operands.
+  // Zero out 2 operands.
   set_operand(start_operand + 0, nullptr);
   set_operand(start_operand + 1, nullptr);
 
@@ -92,8 +92,6 @@ void User::remove_phi_incoming_helper(size_t incoming_index) {
 
     Use* saved_u1 = uses_for_operands[start_operand + 0];
     Use* saved_u2 = uses_for_operands[start_operand + 1];
-
-    verify(!saved_u1->valid && !saved_u2->valid, "Uses already inserted");
 
     const auto offset = std::ptrdiff_t(start_operand);
     std::copy(operands.begin() + offset + 2, operands.end(), operands.begin() + offset);

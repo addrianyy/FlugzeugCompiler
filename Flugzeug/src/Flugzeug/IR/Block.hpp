@@ -77,8 +77,8 @@ public:
   const_reverse_iterator rbegin() const { return instructions.rbegin(); }
   const_reverse_iterator rend() const { return instructions.rend(); }
 
-  InstructionList ::ReversedRange reversed() { return instructions.reversed(); }
-  InstructionList ::ReversedConstRange reversed() const { return instructions.reversed(); }
+  InstructionList::ReversedRange reversed() { return instructions.reversed(); }
+  InstructionList::ReversedConstRange reversed() const { return instructions.reversed(); }
 #pragma endregion
 
   bool is_entry_block() const { return is_entry; }

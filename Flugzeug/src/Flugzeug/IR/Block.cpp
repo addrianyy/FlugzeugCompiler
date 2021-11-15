@@ -42,18 +42,16 @@ template <typename TBlock> std::unordered_set<TBlock*> get_predecessors_generic(
 template <typename TBlock, bool ReturnVector>
 std::conditional_t<ReturnVector, std::vector<TBlock*>, std::unordered_set<TBlock*>>
 traverse_generic(TBlock* start_block, TraversalType traversal) {
-  const size_t result_reserve = 8;
-  const size_t visited_reserve = 8;
-  const size_t worklist_reserve = 8;
+  const size_t reserve_count = std::min(8ull, start_block->get_function()->get_block_count());
 
   std::vector<TBlock*> result;
   std::unordered_set<TBlock*> visited;
 
   if constexpr (ReturnVector) {
-    result.reserve(result_reserve);
+    result.reserve(reserve_count);
   }
 
-  visited.reserve(visited_reserve);
+  visited.reserve(reserve_count);
 
   const bool with_start =
     traversal == TraversalType::BFS_WithStart || traversal == TraversalType::DFS_WithStart;
@@ -90,7 +88,7 @@ traverse_generic(TBlock* start_block, TraversalType traversal) {
     // DFS
 
     std::vector<TBlock*> stack;
-    stack.reserve(worklist_reserve);
+    stack.reserve(reserve_count);
     stack.push_back(start_block);
 
     while (!stack.empty()) {

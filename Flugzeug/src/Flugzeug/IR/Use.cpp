@@ -4,16 +4,19 @@
 
 using namespace flugzeug;
 
-void flugzeug::detail::validate_use(const Use* use) {
-  if (use) {
-    verify(use->is_valid(), "Accessed invalid Use");
-  }
+#ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
+void flugzeug::detail::validate_use(const Value* used_value, const Use* use) {
+  verify(use->get_used_value() == used_value, "Use iterator was invalidated");
 }
+#endif
 
 void ValueUses::add_use(Use* use) {
-  verify(!use->next && !use->previous && !use->valid, "This use is already inserted");
+  verify(!use->next && !use->previous, "This use is already inserted");
 
-  use->valid = true;
+#ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
+  verify(!use->used_value, "Used value is already set.");
+  use->used_value = value;
+#endif
 
   // Insert at the end of the list.
   if (first == nullptr) {
@@ -31,7 +34,10 @@ void ValueUses::add_use(Use* use) {
 }
 
 void ValueUses::remove_use(Use* use) {
-  verify(use->valid, "This Use is not yet inserted");
+#ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
+  verify(use->used_value == value, "Used value is invalid.");
+  use->used_value = nullptr;
+#endif
 
   if (use->previous) {
     use->previous->next = use->next;
@@ -45,7 +51,6 @@ void ValueUses::remove_use(Use* use) {
     last = use->previous;
   }
 
-  use->valid = false;
   use->next = use->previous = nullptr;
 
   size--;

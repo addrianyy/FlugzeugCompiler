@@ -61,7 +61,7 @@ class Context {
   BlockType* block_type = nullptr;
   VoidType* void_type = nullptr;
 
-  PointerType* create_pointer_type_internal(Type* base, uint32_t indirection);
+  PointerType* get_pointer_type_internal(Type* base, uint32_t indirection);
 
 public:
   CLASS_NON_MOVABLE_NON_COPYABLE(Context)
@@ -80,7 +80,7 @@ public:
   Constant* get_constant(Type* type, uint64_t constant);
   Undef* get_undef(Type* type);
 
-  PointerType* create_pointer_type(Type* pointee, uint32_t indirection = 1);
+  PointerType* get_pointer_type(Type* pointee, uint32_t indirection = 1);
 
   Function* create_function(Type* return_type, std::string name,
                             const std::vector<Type*>& arguments);

@@ -80,9 +80,7 @@ Constant* Context::get_constant(Type* type, uint64_t constant) {
   }
 
   auto result = new Constant(this, type, constant);
-
   constants[key] = result;
-
   return result;
 }
 
@@ -95,13 +93,11 @@ Undef* Context::get_undef(Type* type) {
   }
 
   auto result = new Undef(this, type);
-
   undefs[type] = result;
-
   return result;
 }
 
-PointerType* Context::create_pointer_type_internal(Type* base, uint32_t indirection) {
+PointerType* Context::get_pointer_type_internal(Type* base, uint32_t indirection) {
   verify(indirection > 0, "Cannot create pointer with no indirection");
 
   switch (base->get_kind()) {
@@ -129,16 +125,15 @@ PointerType* Context::create_pointer_type_internal(Type* base, uint32_t indirect
   if (indirection == 1) {
     type = new PointerType(this, base, base, indirection);
   } else {
-    auto pointee = create_pointer_type_internal(base, indirection - 1);
+    auto pointee = get_pointer_type_internal(base, indirection - 1);
     type = new PointerType(this, base, pointee, indirection);
   }
 
   pointer_types[key] = type;
-
   return type;
 }
 
-PointerType* Context::create_pointer_type(Type* pointee, uint32_t indirection) {
+PointerType* Context::get_pointer_type(Type* pointee, uint32_t indirection) {
   verify(indirection > 0, "Cannot create pointer with no indirection");
 
   Type* base = pointee;
@@ -147,7 +142,7 @@ PointerType* Context::create_pointer_type(Type* pointee, uint32_t indirection) {
     indirection += pointer->get_indirection();
   }
 
-  return create_pointer_type_internal(base, indirection);
+  return get_pointer_type_internal(base, indirection);
 }
 
 Function* Context::create_function(Type* return_type, std::string name,
