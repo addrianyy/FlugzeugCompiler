@@ -14,7 +14,7 @@ Type::~Type() { context->decrease_refcount(); }
 PointerType* Type::ref(uint32_t indirection) const {
   verify(indirection > 0, "Cannnot specify 0 indirection");
 
-  return get_context()->get_pointer_type_internal(const_cast<Type*>(this), indirection);
+  return get_context()->get_pointer_type(const_cast<Type*>(this), indirection);
 }
 
 size_t Type::get_bit_size() const {

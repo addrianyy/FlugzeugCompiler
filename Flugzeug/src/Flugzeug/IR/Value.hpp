@@ -96,8 +96,8 @@ public:
   size_t get_user_count() const { return uses.get_size(); }
   size_t get_user_count_excluding_self() const { return user_count_excluding_self; }
 
-  bool is_used() const { return get_user_count() > 0; }
-  bool is_used_once() const { return get_user_count() == 1; }
+  bool is_used() const { return get_user_count_excluding_self() > 0; }
+  bool is_used_once() const { return get_user_count_excluding_self() == 1; }
 
   virtual std::string format() const;
 

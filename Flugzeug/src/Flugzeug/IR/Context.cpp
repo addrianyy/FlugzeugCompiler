@@ -98,6 +98,15 @@ Undef* Context::get_undef(Type* type) {
 }
 
 PointerType* Context::get_pointer_type_internal(Type* base, uint32_t indirection) {
+  PointerKey key{base, indirection};
+
+  {
+    const auto it = pointer_types.find(key);
+    if (it != pointer_types.end()) {
+      return it->second;
+    }
+  }
+
   verify(indirection > 0, "Cannot create pointer with no indirection");
 
   switch (base->get_kind()) {
@@ -109,15 +118,6 @@ PointerType* Context::get_pointer_type_internal(Type* base, uint32_t indirection
 
   default:
     break;
-  }
-
-  PointerKey key{base, indirection};
-
-  {
-    const auto it = pointer_types.find(key);
-    if (it != pointer_types.end()) {
-      return it->second;
-    }
   }
 
   PointerType* type = nullptr;
@@ -134,8 +134,6 @@ PointerType* Context::get_pointer_type_internal(Type* base, uint32_t indirection
 }
 
 PointerType* Context::get_pointer_type(Type* pointee, uint32_t indirection) {
-  verify(indirection > 0, "Cannot create pointer with no indirection");
-
   Type* base = pointee;
   if (const auto pointer = cast<PointerType>(pointee)) {
     base = pointer->get_base();

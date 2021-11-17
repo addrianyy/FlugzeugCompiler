@@ -94,7 +94,7 @@ public:
   void replace_incoming_blocks_in_phis(const Block* old_incoming, Block* new_incoming);
 
   /// Remove `incoming` block from all Phis in this block.
-  void remove_incoming_block_from_phis(Block* incoming, bool destroy_empty_phis);
+  void remove_incoming_block_from_phis(const Block* incoming, bool destroy_empty_phis);
 
   /// Call when branch from `this` to `to` was removed. This function will Phi incoming values in
   /// `to` when needed.

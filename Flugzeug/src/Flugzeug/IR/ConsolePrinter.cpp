@@ -31,9 +31,9 @@ ConsolePrinter::ConsolePrinter(ConsolePrinter::Variant variant) : variant(varian
 
   if (variant == Variant::ColorfulIfSupported) {
     if (console_colors::are_allowed()) {
-      variant = Variant::Colorful;
+      this->variant = Variant::Colorful;
     } else {
-      variant = Variant::Simple;
+      this->variant = Variant::Simple;
     }
   }
 

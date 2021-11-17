@@ -61,6 +61,7 @@ void Value::replace_uses(Value* new_value) {
     return;
   }
 
+  verify(!is_void(), "Cannot raplce uses of void value");
   verify(new_value->get_type() == get_type(), "Cannot replace value with value of different type");
 
   const auto block = cast<Block>(this);

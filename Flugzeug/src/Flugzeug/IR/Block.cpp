@@ -186,7 +186,7 @@ void Block::replace_incoming_blocks_in_phis(const Block* old_incoming, Block* ne
   }
 }
 
-void Block::remove_incoming_block_from_phis(Block* incoming, bool destroy_empty_phis) {
+void Block::remove_incoming_block_from_phis(const Block* incoming, bool destroy_empty_phis) {
   if (is_entry_block()) {
     return;
   }

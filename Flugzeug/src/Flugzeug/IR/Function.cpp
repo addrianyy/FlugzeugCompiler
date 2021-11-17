@@ -116,9 +116,7 @@ void Function::insert_block(Block* block) {
 
 void Function::destroy() {
   for (Block& block : *this) {
-    while (!block.is_empty()) {
-      block.get_first_instruction()->destroy();
-    }
+    block.clear();
   }
 
   // Remove from last block so entry block will be removed last.
