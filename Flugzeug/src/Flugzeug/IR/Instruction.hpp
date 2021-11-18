@@ -71,6 +71,7 @@ public:
   BlockTargets<const Block> get_targets() const;
 
   bool is_volatile() const;
+  bool is_branching() const;
 };
 
 } // namespace flugzeug

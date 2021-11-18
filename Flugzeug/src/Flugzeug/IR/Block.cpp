@@ -10,14 +10,15 @@ template <typename TBlock> TBlock* get_single_predecessor_generic(TBlock* block)
   TBlock* predecessor = nullptr;
 
   for (auto& user : block->get_users()) {
-    if (cast<Branch>(user) || cast<CondBranch>(user)) {
-      const auto user_block = cast<Instruction>(user)->get_block();
+    const auto instruction = cast<Instruction>(user);
+    if (instruction && instruction->is_branching()) {
+      const auto instruction_block = instruction->get_block();
 
       if (!predecessor) {
-        predecessor = user_block;
+        predecessor = instruction_block;
       }
 
-      if (predecessor != user_block) {
+      if (predecessor != instruction_block) {
         return nullptr;
       }
     }
@@ -31,8 +32,9 @@ template <typename TBlock> std::unordered_set<TBlock*> get_predecessors_generic(
   predecessors.reserve(block->get_user_count());
 
   for (auto& user : block->get_users()) {
-    if (cast<Branch>(user) || cast<CondBranch>(user)) {
-      predecessors.insert(cast<Instruction>(user)->get_block());
+    const auto instruction = cast<Instruction>(user);
+    if (instruction && instruction->is_branching()) {
+      predecessors.insert(instruction->get_block());
     }
   }
 
@@ -221,8 +223,9 @@ bool Block::has_successor(const Block* successor) const {
 
 bool Block::has_predecessor(const Block* predecessor) const {
   for (const User& user : get_users()) {
-    if (cast<Branch>(user) || cast<CondBranch>(user)) {
-      if (cast<Instruction>(user)->get_block() == predecessor) {
+    const auto instruction = cast<Instruction>(user);
+    if (instruction && instruction->is_branching()) {
+      if (instruction->get_block() == predecessor) {
         return true;
       }
     }

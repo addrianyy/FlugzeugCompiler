@@ -100,7 +100,8 @@ void BinaryInstr::print_instruction_internal(IRPrinter::LinePrinter& p) const {
 }
 
 void IntCompare::print_instruction_internal(IRPrinter::LinePrinter& p) const {
-  p.print("cmp", to_string(get_pred()), get_type(), get_lhs(), SpecialItem::Comma, get_rhs());
+  p.print("cmp", to_string(get_pred()), get_lhs()->get_type(), get_lhs(), SpecialItem::Comma,
+          get_rhs());
 }
 
 void Load::print_instruction_internal(IRPrinter::LinePrinter& p) const {

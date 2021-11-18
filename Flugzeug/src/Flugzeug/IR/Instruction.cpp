@@ -7,9 +7,9 @@ using namespace flugzeug;
 template <typename TBlock, typename TInstruction>
 BlockTargets<TBlock> get_targets_generic(TInstruction* instruction) {
   BlockTargets<TBlock> result;
-  if (const auto bcond = cast<CondBranch>(instruction)) {
-    const auto true_target = bcond->get_true_target();
-    const auto false_target = bcond->get_false_target();
+  if (const auto cond_branch = cast<CondBranch>(instruction)) {
+    const auto true_target = cond_branch->get_true_target();
+    const auto false_target = cond_branch->get_false_target();
 
     result.insert(true_target);
 
@@ -105,4 +105,7 @@ bool Instruction::is_volatile() const {
   default:
     return false;
   }
+}
+bool Instruction::is_branching() const {
+  return get_kind() == Kind::Branch || get_kind() == Kind::CondBranch;
 }
