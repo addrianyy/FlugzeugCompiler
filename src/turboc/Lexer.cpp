@@ -20,7 +20,7 @@ std::string_view Token::get_identifier() const {
 }
 
 const Token::NumberLiteral& Token::get_number_literal() const {
-  verify(kind == Kind::Identifier, "This is not a number literal token");
+  verify(kind == Kind::NumberLiteral, "This is not a number literal token");
   return number_literal;
 }
 
@@ -46,7 +46,7 @@ Token Lexer::lex_number_literal(std::string_view& source) {
   };
 
   std::string_view valid_chars = valid_dec;
-  int base = 10;
+  uint32_t base = 10;
 
   if (source.starts_with("0x")) {
     valid_chars = valid_hex;
@@ -88,10 +88,10 @@ Token Lexer::lex_number_literal(std::string_view& source) {
     }
   }
 
-  const uint64_t number = std::strtoull(literal.c_str(), nullptr, base);
+  const uint64_t number = std::strtoull(literal.c_str(), nullptr, int(base));
 
   Token token(Token::Kind::NumberLiteral);
-  token.number_literal = Token::NumberLiteral{number, type_override};
+  token.number_literal = Token::NumberLiteral{number, type_override, base};
 
   return token;
 }
@@ -321,4 +321,10 @@ Token::Keyword Lexer::consume_keyword() {
 void Lexer::consume_expect(Token::Kind expected_kind) {
   const auto token = consume_token();
   verify(token.is(expected_kind), "Unexpected token {}.", token.format());
+}
+
+void Lexer::consume_expect(Token::Keyword expected_keyword) {
+  const auto token = consume_token();
+  verify(token.is(Token::Kind::Keyword) && token.get_keyword() == expected_keyword,
+         "Unexpected token {}.", token.format());
 }

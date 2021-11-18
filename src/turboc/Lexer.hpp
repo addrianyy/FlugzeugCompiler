@@ -96,6 +96,7 @@ public:
   struct NumberLiteral {
     uint64_t literal{};
     std::optional<TypeOverride> type_override;
+    uint32_t base{};
   };
 
 private:
@@ -165,6 +166,7 @@ public:
   Token::Keyword consume_keyword();
 
   void consume_expect(Token::Kind expected_kind);
+  void consume_expect(Token::Keyword expected_keyword);
 };
 
 } // namespace turboc

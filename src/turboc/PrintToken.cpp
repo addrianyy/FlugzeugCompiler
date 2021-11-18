@@ -1,24 +1,10 @@
 #include "Lexer.hpp"
 
 #include <Flugzeug/Core/Error.hpp>
+#include <Flugzeug/Core/StringifyEnum.hpp>
 
 using namespace turboc;
 using namespace std::literals;
-
-#define BEGIN_ENUM_STRINGIFY(function_name, enum_type)                                             \
-  static std::string_view function_name(enum_type e) {                                             \
-    using ThisEnum = enum_type;                                                                    \
-    switch (e) {
-
-#define ENUM_CASE(enum_case)                                                                       \
-  case ThisEnum::enum_case:                                                                        \
-    return #enum_case;
-
-#define END_ENUM_STRINGIFY()                                                                       \
-  default:                                                                                         \
-    unreachable();                                                                                 \
-    }                                                                                              \
-    }
 
 // clang-format off
 BEGIN_ENUM_STRINGIFY(stringify_token_kind, Token::Kind)
@@ -65,9 +51,7 @@ BEGIN_ENUM_STRINGIFY(stringify_token_kind, Token::Kind)
   ENUM_CASE(Lte)
   ENUM_CASE(Eof)
 END_ENUM_STRINGIFY()
-// clang-format on
 
-// clang-format off
 BEGIN_ENUM_STRINGIFY(stringify_token_keyword, Token::Keyword)
   ENUM_CASE(Void)
   ENUM_CASE(U8)
@@ -87,9 +71,7 @@ BEGIN_ENUM_STRINGIFY(stringify_token_keyword, Token::Keyword)
   ENUM_CASE(Return)
   ENUM_CASE(Extern)
 END_ENUM_STRINGIFY()
-// clang-format on
 
-// clang-format off
 BEGIN_ENUM_STRINGIFY(strinigy_token_type_override, Token::TypeOverride)
   ENUM_CASE(I8)
   ENUM_CASE(I16)

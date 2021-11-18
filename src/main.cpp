@@ -81,7 +81,14 @@ static void test_optimization(Function* function) {
 int main() {
   Context context;
 
-  auto parser = turboc::Parser::parse_from_file("../Tests/main.tc");
+  auto parsed = turboc::Parser::parse_from_file("../Tests/main.tc");
+
+  for (auto& function : parsed) {
+    turboc::ASTPrinter printer;
+    function.print(printer);
+
+    std::cout << std::endl;
+  }
 
   Type* i64 = context.get_i64_ty();
 

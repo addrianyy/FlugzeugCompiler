@@ -1,76 +1,18 @@
 #pragma once
 #include "Lexer.hpp"
+#include "Type.hpp"
 
 #include <Flugzeug/Core/Casting.hpp>
 
 #include <cstdint>
 #include <memory>
-#include <optional>
 #include <string>
 
 namespace turboc {
 
+class ASTPrinter;
 class Expr;
 class BodyStmt;
-
-class Type {
-public:
-  enum class Kind {
-    U8,
-    U16,
-    U32,
-    U64,
-    I8,
-    I16,
-    I32,
-    I64,
-    Void,
-  };
-
-private:
-  Kind kind;
-  uint32_t indirection;
-
-public:
-  explicit Type(Kind kind, uint32_t indirection = 0) : kind(kind), indirection(indirection) {}
-
-  Kind get_kind() const { return kind; }
-  uint32_t get_indirection() const { return indirection; }
-};
-
-class FunctionPrototype {
-public:
-  using Argument = std::pair<Type, std::string>;
-
-private:
-  std::string name;
-  std::vector<Argument> arguments;
-  Type return_type;
-
-public:
-  FunctionPrototype(std::string name, std::vector<Argument> arguments, const Type& return_type)
-      : name(std::move(name)), arguments(std::move(arguments)), return_type(return_type) {}
-
-  const std::string& get_name() { return name; }
-  const std::vector<Argument>& get_arguments() { return arguments; }
-  Type get_return_type() { return return_type; }
-};
-
-class Function {
-  FunctionPrototype prototype;
-  std::unique_ptr<BodyStmt> body;
-
-public:
-  Function(FunctionPrototype prototype, std::unique_ptr<BodyStmt> body)
-      : prototype(std::move(prototype)), body(std::move(body)) {}
-
-  const FunctionPrototype& get_prototype() const { return prototype; }
-  const std::unique_ptr<BodyStmt>& get_body() const { return body; }
-};
-
-namespace conv {
-std::optional<Type::Kind> keyword_to_type_kind(Token::Keyword keyword);
-}
 
 enum class UnaryOp {
   Neg,
@@ -98,11 +40,14 @@ enum class BinaryOp {
   Lte,
 };
 
+int32_t get_binary_op_precedence(BinaryOp op);
+
 class Stmt {
 public:
   // clang-format off
   enum class Kind {
     Assign,
+    BinaryAssign,
     Declare,
     While,
     If,
@@ -131,20 +76,43 @@ protected:
 
 public:
   Kind get_kind() const { return kind; }
+
+  virtual void print(ASTPrinter& printer) const = 0;
 };
 
 class AssignStmt : public Stmt {
   DEFINE_INSTANCEOF(Stmt, Stmt::Kind::Assign);
 
-  std::unique_ptr<Expr> left;
-  std::unique_ptr<Expr> right;
+  std::unique_ptr<Expr> variable;
+  std::unique_ptr<Expr> value;
 
 public:
-  AssignStmt(std::unique_ptr<Expr> left, std::unique_ptr<Expr> right)
-      : Stmt(Stmt::Kind::Assign), left(std::move(left)), right(std::move(right)) {}
+  AssignStmt(std::unique_ptr<Expr> variable, std::unique_ptr<Expr> value)
+      : Stmt(Stmt::Kind::Assign), variable(std::move(variable)), value(std::move(value)) {}
 
-  const std::unique_ptr<Expr>& get_left() const { return left; }
-  const std::unique_ptr<Expr>& get_right() const { return right; }
+  const std::unique_ptr<Expr>& get_variable() const { return variable; }
+  const std::unique_ptr<Expr>& get_value() const { return value; }
+
+  void print(ASTPrinter& printer) const override;
+};
+
+class BinaryAssignStmt : public Stmt {
+  DEFINE_INSTANCEOF(Stmt, Stmt::Kind::BinaryAssign);
+
+  std::unique_ptr<Expr> variable;
+  BinaryOp op;
+  std::unique_ptr<Expr> value;
+
+public:
+  BinaryAssignStmt(std::unique_ptr<Expr> variable, BinaryOp op, std::unique_ptr<Expr> value)
+      : Stmt(Stmt::Kind::BinaryAssign), variable(std::move(variable)), op(op),
+        value(std::move(value)) {}
+
+  const std::unique_ptr<Expr>& get_variable() const { return variable; }
+  BinaryOp get_op() const { return op; }
+  const std::unique_ptr<Expr>& get_value() const { return value; }
+
+  void print(ASTPrinter& printer) const override;
 };
 
 class DeclareStmt : public Stmt {
@@ -159,8 +127,8 @@ class DeclareStmt : public Stmt {
   std::unique_ptr<Expr> array_size;
 
 public:
-  DeclareStmt(const Type& type, const Type& declaration_type, std::string name,
-              std::unique_ptr<Expr> value, std::unique_ptr<Expr> array_size)
+  DeclareStmt(Type type, Type declaration_type, std::string name, std::unique_ptr<Expr> value,
+              std::unique_ptr<Expr> array_size)
       : Stmt(Stmt::Kind::Declare), type(type), declaration_type(declaration_type),
         name(std::move(name)), value(std::move(value)), array_size(std::move(array_size)) {}
 
@@ -169,6 +137,8 @@ public:
   const std::string& get_name() const { return name; }
   const std::unique_ptr<Expr>& get_value() const { return value; }
   const std::unique_ptr<Expr>& get_array_size() const { return array_size; }
+
+  void print(ASTPrinter& printer) const override;
 };
 
 class WhileStmt : public Stmt {
@@ -183,6 +153,8 @@ public:
 
   const std::unique_ptr<Expr>& get_condition() const { return condition; }
   const std::unique_ptr<BodyStmt>& get_body() const { return body; }
+
+  void print(ASTPrinter& printer) const override;
 };
 
 class IfStmt : public Stmt {
@@ -201,6 +173,8 @@ public:
 
   const std::vector<Arm>& get_arms() const { return arms; }
   const std::unique_ptr<BodyStmt>& get_default_body() const { return default_body; }
+
+  void print(ASTPrinter& printer) const override;
 };
 
 class ForStmt : public Stmt {
@@ -221,6 +195,8 @@ public:
   const std::unique_ptr<Expr>& get_condition() const { return condition; }
   const std::unique_ptr<Stmt>& get_step() const { return step; }
   const std::unique_ptr<BodyStmt>& get_body() const { return body; }
+
+  void print(ASTPrinter& printer) const override;
 };
 
 class ReturnStmt : public Stmt {
@@ -233,6 +209,8 @@ public:
       : Stmt(Stmt::Kind::Return), return_value(std::move(return_value)) {}
 
   const std::unique_ptr<Expr>& get_return_value() const { return return_value; }
+
+  void print(ASTPrinter& printer) const override;
 };
 
 class BreakStmt : public Stmt {
@@ -240,6 +218,8 @@ class BreakStmt : public Stmt {
 
 public:
   BreakStmt() : Stmt(Stmt::Kind::Break) {}
+
+  void print(ASTPrinter& printer) const override;
 };
 
 class ContinueStmt : public Stmt {
@@ -247,6 +227,8 @@ class ContinueStmt : public Stmt {
 
 public:
   ContinueStmt() : Stmt(Stmt::Kind::Continue) {}
+
+  void print(ASTPrinter& printer) const override;
 };
 
 class BodyStmt : public Stmt {
@@ -259,6 +241,8 @@ public:
       : Stmt(Stmt::Kind::Body), statements(std::move(statements)) {}
 
   const std::vector<std::unique_ptr<Stmt>>& get_statements() const { return statements; }
+
+  void print(ASTPrinter& printer) const override;
 };
 
 class Expr : public Stmt {
@@ -277,6 +261,8 @@ public:
   explicit VariableExpr(std::string name) : Expr(Stmt::Kind::Variable), name(std::move(name)) {}
 
   const std::string& get_name() const { return name; }
+
+  void print(ASTPrinter& printer) const override;
 };
 
 class UnaryExpr : public Expr {
@@ -291,6 +277,8 @@ public:
 
   UnaryOp get_op() const { return op; }
   const std::unique_ptr<Expr>& get_value() const { return value; }
+
+  void print(ASTPrinter& printer) const override;
 };
 
 class BinaryExpr : public Expr {
@@ -307,6 +295,8 @@ public:
   const std::unique_ptr<Expr>& get_left() const { return left; }
   BinaryOp get_op() const { return op; }
   const std::unique_ptr<Expr>& get_right() const { return right; }
+
+  void print(ASTPrinter& printer) const override;
 };
 
 class NumberExpr : public Expr {
@@ -320,6 +310,8 @@ public:
 
   Type get_type() const { return type; }
   uint64_t get_value() const { return value; }
+
+  void print(ASTPrinter& printer) const override;
 };
 
 class ArrayExpr : public Expr {
@@ -334,6 +326,8 @@ public:
 
   const std::unique_ptr<Expr>& get_array() const { return array; }
   const std::unique_ptr<Expr>& get_index() const { return index; }
+
+  void print(ASTPrinter& printer) const override;
 };
 
 class CallExpr : public Expr {
@@ -349,6 +343,8 @@ public:
 
   const std::string& get_function_name() const { return function_name; }
   const std::vector<std::unique_ptr<Expr>>& get_arguments() const { return arguments; }
+
+  void print(ASTPrinter& printer) const override;
 };
 
 class CastExpr : public Expr {
@@ -363,6 +359,8 @@ public:
 
   const std::unique_ptr<Expr>& get_value() const { return value; }
   Type get_type() const { return type; }
+
+  void print(ASTPrinter& printer) const override;
 };
 
 } // namespace turboc

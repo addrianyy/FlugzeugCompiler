@@ -15,6 +15,7 @@ void print_num(u32 num) {
     if (num == 0) {
         buffer[i] = 48u8;
         i -= 1;
+		continue;
     }
 
     while (num > 0) {
