@@ -74,9 +74,14 @@ static void test_optimization(Function* function) {
 }
 
 #include <Flugzeug/Passes/CmpSimplification.hpp>
+#include <turboc/Parser.hpp>
+
+#include "turboc/Lexer.hpp"
 
 int main() {
   Context context;
+
+  auto parser = turboc::Parser::parse_from_file("../Tests/main.tc");
 
   Type* i64 = context.get_i64_ty();
 
