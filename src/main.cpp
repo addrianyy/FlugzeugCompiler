@@ -1,205 +1,74 @@
 #include <Flugzeug/Core/Iterator.hpp>
 #include <Flugzeug/Core/Log.hpp>
+
 #include <Flugzeug/IR/ConsolePrinter.hpp>
 #include <Flugzeug/IR/Context.hpp>
 #include <Flugzeug/IR/Function.hpp>
 #include <Flugzeug/IR/InstructionInserter.hpp>
-#include <Flugzeug/IR/User.hpp>
+
 #include <Flugzeug/Passes/CFGSimplification.hpp>
+#include <Flugzeug/Passes/CmpSimplification.hpp>
 #include <Flugzeug/Passes/ConstPropagation.hpp>
 #include <Flugzeug/Passes/DeadBlockElimination.hpp>
 #include <Flugzeug/Passes/DeadCodeElimination.hpp>
+#include <Flugzeug/Passes/GeneralSimplification.hpp>
 #include <Flugzeug/Passes/MemoryToSSA.hpp>
-#include <Flugzeug/Passes/PhiToMemory.hpp>
 
-#include <iostream>
-#include <unordered_set>
-
-#include "FunctionsCreator.hpp"
+#include <turboc/IRGenerator.hpp>
+#include <turboc/Parser.hpp>
 
 using namespace flugzeug;
 
-static bool is_pow2(uint64_t x) { return (x != 0) && !(x & (x - 1)); }
+static void optimize_function(Function* f) {
+  while (true) {
+    bool did_something = false;
 
-static uint64_t bin_log2(uint64_t x) {
-  for (uint64_t i = 1; i < 64; ++i) {
-    if ((x >> i) & 1) {
-      return i;
-    }
-  }
+    did_something |= MemoryToSSA::run(f);
+    did_something |= DeadCodeElimination::run(f);
+    did_something |= ConstPropagation::run(f);
+    did_something |= GeneralSimplification::run(f);
+    did_something |= CFGSimplification::run(f);
+    did_something |= CmpSimplification::run(f);
+    did_something |= DeadBlockElimination::run(f);
 
-  return 0;
-}
-
-static Value* optimize_binary_instruction(BinaryInstr* binary) {
-  const auto zero = binary->get_type()->get_zero();
-
-  if (binary->is(BinaryOp::Sub) && binary->get_lhs() == binary->get_rhs()) {
-    // sub X, X == 0
-    return zero;
-  } else if (binary->is(BinaryOp::Add) && binary->get_rhs()->is_zero()) {
-    // add X, 0 == X
-    return binary->get_lhs();
-  } else if (binary->is(BinaryOp::Mul)) {
-    if (const auto multiplier_v = cast<Constant>(binary->get_rhs())) {
-      const auto multiplier = multiplier_v->get_constant_u();
-      if (multiplier == 0) {
-        // mul X, 0 == 0
-        return zero;
-      } else if (multiplier == 1) {
-        // mul X, 1 == X
-        return binary->get_lhs();
-      } else if (is_pow2(multiplier)) {
-        // mul X, Y (if Y is power of 2) == shl X, log2(Y)
-        const auto shift_amount = binary->get_type()->get_constant(bin_log2(multiplier));
-        return new BinaryInstr(binary->get_context(), binary->get_lhs(), BinaryOp::Shl,
-                               shift_amount);
-      }
-    }
-  }
-
-  return nullptr;
-}
-
-static void test_optimization(Function* function) {
-  for (Block& block : *function) {
-    for (Instruction& instruction : dont_invalidate_current(block)) {
-      if (auto binary = cast<BinaryInstr>(&instruction)) {
-        if (auto replacement = optimize_binary_instruction(binary)) {
-          binary->replace_instruction_or_uses_and_destroy(replacement);
-        }
-      }
+    if (!did_something) {
+      f->reassign_display_indices();
+      break;
     }
   }
 }
-
-#include <Flugzeug/Passes/CmpSimplification.hpp>
-#include <turboc/Parser.hpp>
-
-#include "turboc/Lexer.hpp"
 
 int main() {
   Context context;
 
-  auto parsed = turboc::Parser::parse_from_file("../Tests/main.tc");
-
-  for (auto& function : parsed) {
-    turboc::ASTPrinter printer;
-    function.print(printer);
-
-    std::cout << std::endl;
-  }
-
-  Type* i64 = context.get_i64_ty();
-
-  auto f = context.create_function(i64, "test", std::vector{i64, i64});
-
-  auto param_a = f->get_parameter(0);
-  auto param_b = f->get_parameter(1);
-
-  auto entry = f->create_block();
-  auto if_then = f->create_block();
-  auto if_else = f->create_block();
-  auto merge = f->create_block();
-
-  //  InstructionInserter inserter(entry);
-  //  //  auto cond = inserter.compare_slt(param_a, param_b);
-  //  //  auto tv = i64->get_constant(23);
-  //  //  auto fv = i64->get_constant(88);
-  //  //  auto cc = inserter.select(cond, tv, fv);
-  //  //  auto dv = inserter.compare_ne(cc, fv);
-  //  //  inserter.ret(dv);
-  //
-  //  auto instr = inserter.phi({
-  //    {entry, i64->get_constant(2)},
-  //    {if_then, i64->get_constant(2)},
-  //    {if_else, i64->get_constant(2)},
-  //  });
-  //
-  //  bool x = false;
-  //  for (User& user : dont_invalidate_current(i64->get_constant(2)->get_users())) {
-  //    std::cout << &user << std::endl;
-  //
-  //    if (!x) {
-  //      instr->remove_incoming(entry);
-  //      x = true;
-  //    }
-  //}
-  /*
-  auto instr = inserter.phi({
-    {entry, i64->get_constant(0)},
-  });
-  auto instr2 = inserter.phi({
-    {entry, i64->get_constant(0)},
-  });
-  auto instr3 = inserter.phi({
-    {entry, i64->get_constant(0)},
-  });
-
-  for (User& user : dont_invalidate_current(entry->get_users())) {
-    std::cout << "XDDD\n";
-    std::cout << &user << std::endl;
-
-    if (const auto phi = cast<Phi>(user)) {
-      phi->remove_incoming(entry);
-      std::cout << "AAA\n";
-    }
-  }
-   */
-
-  //  CmpSimplification::run(f);
-
-  InstructionInserter inserter(entry);
-  auto cond = inserter.compare_eq(param_a, param_b);
-  inserter.cond_branch(cond, if_then, if_else);
-
-  inserter.set_insertion_block(if_then);
-  inserter.branch(merge);
-
-  inserter.set_insertion_block(if_else);
-  inserter.branch(merge);
-
-  inserter.set_insertion_block(merge);
-  auto res = inserter.phi({{if_then, i64->get_constant(1)}, {if_else, i64->get_constant(2)}});
-  inserter.ret(res);
-
-  ConstPropagation::run(f);
-  DeadCodeElimination::run(f);
-  PhiToMemory::run(f);
-  MemoryToSSA::run(f);
-  CFGSimplification::run(f);
-  DeadBlockElimination::run(f);
-
-  ConsolePrinter printer(ConsolePrinter::Variant::Colorful);
-  f->print(printer);
-
-  f->destroy();
-
-  return 0;
-}
-
-int mainx() {
-  Context context;
-
-  const auto functions = create_functions(&context);
+  const auto parsed_source = turboc::Parser::parse_from_file("../Tests/main.tc");
+  const auto functions = turboc::IRGenerator::generate(&context, parsed_source);
 
   ConsolePrinter printer(ConsolePrinter::Variant::Colorful);
 
-  for (Function* f : functions) {
+  for (const auto& [_, f] : functions) {
     if (f->is_extern()) {
       continue;
     }
 
-    PhiToMemory::run(f);
+    f->print(printer);
+    printer.newline();
 
-    f->reassign_display_indices();
+    optimize_function(f);
+  }
+
+  printer.newline();
+
+  for (const auto& [_, f] : functions) {
+    if (f->is_extern()) {
+      continue;
+    }
+
     f->print(printer);
     printer.newline();
   }
 
-  for (Function* f : functions) {
+  for (const auto& [_, f] : functions) {
     f->destroy();
   }
-
-  return 0;
 }

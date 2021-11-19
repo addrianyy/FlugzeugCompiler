@@ -20,6 +20,7 @@ public:
   explicit InstructionInserter(Block* block = nullptr) { set_insertion_block(block); }
 
   void set_insertion_block(Block* insertion_block);
+  Block* get_insertion_block() { return block; }
 
   UnaryInstr* unary_instr(UnaryOp op, Value* val);
   BinaryInstr* binary_instr(Value* lhs, BinaryOp op, Value* rhs);

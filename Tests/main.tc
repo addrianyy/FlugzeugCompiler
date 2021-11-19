@@ -15,7 +15,6 @@ void print_num(u32 num) {
     if (num == 0) {
         buffer[i] = 48u8;
         i -= 1;
-		continue;
     }
 
     while (num > 0) {
@@ -47,11 +46,6 @@ u32 main() {
 }
 
 i32 test123(i32 x, i32 y) {
-    if (x == 4) {
-        if (x == 8) {
-            return 44;
-        }
-    }
 
-    return 12;
+    return x * 8;
 }

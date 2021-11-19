@@ -4,7 +4,7 @@ namespace flugzeug {
 
 class Function;
 
-class ConstPropagation {
+class GeneralSimplification {
 public:
   static bool run(Function* function);
 };

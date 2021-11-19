@@ -6,7 +6,6 @@
 using namespace flugzeug;
 
 class Propagator : public InstructionVisitor {
-public:
   Type* type;
   bool& did_something;
 
@@ -130,6 +129,7 @@ public:
     }
   }
 
+public:
   explicit Propagator(Type* type, bool& did_something) : type(type), did_something(did_something) {}
 
   Value* visit_unary_instr(Argument<UnaryInstr> unary) {
@@ -252,6 +252,7 @@ public:
     return get_constant(select->get_cond(), cond) ? select->get_val(cond) : nullptr;
   }
 
+  Value* visit_stackalloc(Argument<StackAlloc> stackalloc) { return nullptr; }
   Value* visit_phi(Argument<Phi> phi) { return nullptr; }
   Value* visit_load(Argument<Load> load) { return nullptr; }
   Value* visit_store(Argument<Store> store) { return nullptr; }
@@ -261,17 +262,14 @@ public:
   Value* visit_offset(Argument<Offset> offset) { return nullptr; }
 };
 
-Value* ConstPropagation::constant_propagate(Instruction* instruction, bool& did_something) {
-  Propagator propagator(instruction->get_type(), did_something);
-  return visit_instruction(instruction, propagator);
-}
-
 bool ConstPropagation::run(Function* function) {
   bool did_something = false;
 
   for (Block& block : *function) {
     for (Instruction& instruction : dont_invalidate_current(block)) {
-      if (const auto propagated = constant_propagate(&instruction, did_something)) {
+      Propagator propagator(instruction.get_type(), did_something);
+
+      if (const auto propagated = visitor::visit_instruction(&instruction, propagator)) {
         instruction.replace_instruction_or_uses_and_destroy(propagated);
         did_something = true;
       }

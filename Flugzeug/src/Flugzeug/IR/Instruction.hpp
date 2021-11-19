@@ -72,6 +72,7 @@ public:
 
   bool is_volatile() const;
   bool is_branching() const;
+  bool is_terminator() const;
 };
 
 } // namespace flugzeug

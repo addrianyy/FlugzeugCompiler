@@ -24,9 +24,9 @@ public:
   FunctionPrototype(std::string name, std::vector<Argument> arguments, const Type& return_type)
       : name(std::move(name)), arguments(std::move(arguments)), return_type(return_type) {}
 
-  const std::string& get_name() { return name; }
-  const std::vector<Argument>& get_arguments() { return arguments; }
-  Type get_return_type() { return return_type; }
+  const std::string& get_name() const { return name; }
+  const std::vector<Argument>& get_arguments() const { return arguments; }
+  Type get_return_type() const { return return_type; }
 
   void print(ASTPrinter& printer) const;
 };

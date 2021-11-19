@@ -283,3 +283,7 @@ std::unordered_set<const Block*> Block::get_reachable_blocks_set(IncludeStart in
                                                       ? TraversalType::DFS_WithStart
                                                       : TraversalType::DFS_WithoutStart);
 }
+bool Block::is_terminated() const {
+  const auto last = get_last_instruction();
+  return last && last->is_terminator();
+}

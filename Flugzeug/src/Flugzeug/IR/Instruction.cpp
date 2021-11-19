@@ -109,3 +109,5 @@ bool Instruction::is_volatile() const {
 bool Instruction::is_branching() const {
   return get_kind() == Kind::Branch || get_kind() == Kind::CondBranch;
 }
+
+bool Instruction::is_terminator() const { return is_branching() || get_kind() == Kind::Ret; }

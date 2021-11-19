@@ -100,6 +100,8 @@ public:
   /// `to` when needed.
   void on_removed_branch_to(Block* to, bool destroy_empty_phis);
 
+  bool is_terminated() const;
+
   bool has_successor(const Block* successor) const;
   bool has_predecessor(const Block* predecessor) const;
 
