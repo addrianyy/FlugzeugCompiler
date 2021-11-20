@@ -51,6 +51,9 @@ public:
   bool is_block() const { return kind == Kind::Block; }
   bool is_pointer() const { return kind == Kind::Pointer; }
 
+  bool is_arithmetic() const;
+  bool is_arithmetic_or_pointer() const;
+
   Constant* get_constant(uint64_t constant);
   Constant* get_zero();
   Constant* get_one();

@@ -8,13 +8,13 @@ using namespace flugzeug;
 
 void ConsolePrinter::reset() {
   if (variant == Variant::Colorful) {
-    std::cout << "\x1b[0m";
+    console_colors::reset_color(output_stream);
   }
 }
 
 void ConsolePrinter::set_color(int color) {
   if (variant == Variant::Colorful) {
-    std::cout << "\x1b[1;" << color << "m";
+    console_colors::set_color(output_stream, color);
   }
 }
 
@@ -24,9 +24,13 @@ void ConsolePrinter::begin_constant() {}
 void ConsolePrinter::begin_type() { set_color(34); }
 void ConsolePrinter::begin_block() { set_color(37); }
 
-void ConsolePrinter::write_string(std::string_view string) { std::cout << string; }
+void ConsolePrinter::write_string(std::string_view string) { output_stream << string; }
 
-ConsolePrinter::ConsolePrinter(ConsolePrinter::Variant variant) : variant(variant) {
+ConsolePrinter::ConsolePrinter(ConsolePrinter::Variant variant)
+    : ConsolePrinter(variant, std::cout) {}
+
+ConsolePrinter::ConsolePrinter(ConsolePrinter::Variant variant, std::ostream& output_stream)
+    : variant(variant), output_stream(output_stream) {
   console_colors::ensure_initialized();
 
   if (variant == Variant::ColorfulIfSupported) {
@@ -40,4 +44,4 @@ ConsolePrinter::ConsolePrinter(ConsolePrinter::Variant variant) : variant(varian
   reset();
 }
 
-ConsolePrinter::~ConsolePrinter() { std::cout.flush(); }
+ConsolePrinter::~ConsolePrinter() { output_stream.flush(); }

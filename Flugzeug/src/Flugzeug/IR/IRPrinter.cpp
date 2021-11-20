@@ -24,8 +24,12 @@ void IRPrinter::LinePrinter::item(const Type* type) {
 
   ir_printer->begin_type();
 
-  const auto s = type->format();
-  ir_printer->write_string(s);
+  if (type) {
+    const auto s = type->format();
+    ir_printer->write_string(s);
+  } else {
+    ir_printer->write_string("null_type");
+  }
 
   ir_printer->end_type();
 
@@ -43,8 +47,12 @@ void IRPrinter::LinePrinter::item(const Value* value) {
     ir_printer->begin_value();
   }
 
-  const auto s = value->format();
-  ir_printer->write_string(s);
+  if (value) {
+    const auto s = value->format();
+    ir_printer->write_string(s);
+  } else {
+    ir_printer->write_string("null_value");
+  }
 
   if (is_constant) {
     ir_printer->end_constant();
@@ -60,8 +68,12 @@ void IRPrinter::LinePrinter::item(const Block* block) {
 
   ir_printer->begin_block();
 
-  const auto s = block->format();
-  ir_printer->write_string(s);
+  if (block) {
+    const auto s = block->format();
+    ir_printer->write_string(s);
+  } else {
+    ir_printer->write_string("null_block");
+  }
 
   ir_printer->end_block();
 

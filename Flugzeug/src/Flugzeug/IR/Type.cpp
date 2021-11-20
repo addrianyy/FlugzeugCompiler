@@ -96,6 +96,12 @@ Constant* Type::get_one() { return get_constant(1); }
 
 Undef* Type::get_undef() { return context->get_undef(this); }
 
+bool Type::is_arithmetic() const {
+  return kind == Kind::I8 || kind == Kind::I16 || kind == Kind::I32 || kind == Kind::I64;
+}
+
+bool Type::is_arithmetic_or_pointer() const { return is_pointer() || is_arithmetic(); }
+
 PointerType::PointerType(Context* context, Type* base, Type* pointee, uint32_t indirection)
     : Type(context, Kind::Pointer), base(base), pointee(pointee), indirection(indirection) {
   if (const auto pointee_p = cast<PointerType>(pointee)) {

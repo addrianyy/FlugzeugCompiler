@@ -1,6 +1,7 @@
 #pragma once
 #include "Block.hpp"
 #include "Type.hpp"
+#include "Validator.hpp"
 
 #include <Flugzeug/Core/IntrusiveLinkedList.hpp>
 
@@ -44,6 +45,8 @@ public:
   Function(Context* context, Type* return_type, std::string name,
            const std::vector<Type*>& arguments);
   ~Function();
+
+  ValidationResults validate(ValidationBehaviour behaviour) const;
 
   void print(bool newline = false) const;
   void print(IRPrinter& printer) const;

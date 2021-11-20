@@ -189,6 +189,9 @@ public:
   Value* get_arg(size_t i) { return get_operand(i); }
   const Value* get_arg(size_t i) const { return get_operand(i); }
 
+  Function* get_target() { return target; }
+  const Function* get_target() const { return target; }
+
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };

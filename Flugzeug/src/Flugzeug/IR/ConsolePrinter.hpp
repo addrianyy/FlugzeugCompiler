@@ -11,6 +11,8 @@ public:
     ColorfulIfSupported,
   };
 
+  std::ostream& output_stream;
+
 private:
   Variant variant;
 
@@ -31,6 +33,7 @@ private:
 
 public:
   explicit ConsolePrinter(Variant variant);
+  ConsolePrinter(Variant variant, std::ostream& output_stream);
   ~ConsolePrinter() override;
 
   void write_string(std::string_view string) override;

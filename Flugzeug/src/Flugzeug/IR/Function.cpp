@@ -3,6 +3,10 @@
 
 using namespace flugzeug;
 
+namespace flugzeug {
+ValidationResults validate_function(const Function* function, ValidationBehaviour behaviour);
+}
+
 void Function::on_added_node(Block* block) {
   block->set_display_index(allocate_block_index());
 
@@ -32,7 +36,13 @@ Function::Function(Context* context, Type* return_type, std::string name,
     : blocks(this), context(context), name(std::move(name)), return_type(return_type) {
   context->increase_refcount();
 
+  verify(return_type->is_arithmetic_or_pointer() || return_type->is_void(),
+         "Function return type must be arithmetic or pointer or void");
+
   for (Type* type : arguments) {
+    verify(type->is_arithmetic_or_pointer(),
+           "Function parameter type must be arithmetic or pointer");
+
     auto parameter = new Parameter(context, type);
     parameter->set_display_index(allocate_value_index());
 
@@ -45,6 +55,14 @@ Function::~Function() {
   verify(blocks.is_empty(), "Block list must be empty before removing function.");
 
   context->decrease_refcount();
+}
+
+ValidationResults Function::validate(ValidationBehaviour behaviour) const {
+  if (!is_extern()) {
+    return validate_function(this, behaviour);
+  }
+
+  return ValidationResults({});
 }
 
 void Function::print(bool newline) const {

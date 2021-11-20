@@ -120,7 +120,7 @@ bool Instruction::dominates(const Instruction* other, const DominatorTree& domin
   }
 
   const auto this_block = get_block();
-  const auto other_block = get_block();
+  const auto other_block = other->get_block();
 
   if (this_block == other_block) {
     return is_before(other);
