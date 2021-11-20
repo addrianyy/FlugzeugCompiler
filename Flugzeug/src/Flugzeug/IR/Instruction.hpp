@@ -8,6 +8,7 @@ namespace flugzeug {
 
 class Block;
 class IRPrinter;
+class DominatorTree;
 
 template <typename TBlock> class BlockTargets {
   constexpr static size_t max_targets = 2;
@@ -27,6 +28,9 @@ public:
   TBlock** begin() { return targets; }
   TBlock** end() { return targets + target_count; }
 
+  TBlock** begin() const { return targets; }
+  TBlock** end() const { return targets + target_count; }
+
   size_t size() const { return target_count; }
 };
 
@@ -34,6 +38,10 @@ class Instruction : public User, public IntrusiveNode<Instruction, Block> {
   DEFINE_INSTANCEOF_RANGE(Value, Value::Kind::InstructionBegin, Value::Kind::InstructionEnd)
 
   friend class Block;
+
+  mutable size_t order_in_block = 0;
+
+  size_t get_order_in_block() const;
 
 protected:
   using User::User;
@@ -69,6 +77,14 @@ public:
 
   BlockTargets<Block> get_targets();
   BlockTargets<const Block> get_targets() const;
+
+  bool is_before(const Instruction* other) const;
+  bool is_after(const Instruction* other) const;
+
+  bool is_dominated_by(const Block* block, const DominatorTree& dominator_tree) const;
+
+  bool dominates(const Instruction* other, const DominatorTree& dominator_tree) const;
+  bool is_dominated_by(const Instruction* other, const DominatorTree& dominator_tree) const;
 
   bool is_volatile() const;
   bool is_branching() const;

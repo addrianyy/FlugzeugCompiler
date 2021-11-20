@@ -8,6 +8,7 @@
 namespace flugzeug {
 
 class Function;
+class DominatorTree;
 
 enum class TraversalType {
   BFS_WithStart,
@@ -26,6 +27,7 @@ class Block : public Value, public IntrusiveNode<Block, Function> {
 
   friend class IntrusiveLinkedList<Instruction, Block>;
   friend class IntrusiveNode<Instruction, Block>;
+  friend class Instruction;
   friend class Function;
 
   using InstructionList = IntrusiveLinkedList<Instruction, Block>;
@@ -33,10 +35,14 @@ class Block : public Value, public IntrusiveNode<Block, Function> {
   InstructionList instructions;
   bool is_entry = false;
 
+  mutable bool invalid_instruction_order = false;
+
   InstructionList& get_list() { return instructions; }
 
   void on_added_node(Instruction* instruction);
   void on_removed_node(Instruction* instruction);
+
+  void update_instruction_order() const;
 
   void remove_all_references_in_phis();
 
@@ -98,9 +104,12 @@ public:
 
   /// Call when branch from `this` to `to` was removed. This function will Phi incoming values in
   /// `to` when needed.
-  void on_removed_branch_to(Block* to, bool destroy_empty_phis);
+  void on_removed_branch_to(Block* to, bool destroy_empty_phis) const;
 
   bool is_terminated() const;
+
+  bool dominates(const Block* other, const DominatorTree& dominator_tree) const;
+  bool is_dominated_by(const Block* other, const DominatorTree& dominator_tree) const;
 
   bool has_successor(const Block* successor) const;
   bool has_predecessor(const Block* predecessor) const;

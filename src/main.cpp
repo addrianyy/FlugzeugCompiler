@@ -3,6 +3,7 @@
 
 #include <Flugzeug/IR/ConsolePrinter.hpp>
 #include <Flugzeug/IR/Context.hpp>
+#include <Flugzeug/IR/DominatorTree.hpp>
 #include <Flugzeug/IR/Function.hpp>
 #include <Flugzeug/IR/InstructionInserter.hpp>
 
@@ -63,6 +64,8 @@ int main() {
     if (f->is_extern()) {
       continue;
     }
+
+    DominatorTree tree(f);
 
     f->print(printer);
     printer.newline();

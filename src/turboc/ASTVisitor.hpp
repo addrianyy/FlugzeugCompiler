@@ -42,6 +42,11 @@ using ConstASTVisitor = detail::ASTVisitor<true>;
 namespace visitor {
 template <typename TStmt, typename TVisitor>
 inline auto visit_statement(TStmt* stmt, TVisitor& visitor) {
+  using VisitorType = std::remove_cvref_t<TVisitor>;
+  static_assert(std::is_base_of_v<ASTVisitor, VisitorType> ||
+                  std::is_base_of_v<ConstASTVisitor, VisitorType>,
+                "Cannot visit using visitor that is not derived from ASTVisitor");
+
   switch (stmt->get_kind()) {
   case Stmt::Kind::Assign:
     return visitor.visit_assign_stmt(cast<AssignStmt>(stmt));

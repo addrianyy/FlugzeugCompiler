@@ -1,4 +1,5 @@
 #include "Block.hpp"
+#include "DominatorTree.hpp"
 #include "Function.hpp"
 #include "Instructions.hpp"
 
@@ -128,9 +129,22 @@ void Block::on_added_node(Instruction* instruction) {
   if (get_function() && !instruction->is_void()) {
     instruction->set_display_index(get_function()->allocate_value_index());
   }
+
+  invalid_instruction_order = true;
 }
 
 void Block::on_removed_node(Instruction* instruction) { (void)instruction; }
+
+void Block::update_instruction_order() const {
+  if (invalid_instruction_order) {
+    size_t index = 0;
+    for (const Instruction& instruction : *this) {
+      instruction.order_in_block = index++;
+    }
+
+    invalid_instruction_order = false;
+  }
+}
 
 void Block::remove_all_references_in_phis() {
   for (User& user : dont_invalidate_current(get_users())) {
@@ -202,11 +216,24 @@ void Block::remove_incoming_block_from_phis(const Block* incoming, bool destroy_
   }
 }
 
-void Block::on_removed_branch_to(Block* to, bool destroy_empty_phis) {
+void Block::on_removed_branch_to(Block* to, bool destroy_empty_phis) const {
   // We don't want to do anything if we haven't actually removed CFG edge between `this` and `to`.
   if (!has_successor(to)) {
     to->remove_incoming_block_from_phis(this, destroy_empty_phis);
   }
+}
+
+bool Block::is_terminated() const {
+  const auto last = get_last_instruction();
+  return last && last->is_terminator();
+}
+
+bool Block::dominates(const Block* other, const DominatorTree& dominator_tree) const {
+  return dominator_tree.first_dominates_second(this, other);
+}
+
+bool Block::is_dominated_by(const Block* other, const DominatorTree& dominator_tree) const {
+  return other->dominates(this, dominator_tree);
 }
 
 bool Block::has_successor(const Block* successor) const {
@@ -282,8 +309,4 @@ std::unordered_set<const Block*> Block::get_reachable_blocks_set(IncludeStart in
   return traverse_generic<const Block, false>(this, include_start == IncludeStart::Yes
                                                       ? TraversalType::DFS_WithStart
                                                       : TraversalType::DFS_WithoutStart);
-}
-bool Block::is_terminated() const {
-  const auto last = get_last_instruction();
-  return last && last->is_terminator();
 }

@@ -37,6 +37,11 @@ using ConstInstructionVisitor = detail::InstructionVisitor<true>;
 namespace visitor {
 template <typename TInstruction, typename TVisitor>
 inline auto visit_instruction(TInstruction* instruction, TVisitor& visitor) {
+  using VisitorType = std::remove_cvref_t<TVisitor>;
+  static_assert(std::is_base_of_v<InstructionVisitor, VisitorType> ||
+                  std::is_base_of_v<ConstInstructionVisitor, VisitorType>,
+                "Cannot visit using visitor that is not derived from InstructionVisitor");
+
   switch (instruction->get_kind()) {
   case Value::Kind::UnaryInstr:
     return visitor.visit_unary_instr(cast<UnaryInstr>(instruction));

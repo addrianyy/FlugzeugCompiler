@@ -164,13 +164,11 @@ IRGenerator::implcit_cast_binary(CodegenValue left, CodegenValue right) {
     return {left, right};
   }
 
-  verify(!left.get_type().is_pointer() && !right.get_type().is_pointer(),
-         "Cannot implicit cast pointers");
-  verify(!left.get_type().is_void() && !right.get_type().is_void(),
-         "Cannot implicit cast void types");
-
   Type left_type = left.get_type();
   Type right_type = right.get_type();
+
+  verify(!left_type.is_pointer() && !right_type.is_pointer(), "Cannot implicit cast pointers");
+  verify(!left_type.is_void() && !right_type.is_void(), "Cannot implicit cast void types");
 
   const auto get_conversion_rank = [](Type type) { return type.get_byte_size(); };
 

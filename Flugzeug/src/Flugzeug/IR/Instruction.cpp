@@ -23,6 +23,11 @@ BlockTargets<TBlock> get_targets_generic(TInstruction* instruction) {
   return result;
 }
 
+size_t Instruction::get_order_in_block() const {
+  get_block()->update_instruction_order();
+  return order_in_block;
+}
+
 void Instruction::print(IRPrinter& printer) const {
   auto p = printer.create_line_printer();
   if (!is_void()) {
@@ -91,6 +96,42 @@ BlockTargets<Block> Instruction::get_targets() { return get_targets_generic<Bloc
 
 BlockTargets<const Block> Instruction::get_targets() const {
   return get_targets_generic<const Block>(this);
+}
+
+bool Instruction::is_before(const Instruction* other) const {
+  verify(get_block() == other->get_block(),
+         "Cannot call `is_before` on instructions in different blocks");
+  return get_order_in_block() < other->get_order_in_block();
+}
+
+bool Instruction::is_after(const Instruction* other) const {
+  verify(get_block() == other->get_block(),
+         "Cannot call `is_after` on instructions in different blocks");
+  return get_order_in_block() > other->get_order_in_block();
+}
+
+bool Instruction::is_dominated_by(const Block* block, const DominatorTree& dominator_tree) const {
+  return get_block()->is_dominated_by(block, dominator_tree);
+}
+
+bool Instruction::dominates(const Instruction* other, const DominatorTree& dominator_tree) const {
+  if (this == other) {
+    return true;
+  }
+
+  const auto this_block = get_block();
+  const auto other_block = get_block();
+
+  if (this_block == other_block) {
+    return is_before(other);
+  } else {
+    return this_block->dominates(other_block, dominator_tree);
+  }
+}
+
+bool Instruction::is_dominated_by(const Instruction* other,
+                                  const DominatorTree& dominator_tree) const {
+  return other->dominates(this, dominator_tree);
 }
 
 bool Instruction::is_volatile() const {
