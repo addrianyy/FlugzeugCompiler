@@ -4,7 +4,7 @@ namespace flugzeug {
 
 class Function;
 
-class GeneralSimplification {
+class InstructionSimplification {
 public:
   static bool run(Function* function);
 };

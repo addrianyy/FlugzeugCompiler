@@ -1,4 +1,6 @@
 #include "ConstPropagation.hpp"
+#include "Utils/OptimizationResult.hpp"
+
 #include <Flugzeug/IR/Block.hpp>
 #include <Flugzeug/IR/Function.hpp>
 #include <Flugzeug/IR/InstructionVisitor.hpp>
@@ -7,7 +9,6 @@ using namespace flugzeug;
 
 class Propagator : public InstructionVisitor {
   Type* type;
-  bool& did_something;
 
   static bool get_constant(const Value* value, uint64_t& result) {
     const auto c = cast<Constant>(value);
@@ -130,12 +131,12 @@ class Propagator : public InstructionVisitor {
   }
 
 public:
-  explicit Propagator(Type* type, bool& did_something) : type(type), did_something(did_something) {}
+  explicit Propagator(Type* type) : type(type) {}
 
-  Value* visit_unary_instr(Argument<UnaryInstr> unary) {
+  OptimizationResult visit_unary_instr(Argument<UnaryInstr> unary) {
     uint64_t val;
     if (!get_constant(unary->get_val(), val)) {
-      return nullptr;
+      return OptimizationResult::unchanged();
     }
 
     const auto op = unary->get_op();
@@ -158,10 +159,10 @@ public:
     return type->get_constant(propagated);
   }
 
-  Value* visit_binary_instr(Argument<BinaryInstr> binary) {
+  OptimizationResult visit_binary_instr(Argument<BinaryInstr> binary) {
     uint64_t lhs, rhs;
     if (!get_constant(binary->get_lhs(), lhs) || !get_constant(binary->get_rhs(), rhs)) {
-      return nullptr;
+      return OptimizationResult::unchanged();
     }
 
     const auto op = binary->get_op();
@@ -184,10 +185,10 @@ public:
     return type->get_constant(propagated);
   }
 
-  Value* visit_int_compare(Argument<IntCompare> int_compare) {
+  OptimizationResult visit_int_compare(Argument<IntCompare> int_compare) {
     uint64_t lhs, rhs;
     if (!get_constant(int_compare->get_lhs(), lhs) || !get_constant(int_compare->get_rhs(), rhs)) {
-      return nullptr;
+      return OptimizationResult::unchanged();
     }
 
     const auto pred = int_compare->get_pred();
@@ -210,10 +211,10 @@ public:
     return type->get_constant(propagated);
   }
 
-  Value* visit_cast(Argument<Cast> cast) {
+  OptimizationResult visit_cast(Argument<Cast> cast) {
     uint64_t val;
     if (!get_constant(cast->get_val(), val)) {
-      return nullptr;
+      return OptimizationResult::unchanged();
     }
 
     const uint64_t propagated =
@@ -222,14 +223,11 @@ public:
     return type->get_constant(propagated);
   }
 
-  Value* visit_cond_branch(Argument<CondBranch> cond_branch) {
+  OptimizationResult visit_cond_branch(Argument<CondBranch> cond_branch) {
     uint64_t cond;
     if (!get_constant(cond_branch->get_cond(), cond)) {
-      return nullptr;
+      return OptimizationResult::unchanged();
     }
-
-    // We will manually replace instruction here and not rely on run().
-    // This is done here because we need to fix up Phis afterwards.
 
     const auto actual_target = cond_branch->get_target(cond);
     const auto removed_target = cond_branch->get_target(!cond);
@@ -242,24 +240,32 @@ public:
     const bool destroy_empty_phis = removed_target != block;
     block->on_removed_branch_to(removed_target, destroy_empty_phis);
 
-    did_something = true;
-
-    return nullptr;
+    return OptimizationResult::changed();
   }
 
-  Value* visit_select(Argument<Select> select) {
+  OptimizationResult visit_select(Argument<Select> select) {
     uint64_t cond;
-    return get_constant(select->get_cond(), cond) ? select->get_val(cond) : nullptr;
+    if (get_constant(select->get_cond(), cond)) {
+      return select->get_val(cond);
+    } else {
+      return OptimizationResult::unchanged();
+    }
   }
 
-  Value* visit_stackalloc(Argument<StackAlloc> stackalloc) { return nullptr; }
-  Value* visit_phi(Argument<Phi> phi) { return nullptr; }
-  Value* visit_load(Argument<Load> load) { return nullptr; }
-  Value* visit_store(Argument<Store> store) { return nullptr; }
-  Value* visit_call(Argument<Call> call) { return nullptr; }
-  Value* visit_branch(Argument<Branch> branch) { return nullptr; }
-  Value* visit_ret(Argument<Ret> ret) { return nullptr; }
-  Value* visit_offset(Argument<Offset> offset) { return nullptr; }
+  OptimizationResult visit_stackalloc(Argument<StackAlloc> stackalloc) {
+    return OptimizationResult::unchanged();
+  }
+  OptimizationResult visit_phi(Argument<Phi> phi) { return OptimizationResult::unchanged(); }
+  OptimizationResult visit_load(Argument<Load> load) { return OptimizationResult::unchanged(); }
+  OptimizationResult visit_store(Argument<Store> store) { return OptimizationResult::unchanged(); }
+  OptimizationResult visit_call(Argument<Call> call) { return OptimizationResult::unchanged(); }
+  OptimizationResult visit_branch(Argument<Branch> branch) {
+    return OptimizationResult::unchanged();
+  }
+  OptimizationResult visit_ret(Argument<Ret> ret) { return OptimizationResult::unchanged(); }
+  OptimizationResult visit_offset(Argument<Offset> offset) {
+    return OptimizationResult::unchanged();
+  }
 };
 
 bool ConstPropagation::run(Function* function) {
@@ -267,10 +273,12 @@ bool ConstPropagation::run(Function* function) {
 
   for (Block& block : *function) {
     for (Instruction& instruction : dont_invalidate_current(block)) {
-      Propagator propagator(instruction.get_type(), did_something);
+      Propagator propagator(instruction.get_type());
 
-      if (const auto propagated = visitor::visit_instruction(&instruction, propagator)) {
-        instruction.replace_instruction_or_uses_and_destroy(propagated);
+      if (const auto result = visitor::visit_instruction(&instruction, propagator)) {
+        if (const auto replacement = result.get_replacement()) {
+          instruction.replace_instruction_or_uses_and_destroy(replacement);
+        }
         did_something = true;
       }
     }

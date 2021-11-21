@@ -8,11 +8,10 @@
 #include <Flugzeug/IR/InstructionInserter.hpp>
 
 #include <Flugzeug/Passes/CFGSimplification.hpp>
-#include <Flugzeug/Passes/CmpSimplification.hpp>
 #include <Flugzeug/Passes/ConstPropagation.hpp>
 #include <Flugzeug/Passes/DeadBlockElimination.hpp>
 #include <Flugzeug/Passes/DeadCodeElimination.hpp>
-#include <Flugzeug/Passes/GeneralSimplification.hpp>
+#include <Flugzeug/Passes/InstructionSimplification.hpp>
 #include <Flugzeug/Passes/MemoryToSSA.hpp>
 
 #include <turboc/IRGenerator.hpp>
@@ -62,9 +61,8 @@ static void optimize_function(Function* f) {
     did_something |= MemoryToSSA::run(f);
     did_something |= DeadCodeElimination::run(f);
     did_something |= ConstPropagation::run(f);
-    did_something |= GeneralSimplification::run(f);
     did_something |= CFGSimplification::run(f);
-    did_something |= CmpSimplification::run(f);
+    did_something |= InstructionSimplification::run(f);
     did_something |= DeadBlockElimination::run(f);
 
     if (!did_something) {
@@ -78,7 +76,7 @@ int main() {
   Context context;
 
   //  test_validation(context);
-  
+
   const auto parsed_source = turboc::Parser::parse_from_file("../Tests/main.tc");
   const auto functions = turboc::IRGenerator::generate(&context, parsed_source);
 
