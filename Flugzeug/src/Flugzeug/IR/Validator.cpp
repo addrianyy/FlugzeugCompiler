@@ -258,6 +258,8 @@ class Validator : public ConstInstructionVisitor {
       } else if (const auto block = cast<Block>(operand)) {
         validation_check(blocks.contains(block), "Instruction uses block outside of the function");
       } else if (const auto other = cast<Instruction>(operand)) {
+        verify(other->get_block(), "Using uninserted instruction as operand");
+
         if (!phi) {
           validation_check(instruction != other,
                            "Self references are only allowed in Phi instructions");

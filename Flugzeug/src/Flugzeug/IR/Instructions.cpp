@@ -3,6 +3,20 @@
 
 using namespace flugzeug;
 
+bool BinaryInstr::is_binary_op_commutative(BinaryOp op) {
+  switch (op) {
+  case BinaryOp::Add:
+  case BinaryOp::Mul:
+  case BinaryOp::And:
+  case BinaryOp::Or:
+  case BinaryOp::Xor:
+    return true;
+
+  default:
+    return false;
+  }
+}
+
 IntPredicate IntCompare::inverted_predicate(IntPredicate pred) {
   switch (pred) {
   case IntPredicate::Equal:
@@ -25,6 +39,33 @@ IntPredicate IntCompare::inverted_predicate(IntPredicate pred) {
     return IntPredicate::GteU;
   case IntPredicate::LteU:
     return IntPredicate::GtU;
+  default:
+    unreachable();
+  }
+}
+
+IntPredicate IntCompare::swapped_order_predicate(IntPredicate pred) {
+  switch (pred) {
+  case IntPredicate::Equal:
+    return IntPredicate::Equal;
+  case IntPredicate::NotEqual:
+    return IntPredicate::NotEqual;
+  case IntPredicate::GtS:
+    return IntPredicate::LtS;
+  case IntPredicate::GteS:
+    return IntPredicate::LteS;
+  case IntPredicate::GtU:
+    return IntPredicate::LtU;
+  case IntPredicate::GteU:
+    return IntPredicate::LteU;
+  case IntPredicate::LtS:
+    return IntPredicate::GtS;
+  case IntPredicate::LteS:
+    return IntPredicate::GteS;
+  case IntPredicate::LtU:
+    return IntPredicate::GtU;
+  case IntPredicate::LteU:
+    return IntPredicate::GteU;
   default:
     unreachable();
   }

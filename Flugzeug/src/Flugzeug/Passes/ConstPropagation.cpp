@@ -1,5 +1,6 @@
 #include "ConstPropagation.hpp"
 #include "Utils/OptimizationResult.hpp"
+#include "Utils/Propagation.hpp"
 
 #include <Flugzeug/IR/Block.hpp>
 #include <Flugzeug/IR/Function.hpp>
@@ -16,98 +17,6 @@ class Propagator : public InstructionVisitor {
       result = c->get_constant_u();
     }
     return c;
-  }
-
-  template <typename T> static T propagate_unary(UnaryOp op, uint64_t value) {
-    switch (op) {
-    case UnaryOp::Neg:
-      return T(-std::make_signed_t<T>(value));
-    case UnaryOp::Not:
-      return ~T(value);
-    default:
-      unreachable();
-    }
-  }
-
-  template <typename T> static T propagate_binary(uint64_t lhs, BinaryOp op, uint64_t rhs) {
-    static_assert(std::is_unsigned_v<T>);
-
-    using Signed = std::make_signed_t<T>;
-    using Unsigned = T;
-
-    const auto sa = Signed(lhs);
-    const auto sb = Signed(rhs);
-    const auto ua = Unsigned(lhs);
-    const auto ub = Unsigned(rhs);
-
-    switch (op) {
-    case BinaryOp::Add:
-      return ua + ub;
-    case BinaryOp::Sub:
-      return ua - ub;
-    case BinaryOp::Mul:
-      return ua * ub;
-    case BinaryOp::ModU:
-      return ua % ub;
-    case BinaryOp::DivU:
-      return ua / ub;
-    case BinaryOp::ModS:
-      return sa % sb;
-    case BinaryOp::DivS:
-      return sa / sb;
-    case BinaryOp::Shr:
-      return ua >> ub;
-    case BinaryOp::Shl:
-      return ua << ub;
-    case BinaryOp::Sar:
-      return sa >> ub;
-    case BinaryOp::And:
-      return ua & ub;
-    case BinaryOp::Or:
-      return ua | ub;
-    case BinaryOp::Xor:
-      return ua ^ ub;
-    default:
-      unreachable();
-    }
-  }
-
-  template <typename T>
-  static bool propagate_int_compare(uint64_t lhs, IntPredicate pred, uint64_t rhs) {
-    static_assert(std::is_unsigned_v<T>);
-
-    using Signed = std::make_signed_t<T>;
-    using Unsigned = T;
-
-    const auto sa = Signed(lhs);
-    const auto sb = Signed(rhs);
-    const auto ua = Unsigned(lhs);
-    const auto ub = Unsigned(rhs);
-
-    switch (pred) {
-    case IntPredicate::Equal:
-      return ua == ub;
-    case IntPredicate::NotEqual:
-      return ua != ub;
-    case IntPredicate::GtU:
-      return ua > ub;
-    case IntPredicate::GteU:
-      return ua >= ub;
-    case IntPredicate::GtS:
-      return sa > sb;
-    case IntPredicate::GteS:
-      return sa >= sb;
-    case IntPredicate::LtU:
-      return ua < ub;
-    case IntPredicate::LteU:
-      return ua <= ub;
-    case IntPredicate::LtS:
-      return sa < sb;
-    case IntPredicate::LteS:
-      return sa <= sb;
-    default:
-      unreachable();
-    }
   }
 
   static uint64_t propagate_cast(uint64_t from, Type* from_type, Type* to_type,
@@ -139,22 +48,7 @@ public:
       return OptimizationResult::unchanged();
     }
 
-    const auto op = unary->get_op();
-
-    const uint64_t propagated = [&]() -> uint64_t {
-      switch (type->get_kind()) {
-      case Type::Kind::I8:
-        return uint64_t(propagate_unary<uint8_t>(op, val));
-      case Type::Kind::I16:
-        return uint64_t(propagate_unary<uint16_t>(op, val));
-      case Type::Kind::I32:
-        return uint64_t(propagate_unary<uint32_t>(op, val));
-      case Type::Kind::I64:
-        return uint64_t(propagate_unary<uint64_t>(op, val));
-      default:
-        unreachable();
-      }
-    }();
+    const auto propagated = utils::propagate_unary_instr(type, unary->get_op(), val);
 
     return type->get_constant(propagated);
   }
@@ -165,22 +59,7 @@ public:
       return OptimizationResult::unchanged();
     }
 
-    const auto op = binary->get_op();
-
-    const uint64_t propagated = [&]() -> uint64_t {
-      switch (type->get_kind()) {
-      case Type::Kind::I8:
-        return uint64_t(propagate_binary<uint8_t>(lhs, op, rhs));
-      case Type::Kind::I16:
-        return uint64_t(propagate_binary<uint16_t>(lhs, op, rhs));
-      case Type::Kind::I32:
-        return uint64_t(propagate_binary<uint32_t>(lhs, op, rhs));
-      case Type::Kind::I64:
-        return uint64_t(propagate_binary<uint64_t>(lhs, op, rhs));
-      default:
-        unreachable();
-      }
-    }();
+    const auto propagated = utils::propagate_binary_instr(type, lhs, binary->get_op(), rhs);
 
     return type->get_constant(propagated);
   }
@@ -191,22 +70,7 @@ public:
       return OptimizationResult::unchanged();
     }
 
-    const auto pred = int_compare->get_pred();
-
-    const bool propagated = [&]() -> bool {
-      switch (type->get_kind()) {
-      case Type::Kind::I8:
-        return propagate_int_compare<uint8_t>(lhs, pred, rhs);
-      case Type::Kind::I16:
-        return propagate_int_compare<uint16_t>(lhs, pred, rhs);
-      case Type::Kind::I32:
-        return propagate_int_compare<uint32_t>(lhs, pred, rhs);
-      case Type::Kind::I64:
-        return propagate_int_compare<uint64_t>(lhs, pred, rhs);
-      default:
-        unreachable();
-      }
-    }();
+    const auto propagated = utils::propagate_int_compare(type, lhs, int_compare->get_pred(), rhs);
 
     return type->get_constant(propagated);
   }
@@ -252,6 +116,18 @@ public:
     }
   }
 
+  OptimizationResult visit_offset(Argument<Offset> offset) {
+    uint64_t base;
+    const auto index_constant = cast<Constant>(offset->get_index());
+    if (!get_constant(offset->get_base(), base) || !index_constant) {
+      return OptimizationResult::unchanged();
+    }
+
+    const auto pointer = base + uint64_t(index_constant->get_constant_i());
+
+    return type->get_constant(pointer);
+  }
+
   OptimizationResult visit_stackalloc(Argument<StackAlloc> stackalloc) {
     return OptimizationResult::unchanged();
   }
@@ -263,9 +139,6 @@ public:
     return OptimizationResult::unchanged();
   }
   OptimizationResult visit_ret(Argument<Ret> ret) { return OptimizationResult::unchanged(); }
-  OptimizationResult visit_offset(Argument<Offset> offset) {
-    return OptimizationResult::unchanged();
-  }
 };
 
 bool ConstPropagation::run(Function* function) {

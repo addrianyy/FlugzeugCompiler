@@ -98,6 +98,8 @@ public:
   void set_lhs(Value* lhs) { return set_operand(0, lhs); }
   void set_rhs(Value* rhs) { return set_operand(1, rhs); }
 
+  static bool is_binary_op_commutative(BinaryOp op);
+
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };
@@ -126,8 +128,10 @@ public:
 
   void set_lhs(Value* lhs) { return set_operand(0, lhs); }
   void set_rhs(Value* rhs) { return set_operand(1, rhs); }
+  void set_pred(IntPredicate new_pred) { pred = new_pred; }
 
   static IntPredicate inverted_predicate(IntPredicate pred);
+  static IntPredicate swapped_order_predicate(IntPredicate pred);
 
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
