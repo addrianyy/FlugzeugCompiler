@@ -88,6 +88,7 @@ public:
 
   bool is_zero() const;
   bool is_one() const;
+  bool is_all_ones() const;
   bool is_undef() const { return kind == Kind::Undef; }
 
   std::optional<uint64_t> get_constant_u_opt() const;

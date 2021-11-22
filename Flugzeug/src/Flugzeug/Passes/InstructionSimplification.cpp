@@ -135,7 +135,7 @@ static OptimizationResult simplify_cmp_select_cmp_sequence(IntCompare* cmp) {
     return OptimizationResult::changed();
   } else if (const auto parent_cmp = cast<IntCompare>(select->get_cond())) {
     const auto new_cmp =
-      new IntCompare(parent_cmp->get_context(), parent_cmp->get_lhs(),
+      new IntCompare(cmp->get_context(), parent_cmp->get_lhs(),
                      IntCompare::inverted_predicate(parent_cmp->get_pred()), parent_cmp->get_rhs());
     cmp->replace_instruction_and_destroy(new_cmp);
 
@@ -176,30 +176,185 @@ public:
     PROPAGATE_RESULT(make_undef_if_uses_undef(binary));
     PROPAGATE_RESULT(chain_commutative_expressions(binary));
 
-    const auto zero = binary->get_type()->get_zero();
+    const auto type = binary->get_type();
+    const auto lhs = binary->get_lhs();
+    const auto rhs = binary->get_rhs();
 
-    if (binary->is(BinaryOp::Sub) && binary->get_lhs() == binary->get_rhs()) {
-      // sub X, X == 0
-      return zero;
-    } else if (binary->is(BinaryOp::Add) && binary->get_rhs()->is_zero()) {
-      // add X, 0 == X
-      return binary->get_lhs();
-    } else if (binary->is(BinaryOp::Mul)) {
-      if (const auto multiplier_v = cast<Constant>(binary->get_rhs())) {
+    // Canonicalize `op const, non-const` to `op non-const, const` if `op` is commutative.
+    if (BinaryInstr::is_binary_op_commutative(binary->get_op())) {
+      if (cast<Constant>(lhs) && !cast<Constant>(rhs)) {
+        binary->set_lhs(rhs);
+        binary->set_rhs(lhs);
+
+        return OptimizationResult::changed();
+      }
+    }
+
+    switch (binary->get_op()) {
+    case BinaryOp::Add: {
+      if (rhs->is_zero()) {
+        // x + 0 == x
+        return lhs;
+      }
+
+      break;
+    }
+
+    case BinaryOp::Sub: {
+      if (lhs == rhs) {
+        // x - x == 0
+        return type->get_zero();
+      }
+
+      if (rhs->is_zero()) {
+        // x - 0 == x
+        return lhs;
+      }
+
+      if (lhs->is_zero()) {
+        // 0 - x == -x
+        return new UnaryInstr(context, UnaryOp::Neg, rhs);
+      }
+
+      if (const auto constant = cast<Constant>(rhs)) {
+        // Canonicalize
+        // x - c == x + (-c)
+        const auto negated_constant = type->get_constant(-constant->get_constant_u());
+        return new BinaryInstr(context, lhs, BinaryOp::Add, negated_constant);
+      }
+
+      break;
+    }
+
+    case BinaryOp::And: {
+      if (rhs->is_zero()) {
+        // x & 0 == 0
+        return type->get_zero();
+      }
+
+      if (rhs->is_all_ones()) {
+        // x & 111...111 == x
+        return lhs;
+      }
+
+      if (lhs == rhs) {
+        // x & x == x
+        return lhs;
+      }
+
+      break;
+    }
+
+    case BinaryOp::Or: {
+      if (rhs->is_zero()) {
+        // x | 0 == x
+        return lhs;
+      }
+
+      if (rhs->is_all_ones()) {
+        // x | 111...111 == 111...111
+        return rhs;
+      }
+
+      if (lhs == rhs) {
+        // x | x == x
+        return lhs;
+      }
+
+      break;
+    }
+
+    case BinaryOp::Xor: {
+      if (rhs->is_zero()) {
+        // x ^ 0 == x
+        return lhs;
+      }
+
+      if (lhs == rhs) {
+        // x ^ x == 0
+        return type->get_zero();
+      }
+
+      if (rhs->is_all_ones()) {
+        // a ^ 111...111 = ~a
+        return new UnaryInstr(context, UnaryOp::Not, lhs);
+      }
+
+      break;
+    }
+
+    case BinaryOp::Mul: {
+      if (rhs->is_zero()) {
+        // x * 0 == 0
+        return type->get_zero();
+      }
+
+      if (rhs->is_one()) {
+        // x * 1 == x
+        return lhs;
+      }
+
+      if (const auto multiplier_v = cast<Constant>(rhs)) {
         const auto multiplier = multiplier_v->get_constant_u();
-        if (multiplier == 0) {
-          // mul X, 0 == 0
-          return zero;
-        } else if (multiplier == 1) {
-          // mul X, 1 == X
-          return binary->get_lhs();
-        } else if (is_pow2(multiplier)) {
-          // mul X, Y (if Y is power of 2) == shl X, log2(Y)
-          const auto shift_amount = binary->get_type()->get_constant(bin_log2(multiplier));
-          return new BinaryInstr(binary->get_context(), binary->get_lhs(), BinaryOp::Shl,
-                                 shift_amount);
+        if (is_pow2(multiplier)) {
+          // X * Y (if Y is power of 2) == X << log2(Y)
+          const auto shift_amount = type->get_constant(bin_log2(multiplier));
+          return new BinaryInstr(context, lhs, BinaryOp::Shl, shift_amount);
         }
       }
+
+      break;
+    }
+    case BinaryOp::DivU:
+    case BinaryOp::DivS: {
+      if (lhs->is_zero()) {
+        // 0 / x == 0
+        return type->get_zero();
+      }
+
+      if (rhs->is_one()) {
+        // x / 1 == x
+        return lhs;
+      }
+
+      if (lhs == rhs) {
+        // x / x == 1
+        return type->get_one();
+      }
+
+      break;
+    }
+
+    case BinaryOp::ModU:
+    case BinaryOp::ModS: {
+      if (lhs->is_zero() || rhs->is_one() || lhs == rhs) {
+        // 0 % x == 0
+        // x % 1 == 0
+        // x % x == 0
+        return type->get_zero();
+      }
+
+      break;
+    }
+
+    case BinaryOp::Shr:
+    case BinaryOp::Shl:
+    case BinaryOp::Sar: {
+      if (lhs->is_zero()) {
+        // 0 <<>> x == 0
+        return type->get_zero();
+      }
+
+      if (rhs->is_zero()) {
+        // x <<>> 0 == x
+        return lhs;
+      }
+
+      break;
+    }
+
+    default:
+      unreachable();
     }
 
     return OptimizationResult::unchanged();
@@ -218,7 +373,7 @@ public:
     if (lhs == rhs) {
       const auto result = utils::propagate_int_compare(lhs->get_type(), 1, pred, 1);
 
-      return int_compare->get_context()->get_i1_ty()->get_constant(result);
+      return context->get_i1_ty()->get_constant(result);
     }
 
     // Canonicalize `cmp const, non-const` to `cmp non-const, const`.
@@ -228,6 +383,36 @@ public:
       int_compare->set_pred(IntCompare::swapped_order_predicate(pred));
 
       return OptimizationResult::changed();
+    }
+
+    const auto i1 = context->get_i1_ty();
+    const auto false_value = i1->get_constant(0);
+    const auto true_value = i1->get_constant(1);
+
+    // Optimize some unsigned comparisons.
+    if (rhs->is_zero()) {
+      switch (pred) {
+      case IntPredicate::LtU:
+        // unsigned < 0 == false
+        return false_value;
+
+      case IntPredicate::LteU:
+      case IntPredicate::GteU:
+        // unsigned <= 0 == true
+        // unsigned >= 0 == true
+        return true_value;
+
+      case IntPredicate::GtU:
+        // unsigned > 0 == unsigned != 0
+        return new IntCompare(context, lhs, IntPredicate::NotEqual,
+                              lhs->get_type()->get_constant(0));
+
+      default:
+        break;
+      }
+    } else if (rhs->is_one() && pred == IntPredicate::LtU) {
+      // unsigned < 1 == unsigned == 0
+      return new IntCompare(context, lhs, IntPredicate::Equal, lhs->get_type()->get_constant(0));
     }
 
     return OptimizationResult::unchanged();
@@ -246,8 +431,8 @@ public:
       // can be converted to `zext` from i16 to i64.
       if (kind == parent_kind ||
           (kind == CastKind::SignExtend && parent_kind == CastKind::ZeroExtend)) {
-        const auto new_cast = new Cast(cast_instr->get_context(), parent_cast->get_val(),
-                                       parent_kind, cast_instr->get_type());
+        const auto new_cast =
+          new Cast(context, parent_cast->get_val(), parent_kind, cast_instr->get_type());
 
         cast_instr->replace_instruction_and_destroy(new_cast);
         parent_cast->destroy_if_unused();
@@ -275,8 +460,7 @@ public:
           new_kind = parent_kind;
         }
 
-        const auto new_cast =
-          new Cast(cast_instr->get_context(), original, new_kind, cast_instr->get_type());
+        const auto new_cast = new Cast(context, original, new_kind, cast_instr->get_type());
 
         cast_instr->replace_instruction_and_destroy(new_cast);
         parent_cast->destroy_if_unused();

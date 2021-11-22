@@ -45,7 +45,7 @@ u32 main() {
     return 0;
 }
 
-i32 test123(u16 x, i32 y) {
+i32 test123(u32 x, i32 y) {
 
-    return (i64)(i32)x;
+    return x -8;
 }

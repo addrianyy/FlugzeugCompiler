@@ -46,6 +46,11 @@ bool Value::is_one() const {
   return c && c->get_constant_u() == 1;
 }
 
+bool Value::is_all_ones() const {
+  const auto c = cast<Constant>(this);
+  return c && c->get_constant_i() == -1;
+}
+
 std::optional<uint64_t> Value::get_constant_u_opt() const {
   const auto c = cast<Constant>(this);
   return c ? std::optional(c->get_constant_u()) : std::nullopt;
