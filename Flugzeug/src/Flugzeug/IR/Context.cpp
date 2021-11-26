@@ -1,30 +1,16 @@
 #include "Context.hpp"
 #include "Function.hpp"
 
+#include <Flugzeug/Core/HashCombine.hpp>
+
 using namespace flugzeug;
 
 size_t Context::ConstantKeyHash::operator()(const Context::ConstantKey& p) const {
-  const auto h1 = std::hash<uint64_t>{}(p.constant);
-  const auto h2 = std::hash<Type*>{}(p.type);
-
-  size_t seed = 0ull;
-
-  seed ^= h1 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-  seed ^= h2 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-
-  return seed;
+  return hash_combine(p.constant, p.type);
 }
 
 size_t Context::PointerKeyHash::operator()(const Context::PointerKey& p) const {
-  const auto h1 = std::hash<uint32_t>{}(p.indirection);
-  const auto h2 = std::hash<Type*>{}(p.base);
-
-  size_t seed = 0ull;
-
-  seed ^= h1 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-  seed ^= h2 + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-
-  return seed;
+  return hash_combine(p.indirection, p.base);
 }
 
 void Context::increase_refcount() { refcount++; }

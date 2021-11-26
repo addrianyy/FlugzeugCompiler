@@ -12,6 +12,7 @@
 #include <Flugzeug/Passes/DeadBlockElimination.hpp>
 #include <Flugzeug/Passes/DeadCodeElimination.hpp>
 #include <Flugzeug/Passes/InstructionSimplification.hpp>
+#include <Flugzeug/Passes/LocalReordering.hpp>
 #include <Flugzeug/Passes/MemoryToSSA.hpp>
 
 #include <turboc/IRGenerator.hpp>
@@ -58,12 +59,13 @@ static void optimize_function(Function* f) {
   while (true) {
     bool did_something = false;
 
+    did_something |= CFGSimplification::run(f);
     did_something |= MemoryToSSA::run(f);
     did_something |= DeadCodeElimination::run(f);
     did_something |= ConstPropagation::run(f);
-    did_something |= CFGSimplification::run(f);
     did_something |= InstructionSimplification::run(f);
     did_something |= DeadBlockElimination::run(f);
+    did_something |= LocalReordering::run(f);
 
     if (!did_something) {
       f->reassign_display_indices();

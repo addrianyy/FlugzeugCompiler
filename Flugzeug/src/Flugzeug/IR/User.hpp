@@ -69,6 +69,8 @@ public:
   Value* get_operand(size_t index);
   const Value* get_operand(size_t index) const;
 
+  bool uses_value(Value* value) const;
+
   void set_operand(size_t index, Value* operand);
 
   using OperandIterator = OperandIteratorInternal<Value>;

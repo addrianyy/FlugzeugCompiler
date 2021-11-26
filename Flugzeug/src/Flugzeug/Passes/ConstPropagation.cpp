@@ -1,6 +1,6 @@
 #include "ConstPropagation.hpp"
+#include "Utils/Evaluation.hpp"
 #include "Utils/OptimizationResult.hpp"
-#include "Utils/Propagation.hpp"
 
 #include <Flugzeug/IR/Block.hpp>
 #include <Flugzeug/IR/Function.hpp>
@@ -48,7 +48,7 @@ public:
       return OptimizationResult::unchanged();
     }
 
-    const auto propagated = utils::propagate_unary_instr(type, unary->get_op(), val);
+    const auto propagated = utils::evaluate_unary_instr(type, unary->get_op(), val);
 
     return type->get_constant(propagated);
   }
@@ -59,7 +59,7 @@ public:
       return OptimizationResult::unchanged();
     }
 
-    const auto propagated = utils::propagate_binary_instr(type, lhs, binary->get_op(), rhs);
+    const auto propagated = utils::evaluate_binary_instr(type, lhs, binary->get_op(), rhs);
 
     return type->get_constant(propagated);
   }
@@ -70,7 +70,7 @@ public:
       return OptimizationResult::unchanged();
     }
 
-    const auto propagated = utils::propagate_int_compare(type, lhs, int_compare->get_pred(), rhs);
+    const auto propagated = utils::evaluate_int_compare(type, lhs, int_compare->get_pred(), rhs);
 
     return type->get_constant(propagated);
   }

@@ -30,6 +30,16 @@ const Value* User::get_operand(size_t index) const {
   return operands[index];
 }
 
+bool User::uses_value(Value* value) const {
+  for (size_t i = 0; i < get_operand_count(); ++i) {
+    if (operands[i] == value) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void User::adjust_uses_count(size_t count) {
   if (count > uses_for_operands.size()) {
     const auto previous_size = uses_for_operands.size();

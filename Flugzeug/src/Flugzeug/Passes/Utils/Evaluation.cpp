@@ -1,8 +1,8 @@
-#include "Propagation.hpp"
+#include "Evaluation.hpp"
 
 using namespace flugzeug;
 
-template <typename T> static T propagate_unary_generic(UnaryOp op, uint64_t value) {
+template <typename T> static T evaluate_unary_generic(UnaryOp op, uint64_t value) {
   switch (op) {
   case UnaryOp::Neg:
     return T(-std::make_signed_t<T>(value));
@@ -13,7 +13,7 @@ template <typename T> static T propagate_unary_generic(UnaryOp op, uint64_t valu
   }
 }
 
-template <typename T> static T propagate_binary_generic(uint64_t lhs, BinaryOp op, uint64_t rhs) {
+template <typename T> static T evaluate_binary_generic(uint64_t lhs, BinaryOp op, uint64_t rhs) {
   static_assert(std::is_unsigned_v<T>);
 
   using Signed = std::make_signed_t<T>;
@@ -57,7 +57,7 @@ template <typename T> static T propagate_binary_generic(uint64_t lhs, BinaryOp o
 }
 
 template <typename T>
-static bool propagate_int_compare_generic(uint64_t lhs, IntPredicate pred, uint64_t rhs) {
+static bool evaluate_int_compare_generic(uint64_t lhs, IntPredicate pred, uint64_t rhs) {
   static_assert(std::is_unsigned_v<T>);
 
   using Signed = std::make_signed_t<T>;
@@ -94,47 +94,47 @@ static bool propagate_int_compare_generic(uint64_t lhs, IntPredicate pred, uint6
   }
 }
 
-uint64_t utils::propagate_unary_instr(Type* type, UnaryOp op, uint64_t value) {
+uint64_t utils::evaluate_unary_instr(Type* type, UnaryOp op, uint64_t value) {
   switch (type->get_kind()) {
   case Type::Kind::I8:
-    return uint64_t(propagate_unary_generic<uint8_t>(op, value));
+    return uint64_t(evaluate_unary_generic<uint8_t>(op, value));
   case Type::Kind::I16:
-    return uint64_t(propagate_unary_generic<uint16_t>(op, value));
+    return uint64_t(evaluate_unary_generic<uint16_t>(op, value));
   case Type::Kind::I32:
-    return uint64_t(propagate_unary_generic<uint32_t>(op, value));
+    return uint64_t(evaluate_unary_generic<uint32_t>(op, value));
   case Type::Kind::I64:
-    return uint64_t(propagate_unary_generic<uint64_t>(op, value));
+    return uint64_t(evaluate_unary_generic<uint64_t>(op, value));
   default:
     unreachable();
   }
 }
 
-uint64_t utils::propagate_binary_instr(Type* type, uint64_t lhs, BinaryOp op, uint64_t rhs) {
+uint64_t utils::evaluate_binary_instr(Type* type, uint64_t lhs, BinaryOp op, uint64_t rhs) {
   switch (type->get_kind()) {
   case Type::Kind::I8:
-    return uint64_t(propagate_binary_generic<uint8_t>(lhs, op, rhs));
+    return uint64_t(evaluate_binary_generic<uint8_t>(lhs, op, rhs));
   case Type::Kind::I16:
-    return uint64_t(propagate_binary_generic<uint16_t>(lhs, op, rhs));
+    return uint64_t(evaluate_binary_generic<uint16_t>(lhs, op, rhs));
   case Type::Kind::I32:
-    return uint64_t(propagate_binary_generic<uint32_t>(lhs, op, rhs));
+    return uint64_t(evaluate_binary_generic<uint32_t>(lhs, op, rhs));
   case Type::Kind::I64:
-    return uint64_t(propagate_binary_generic<uint64_t>(lhs, op, rhs));
+    return uint64_t(evaluate_binary_generic<uint64_t>(lhs, op, rhs));
   default:
     unreachable();
   }
 }
 
-bool utils::propagate_int_compare(Type* type, uint64_t lhs, IntPredicate predicate, uint64_t rhs) {
+bool utils::evaluate_int_compare(Type* type, uint64_t lhs, IntPredicate predicate, uint64_t rhs) {
   switch (type->get_kind()) {
   case Type::Kind::I8:
-    return propagate_int_compare_generic<uint8_t>(lhs, predicate, rhs);
+    return evaluate_int_compare_generic<uint8_t>(lhs, predicate, rhs);
   case Type::Kind::I16:
-    return propagate_int_compare_generic<uint16_t>(lhs, predicate, rhs);
+    return evaluate_int_compare_generic<uint16_t>(lhs, predicate, rhs);
   case Type::Kind::I32:
-    return propagate_int_compare_generic<uint32_t>(lhs, predicate, rhs);
+    return evaluate_int_compare_generic<uint32_t>(lhs, predicate, rhs);
   case Type::Kind::I64:
   case Type::Kind::Pointer:
-    return propagate_int_compare_generic<uint64_t>(lhs, predicate, rhs);
+    return evaluate_int_compare_generic<uint64_t>(lhs, predicate, rhs);
   default:
     unreachable();
   }

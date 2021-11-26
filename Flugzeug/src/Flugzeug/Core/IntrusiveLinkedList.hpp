@@ -76,6 +76,8 @@ template <typename T, typename Owner> class IntrusiveLinkedList {
     using pointer = value_type*;
     using reference = value_type&;
 
+    explicit IteratorInternal(std::nullptr_t) : node(nullptr) {}
+    explicit IteratorInternal(TValue* value) : node(static_cast<TNode*>(value)) {}
     explicit IteratorInternal(TNode* node) : node(node) {}
 
     IteratorInternal& operator++() {

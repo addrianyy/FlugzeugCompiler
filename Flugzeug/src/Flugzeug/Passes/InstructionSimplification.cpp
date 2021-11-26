@@ -1,7 +1,7 @@
 #include "InstructionSimplification.hpp"
 #include "Utils/Commutative.hpp"
+#include "Utils/Evaluation.hpp"
 #include "Utils/OptimizationResult.hpp"
-#include "Utils/Propagation.hpp"
 
 #include <Flugzeug/IR/Block.hpp>
 #include <Flugzeug/IR/Function.hpp>
@@ -63,7 +63,7 @@ static OptimizationResult chain_commutative_expressions(BinaryInstr* binary) {
     return OptimizationResult::unchanged();
   }
 
-  const auto evaluated = utils::propagate_binary_instr(
+  const auto evaluated = utils::evaluate_binary_instr(
     binary->get_type(), constant->get_constant_u(), op, constant_2->get_constant_u());
 
   const auto evaluated_constant = binary->get_type()->get_constant(evaluated);
@@ -305,6 +305,7 @@ public:
 
       break;
     }
+
     case BinaryOp::DivU:
     case BinaryOp::DivS: {
       if (lhs->is_zero()) {
@@ -371,7 +372,7 @@ public:
     // If both operands to int compare instruction are the same we can
     // calculate the result at compile time.
     if (lhs == rhs) {
-      const auto result = utils::propagate_int_compare(lhs->get_type(), 1, pred, 1);
+      const auto result = utils::evaluate_int_compare(lhs->get_type(), 1, pred, 1);
 
       return context->get_i1_ty()->get_constant(result);
     }
