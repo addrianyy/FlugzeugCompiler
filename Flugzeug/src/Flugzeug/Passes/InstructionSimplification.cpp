@@ -600,32 +600,30 @@ public:
 bool InstructionSimplification::run(Function* function) {
   bool did_something = false;
 
-  for (Block& block : *function) {
-    for (Instruction& instruction : dont_invalidate_current(block)) {
-      Simplifier simplifier(&instruction);
+  for (Instruction& instruction : dont_invalidate_current(function->instructions())) {
+    Simplifier simplifier(&instruction);
 
-      // Simplify current instruction. If we have inserted new instruction than try to simplify it
-      // again.
-      Instruction* current_instruction = &instruction;
-      while (current_instruction) {
-        if (const auto result = visitor::visit_instruction(current_instruction, simplifier)) {
-          current_instruction = nullptr;
+    // Simplify current instruction. If we have inserted new instruction than try to simplify it
+    // again.
+    Instruction* current_instruction = &instruction;
+    while (current_instruction) {
+      if (const auto result = visitor::visit_instruction(current_instruction, simplifier)) {
+        current_instruction = nullptr;
 
-          if (const auto replacement = result.get_replacement()) {
-            if (const auto new_instruction = cast<Instruction>(replacement)) {
-              if (!new_instruction->get_block()) {
-                // Try to simplify newly added instruction in the next iteration.
-                current_instruction = new_instruction;
-              }
+        if (const auto replacement = result.get_replacement()) {
+          if (const auto new_instruction = cast<Instruction>(replacement)) {
+            if (!new_instruction->get_block()) {
+              // Try to simplify newly added instruction in the next iteration.
+              current_instruction = new_instruction;
             }
-
-            instruction.replace_instruction_or_uses_and_destroy(replacement);
           }
 
-          did_something = true;
-        } else {
-          break;
+          instruction.replace_instruction_or_uses_and_destroy(replacement);
         }
+
+        did_something = true;
+      } else {
+        break;
       }
     }
   }

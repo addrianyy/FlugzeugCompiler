@@ -24,6 +24,8 @@ class Function {
     TInstruction* current_instruction;
 
     void get_instruction_for_current_block() {
+      current_instruction = nullptr;
+
       while (current_block) {
         current_instruction = current_block->get_first_instruction();
         if (current_instruction) {

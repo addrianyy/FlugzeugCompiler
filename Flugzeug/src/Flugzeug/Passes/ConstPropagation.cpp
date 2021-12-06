@@ -144,16 +144,14 @@ public:
 bool ConstPropagation::run(Function* function) {
   bool did_something = false;
 
-  for (Block& block : *function) {
-    for (Instruction& instruction : dont_invalidate_current(block)) {
-      Propagator propagator(instruction.get_type());
+  for (Instruction& instruction : dont_invalidate_current(function->instructions())) {
+    Propagator propagator(instruction.get_type());
 
-      if (const auto result = visitor::visit_instruction(&instruction, propagator)) {
-        if (const auto replacement = result.get_replacement()) {
-          instruction.replace_instruction_or_uses_and_destroy(replacement);
-        }
-        did_something = true;
+    if (const auto result = visitor::visit_instruction(&instruction, propagator)) {
+      if (const auto replacement = result.get_replacement()) {
+        instruction.replace_instruction_or_uses_and_destroy(replacement);
       }
+      did_something = true;
     }
   }
 

@@ -38,12 +38,10 @@ void PhiToMemory::convert_phi_to_memory(Phi* phi) {
 bool PhiToMemory::run(Function* function) {
   bool did_something = false;
 
-  for (Block& block : *function) {
-    for (Instruction& instruction : dont_invalidate_current(block)) {
-      if (const auto phi = cast<Phi>(instruction)) {
-        convert_phi_to_memory(phi);
-        did_something = true;
-      }
+  for (Instruction& instruction : dont_invalidate_current(function->instructions())) {
+    if (const auto phi = cast<Phi>(instruction)) {
+      convert_phi_to_memory(phi);
+      did_something = true;
     }
   }
 

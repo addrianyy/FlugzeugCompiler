@@ -30,12 +30,10 @@ bool MemoryToSSA::is_stackalloc_optimizable(const StackAlloc* stackalloc) {
 std::vector<StackAlloc*> MemoryToSSA::find_optimizable_stackallocs(Function* function) {
   std::vector<StackAlloc*> stackallocs;
 
-  for (Block& block : *function) {
-    for (Instruction& instruction : block) {
-      if (const auto stackalloc = cast<StackAlloc>(instruction)) {
-        if (is_stackalloc_optimizable(stackalloc)) {
-          stackallocs.push_back(stackalloc);
-        }
+  for (Instruction& instruction : function->instructions()) {
+    if (const auto stackalloc = cast<StackAlloc>(instruction)) {
+      if (is_stackalloc_optimizable(stackalloc)) {
+        stackallocs.push_back(stackalloc);
       }
     }
   }

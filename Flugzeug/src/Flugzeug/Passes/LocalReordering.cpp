@@ -91,32 +91,30 @@ bool LocalReordering::run(Function* function) {
   Reorderer reorderer;
   bool did_something = false;
 
-  for (Block& block : *function) {
-    for (Instruction& instruction : dont_invalidate_current(block)) {
-      const auto later_instruction = &instruction;
-      const auto earlier_instruction = visitor::visit_instruction(later_instruction, reorderer);
-      if (!earlier_instruction) {
-        continue;
-      }
+  for (Instruction& instruction : dont_invalidate_current(function->instructions())) {
+    const auto later_instruction = &instruction;
+    const auto earlier_instruction = visitor::visit_instruction(later_instruction, reorderer);
+    if (!earlier_instruction) {
+      continue;
+    }
 
-      // We want to move earlier instruction just before later instruction.
+    // We want to move earlier instruction just before later instruction.
 
-      // Local reorder can only reorder within one block.
-      if (earlier_instruction->get_block() != later_instruction->get_block()) {
-        continue;
-      }
+    // Local reorder can only reorder within one block.
+    if (earlier_instruction->get_block() != later_instruction->get_block()) {
+      continue;
+    }
 
-      // Check if other instruction is actually just above us. In this case
-      // we have nothing to do.
-      if (earlier_instruction->get_next() == later_instruction) {
-        continue;
-      }
+    // Check if other instruction is actually just above us. In this case
+    // we have nothing to do.
+    if (earlier_instruction->get_next() == later_instruction) {
+      continue;
+    }
 
-      if (can_move_earlier_down(earlier_instruction, later_instruction)) {
-        earlier_instruction->move_before(later_instruction);
+    if (can_move_earlier_down(earlier_instruction, later_instruction)) {
+      earlier_instruction->move_before(later_instruction);
 
-        did_something = true;
-      }
+      did_something = true;
     }
   }
 

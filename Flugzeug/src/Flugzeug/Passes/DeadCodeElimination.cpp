@@ -37,13 +37,11 @@ bool DeadCodeElimination::run(Function* function) {
   std::vector<Instruction*> worklist;
   bool did_something = false;
 
-  for (Block& block : *function) {
-    for (Instruction& instruction : dont_invalidate_current(block)) {
-      // Don't try to eliminate instructions that are already queued in worklist.
-      const auto found = std::find(worklist.begin(), worklist.end(), &instruction);
-      if (found == worklist.end()) {
-        did_something |= try_to_eliminate(&instruction, worklist);
-      }
+  for (Instruction& instruction : dont_invalidate_current(function->instructions())) {
+    // Don't try to eliminate instructions that are already queued in worklist.
+    const auto found = std::find(worklist.begin(), worklist.end(), &instruction);
+    if (found == worklist.end()) {
+      did_something |= try_to_eliminate(&instruction, worklist);
     }
   }
 
