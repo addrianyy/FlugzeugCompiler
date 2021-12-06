@@ -19,6 +19,59 @@ class Function {
 
   using BlockList = IntrusiveLinkedList<Block, Function>;
 
+  template <typename TBlock, typename TInstruction> class InstructionIteratorInternal {
+    TBlock* current_block;
+    TInstruction* current_instruction;
+
+    void get_instruction_for_current_block() {
+      while (current_block) {
+        current_instruction = current_block->get_first_instruction();
+        if (current_instruction) {
+          break;
+        }
+
+        current_block = current_block->get_next();
+      }
+    }
+
+  public:
+    using iterator_category = std::forward_iterator_tag;
+    using difference_type = std::ptrdiff_t;
+    using value_type = TInstruction;
+    using pointer = value_type*;
+    using reference = value_type&;
+
+    explicit InstructionIteratorInternal(TBlock* current_block)
+        : current_block(current_block), current_instruction(nullptr) {
+      get_instruction_for_current_block();
+    }
+
+    InstructionIteratorInternal& operator++() {
+      if (const auto next = current_instruction->get_next()) {
+        current_instruction = next;
+      } else {
+        current_block = current_block->get_next();
+        get_instruction_for_current_block();
+      }
+
+      return *this;
+    }
+
+    InstructionIteratorInternal operator++(int) {
+      const auto before = *this;
+      ++(*this);
+      return before;
+    }
+
+    reference operator*() const { return *current_instruction; }
+    pointer operator->() const { return current_instruction; }
+
+    bool operator==(const InstructionIteratorInternal& rhs) const {
+      return current_block == rhs.current_block && current_instruction == rhs.current_instruction;
+    }
+    bool operator!=(const InstructionIteratorInternal& rhs) const { return !(*this == rhs); }
+  };
+
   Context* const context;
 
   Type* const return_type;
@@ -93,6 +146,16 @@ public:
   void insert_block(Block* block);
 
   void destroy();
+
+  using InstructionIterator = InstructionIteratorInternal<Block, Instruction>;
+  using ConstInstructionIterator = InstructionIteratorInternal<const Block, const Instruction>;
+
+  IteratorRange<InstructionIterator> instructions() {
+    return {InstructionIterator(get_first_block()), InstructionIterator(nullptr)};
+  }
+  IteratorRange<ConstInstructionIterator> instructions() const {
+    return {ConstInstructionIterator(get_first_block()), ConstInstructionIterator(nullptr)};
+  }
 };
 
 }; // namespace flugzeug

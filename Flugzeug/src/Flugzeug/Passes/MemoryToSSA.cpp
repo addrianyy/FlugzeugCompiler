@@ -13,7 +13,7 @@ bool MemoryToSSA::is_stackalloc_optimizable(const StackAlloc* stackalloc) {
     return false;
   }
 
-  for (const User& user : stackalloc->get_users()) {
+  for (const User& user : stackalloc->users()) {
     // Stackalloc is optimizable if it's only used by Load and Store instructions.
     const auto store = cast<Store>(user);
     const auto load = cast<Load>(user);

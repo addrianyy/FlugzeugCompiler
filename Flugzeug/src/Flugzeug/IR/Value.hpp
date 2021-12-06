@@ -105,9 +105,9 @@ public:
   using UserIterator = ValueUses::iterator;
   using ConstUserIterator = ValueUses::const_iterator;
 
-  IteratorRange<UserIterator> get_users() { return IteratorRange(uses.begin(), uses.end()); }
-  IteratorRange<ConstUserIterator> get_users() const {
-    return IteratorRange(ConstUserIterator(uses.begin()), ConstUserIterator(uses.end()));
+  IteratorRange<UserIterator> users() { return {uses.begin(), uses.end()}; }
+  IteratorRange<ConstUserIterator> users() const {
+    return {ConstUserIterator(uses.begin()), ConstUserIterator(uses.end())};
   }
 };
 

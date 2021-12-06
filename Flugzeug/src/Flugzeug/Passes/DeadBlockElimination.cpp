@@ -12,7 +12,7 @@ void DeadBlockElimination::destroy_dead_block(Block* block) {
   block->clear();
 
   // Remove branches to this block (they are in dead blocks anyway).
-  for (User& user : dont_invalidate_current(block->get_users())) {
+  for (User& user : dont_invalidate_current(block->users())) {
     const auto instruction = cast<Instruction>(user);
     if (instruction && instruction->is_branching()) {
       // These branches are in dead blocks so we can remove them.

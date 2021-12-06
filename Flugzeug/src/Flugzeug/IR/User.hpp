@@ -17,7 +17,7 @@ class User : public Value {
   constexpr static size_t static_use_count = 3;
   Use static_uses[static_use_count]{};
 
-  std::vector<Value*> operands;
+  std::vector<Value*> used_operands;
   std::vector<Use*> uses_for_operands;
 
   template <typename TOperand> class OperandIteratorInternal {
@@ -76,13 +76,13 @@ public:
   using OperandIterator = OperandIteratorInternal<Value>;
   using ConstOperandIterator = OperandIteratorInternal<const Value>;
 
-  IteratorRange<OperandIterator> get_operands() {
-    return IteratorRange(OperandIterator(operands.data()),
-                         OperandIterator(operands.data() + operands.size()));
+  IteratorRange<OperandIterator> operands() {
+    return {OperandIterator(used_operands.data()),
+            OperandIterator(used_operands.data() + used_operands.size())};
   }
-  IteratorRange<ConstOperandIterator> get_operands() const {
-    return IteratorRange(ConstOperandIterator(operands.data()),
-                         ConstOperandIterator(operands.data() + operands.size()));
+  IteratorRange<ConstOperandIterator> operands() const {
+    return {ConstOperandIterator(used_operands.data()),
+            ConstOperandIterator(used_operands.data() + used_operands.size())};
   }
 };
 

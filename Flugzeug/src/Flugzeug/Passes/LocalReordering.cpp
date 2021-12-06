@@ -40,8 +40,7 @@ public:
           other_binary->get_op() == corresponding_op &&
           other_binary->get_rhs() == binary->get_rhs()) {
         // Move this instruction just after corresponding `div`/`mod`.
-        binary->unlink();
-        binary->insert_after(other_binary);
+        binary->move_after(other_binary);
 
         did_something = true;
 
@@ -114,8 +113,7 @@ bool LocalReordering::run(Function* function) {
       }
 
       if (can_move_earlier_down(earlier_instruction, later_instruction)) {
-        earlier_instruction->unlink();
-        earlier_instruction->insert_before(later_instruction);
+        earlier_instruction->move_before(later_instruction);
 
         did_something = true;
       }

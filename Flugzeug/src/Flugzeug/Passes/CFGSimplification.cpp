@@ -106,8 +106,7 @@ bool CFGSimplification::merge_blocks(Function* function) {
     // Move all instructions from `block` to `predecessor`.
     while (!block.is_empty()) {
       const auto instruction = block.get_first_instruction();
-      instruction->unlink();
-      instruction->insert_before(branch_to_block);
+      instruction->move_before(branch_to_block);
 
       if (const auto phi = cast<Phi>(instruction)) {
         // Phi should have either 0 or 1 incoming values. It must be simplificable.

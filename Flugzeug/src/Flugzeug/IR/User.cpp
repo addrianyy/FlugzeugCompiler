@@ -18,21 +18,21 @@ User::~User() {
   }
 }
 
-size_t User::get_operand_count() const { return operands.size(); }
+size_t User::get_operand_count() const { return used_operands.size(); }
 
 Value* User::get_operand(size_t index) {
   verify(index < get_operand_count(), "Tried to use out of bounds operand.");
-  return operands[index];
+  return used_operands[index];
 }
 
 const Value* User::get_operand(size_t index) const {
   verify(index < get_operand_count(), "Tried to use out of bounds operand.");
-  return operands[index];
+  return used_operands[index];
 }
 
 bool User::uses_value(Value* value) const {
   for (size_t i = 0; i < get_operand_count(); ++i) {
-    if (operands[i] == value) {
+    if (used_operands[i] == value) {
       return true;
     }
   }
@@ -64,8 +64,8 @@ void User::adjust_uses_count(size_t count) {
 }
 
 void User::reserve_operands(size_t count) {
-  if (count > operands.capacity()) {
-    operands.reserve(count);
+  if (count > used_operands.capacity()) {
+    used_operands.reserve(count);
   }
 
   adjust_uses_count(count);
@@ -83,7 +83,7 @@ void User::set_operand_count(size_t count) {
     }
   }
 
-  operands.resize(count, nullptr);
+  used_operands.resize(count, nullptr);
 
   adjust_uses_count(count);
 }
@@ -104,13 +104,14 @@ void User::remove_phi_incoming_helper(size_t incoming_index) {
     Use* saved_u2 = uses_for_operands[start_operand + 1];
 
     const auto offset = std::ptrdiff_t(start_operand);
-    std::copy(operands.begin() + offset + 2, operands.end(), operands.begin() + offset);
+    std::copy(used_operands.begin() + offset + 2, used_operands.end(),
+              used_operands.begin() + offset);
     std::copy(uses_for_operands.begin() + offset + 2,
               uses_for_operands.begin() + std::ptrdiff_t(get_operand_count()),
               uses_for_operands.begin() + offset);
 
-    operands[get_operand_count() - 2] = nullptr;
-    operands[get_operand_count() - 1] = nullptr;
+    used_operands[get_operand_count() - 2] = nullptr;
+    used_operands[get_operand_count() - 1] = nullptr;
 
     uses_for_operands[get_operand_count() - 2] = saved_u1;
     uses_for_operands[get_operand_count() - 1] = saved_u2;
@@ -128,7 +129,7 @@ void User::grow_operand_count(size_t grow) { set_operand_count(get_operand_count
 void User::set_operand(size_t index, Value* operand) {
   verify(index < get_operand_count(), "Tried to use out of bounds operand.");
 
-  Value* old_operand = operands[index];
+  Value* old_operand = used_operands[index];
   if (old_operand == operand) {
     return;
   }
@@ -143,5 +144,5 @@ void User::set_operand(size_t index, Value* operand) {
     operand->add_use(use);
   }
 
-  operands[index] = operand;
+  used_operands[index] = operand;
 }

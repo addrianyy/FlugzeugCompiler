@@ -10,7 +10,7 @@ using namespace flugzeug;
 template <typename TBlock> TBlock* get_single_predecessor_generic(TBlock* block) {
   TBlock* predecessor = nullptr;
 
-  for (auto& user : block->get_users()) {
+  for (auto& user : block->users()) {
     const auto instruction = cast<Instruction>(user);
     if (instruction && instruction->is_branching()) {
       const auto instruction_block = instruction->get_block();
@@ -32,7 +32,7 @@ template <typename TBlock> std::unordered_set<TBlock*> get_predecessors_generic(
   std::unordered_set<TBlock*> predecessors;
   predecessors.reserve(block->get_user_count());
 
-  for (auto& user : block->get_users()) {
+  for (auto& user : block->users()) {
     const auto instruction = cast<Instruction>(user);
     if (instruction && instruction->is_branching()) {
       predecessors.insert(instruction->get_block());
@@ -147,7 +147,7 @@ void Block::update_instruction_order() const {
 }
 
 void Block::remove_all_references_in_phis() {
-  for (User& user : dont_invalidate_current(get_users())) {
+  for (User& user : dont_invalidate_current(users())) {
     if (const auto phi = cast<Phi>(user)) {
       phi->remove_incoming(this);
     }
@@ -249,7 +249,7 @@ bool Block::has_successor(const Block* successor) const {
 }
 
 bool Block::has_predecessor(const Block* predecessor) const {
-  for (const User& user : get_users()) {
+  for (const User& user : users()) {
     const auto instruction = cast<Instruction>(user);
     if (instruction && instruction->is_branching()) {
       if (instruction->get_block() == predecessor) {

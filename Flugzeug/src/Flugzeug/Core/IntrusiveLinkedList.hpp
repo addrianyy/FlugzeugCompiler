@@ -41,15 +41,11 @@ protected:
   void insert_after(T* after) { after->get_list().insert_after(to_underlying(), after); }
 
   void move_before(T* before) {
-    verify(before->owner == owner, "Tried to move between different lists.");
-
     unlink();
     insert_before(before);
   }
 
   void move_after(T* after) {
-    verify(after->owner == owner, "Tried to move between different lists.");
-
     unlink();
     insert_after(after);
   }
@@ -268,15 +264,8 @@ public:
     owner->on_removed_node(node);
   }
 
-  T* push_front(T* insert_node) {
-    insert_before(insert_node, nullptr);
-    return insert_node;
-  }
-
-  T* push_back(T* insert_node) {
-    insert_after(insert_node, nullptr);
-    return insert_node;
-  }
+  void push_front(T* insert_node) { insert_before(insert_node, nullptr); }
+  void push_back(T* insert_node) { insert_after(insert_node, nullptr); }
 
   using iterator = IteratorInternal<T, Node, false>;
   using const_iterator = IteratorInternal<const T, const Node, false>;
