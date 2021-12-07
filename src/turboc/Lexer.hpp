@@ -2,6 +2,7 @@
 #include <Flugzeug/Core/ClassTraits.hpp>
 
 #include <optional>
+#include <string>
 #include <string_view>
 #include <vector>
 

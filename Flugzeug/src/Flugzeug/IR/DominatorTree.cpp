@@ -13,7 +13,7 @@ static std::vector<const Block*> traverse_dfs_postorder(const Block* entry_block
   std::unordered_set<const Block*> finished;
 
   result.reserve(block_count);
-  stack.reserve(std::min(8ull, block_count));
+  stack.reserve(std::min(size_t(8), block_count));
   visited.reserve(block_count);
   finished.reserve(block_count);
 

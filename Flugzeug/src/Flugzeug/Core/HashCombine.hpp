@@ -1,6 +1,7 @@
 #pragma once
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <utility>
 
 inline void hash_combine(std::size_t& seed) {}

@@ -45,7 +45,7 @@ template <typename TBlock> std::unordered_set<TBlock*> get_predecessors_generic(
 template <typename TBlock, bool ReturnVector>
 std::conditional_t<ReturnVector, std::vector<TBlock*>, std::unordered_set<TBlock*>>
 traverse_generic(TBlock* start_block, TraversalType traversal) {
-  const size_t reserve_count = std::min(8ull, start_block->get_function()->get_block_count());
+  const size_t reserve_count = std::min(size_t(8), start_block->get_function()->get_block_count());
 
   std::vector<TBlock*> result;
   std::unordered_set<TBlock*> visited;
