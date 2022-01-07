@@ -1,6 +1,7 @@
 #pragma once
 #include "Block.hpp"
 #include "Type.hpp"
+#include "TypeFilteringIterator.hpp"
 #include "Validator.hpp"
 
 #include <Flugzeug/Core/IntrusiveLinkedList.hpp>
@@ -152,11 +153,29 @@ public:
   using InstructionIterator = InstructionIteratorInternal<Block, Instruction>;
   using ConstInstructionIterator = InstructionIteratorInternal<const Block, const Instruction>;
 
+  template <typename TInstruction>
+  using SpecificInstructionIterator = TypeFilteringIterator<TInstruction, InstructionIterator>;
+  template <typename TInstruction>
+  using ConstSpecificInstructionIterator =
+    TypeFilteringIterator<const TInstruction, ConstInstructionIterator>;
+
   IteratorRange<InstructionIterator> instructions() {
     return {InstructionIterator(get_first_block()), InstructionIterator(nullptr)};
   }
   IteratorRange<ConstInstructionIterator> instructions() const {
     return {ConstInstructionIterator(get_first_block()), ConstInstructionIterator(nullptr)};
+  }
+
+  template <typename TInstruction>
+  IteratorRange<SpecificInstructionIterator<TInstruction>> instructions() {
+    return {SpecificInstructionIterator<TInstruction>(InstructionIterator(get_first_block())),
+            SpecificInstructionIterator<TInstruction>(InstructionIterator(nullptr))};
+  }
+  template <typename TInstruction>
+  IteratorRange<ConstSpecificInstructionIterator<TInstruction>> instructions() const {
+    return {
+      ConstSpecificInstructionIterator<TInstruction>(ConstInstructionIterator(get_first_block())),
+      ConstSpecificInstructionIterator<TInstruction>(ConstInstructionIterator(nullptr))};
   }
 };
 

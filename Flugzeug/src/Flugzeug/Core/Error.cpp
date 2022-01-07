@@ -17,15 +17,17 @@
                                              const std::string& message) {
   log_error("{}:{} => {}", file, line, message);
 
+  // For debugger breakpoint:
+  {
+    int _unused = 0;
+    (void)_unused;
+  }
+
 #ifdef PLATFORM_WINDOWS
   if (message.size() < 128) {
     MessageBoxA(nullptr, message.c_str(), "Error", MB_ICONERROR);
   } else {
     MessageBoxA(nullptr, "Encountered fatal error.", "Error", MB_ICONERROR);
-  }
-
-  if (IsDebuggerPresent()) {
-    // DebugBreak();
   }
 #endif
 

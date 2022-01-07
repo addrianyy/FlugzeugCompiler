@@ -32,12 +32,12 @@ class Block : public Value, public IntrusiveNode<Block, Function> {
 
   using InstructionList = IntrusiveLinkedList<Instruction, Block>;
 
-  InstructionList instructions;
+  InstructionList instruction_list;
   bool is_entry = false;
 
   mutable bool invalid_instruction_order = false;
 
-  InstructionList& get_list() { return instructions; }
+  InstructionList& get_list() { return instruction_list; }
 
   void on_added_node(Instruction* instruction);
   void on_removed_node(Instruction* instruction);
@@ -48,43 +48,62 @@ class Block : public Value, public IntrusiveNode<Block, Function> {
 
 public:
   explicit Block(Context* context)
-      : Value(context, Value::Kind::Block, context->get_block_ty()), instructions(this) {}
+      : Value(context, Value::Kind::Block, context->get_block_ty()), instruction_list(this) {}
   ~Block() override;
 
   void print(IRPrinter& printer) const;
 
 #pragma region instruction_list
-  Instruction* get_first_instruction() { return instructions.get_first(); }
-  Instruction* get_last_instruction() { return instructions.get_last(); }
+  Instruction* get_first_instruction() { return instruction_list.get_first(); }
+  Instruction* get_last_instruction() { return instruction_list.get_last(); }
 
-  const Instruction* get_first_instruction() const { return instructions.get_first(); }
-  const Instruction* get_last_instruction() const { return instructions.get_last(); }
+  const Instruction* get_first_instruction() const { return instruction_list.get_first(); }
+  const Instruction* get_last_instruction() const { return instruction_list.get_last(); }
 
-  size_t get_instruction_count() const { return instructions.get_size(); }
-  bool is_empty() const { return instructions.is_empty(); }
+  size_t get_instruction_count() const { return instruction_list.get_size(); }
+  bool is_empty() const { return instruction_list.is_empty(); }
 
-  void push_instruction_front(Instruction* instruction) { instructions.push_front(instruction); }
-  void push_instruction_back(Instruction* instruction) { instructions.push_back(instruction); }
+  void push_instruction_front(Instruction* instruction) {
+    instruction_list.push_front(instruction);
+  }
+  void push_instruction_back(Instruction* instruction) { instruction_list.push_back(instruction); }
 
   using const_iterator = InstructionList::const_iterator;
   using iterator = InstructionList::iterator;
   using const_reverse_iterator = InstructionList::const_reverse_iterator;
   using reverse_iterator = InstructionList::reverse_iterator;
 
-  iterator begin() { return instructions.begin(); }
-  iterator end() { return instructions.end(); }
+  template <typename TInstruction>
+  using SpecificInstructionIterator = TypeFilteringIterator<TInstruction, iterator>;
+  template <typename TInstruction>
+  using ConstSpecificInstructionIterator =
+    TypeFilteringIterator<const TInstruction, const_iterator>;
 
-  const_iterator begin() const { return instructions.begin(); }
-  const_iterator end() const { return instructions.end(); }
+  iterator begin() { return instruction_list.begin(); }
+  iterator end() { return instruction_list.end(); }
 
-  reverse_iterator rbegin() { return instructions.rbegin(); }
-  reverse_iterator rend() { return instructions.rend(); }
+  const_iterator begin() const { return instruction_list.begin(); }
+  const_iterator end() const { return instruction_list.end(); }
 
-  const_reverse_iterator rbegin() const { return instructions.rbegin(); }
-  const_reverse_iterator rend() const { return instructions.rend(); }
+  reverse_iterator rbegin() { return instruction_list.rbegin(); }
+  reverse_iterator rend() { return instruction_list.rend(); }
 
-  InstructionList::ReversedRange reversed() { return instructions.reversed(); }
-  InstructionList::ReversedConstRange reversed() const { return instructions.reversed(); }
+  const_reverse_iterator rbegin() const { return instruction_list.rbegin(); }
+  const_reverse_iterator rend() const { return instruction_list.rend(); }
+
+  InstructionList::ReversedRange reversed() { return instruction_list.reversed(); }
+  InstructionList::ReversedConstRange reversed() const { return instruction_list.reversed(); }
+
+  template <typename TInstruction>
+  IteratorRange<SpecificInstructionIterator<TInstruction>> instructions() {
+    return {SpecificInstructionIterator<TInstruction>(begin()),
+            SpecificInstructionIterator<TInstruction>(end())};
+  }
+  template <typename TInstruction>
+  IteratorRange<ConstSpecificInstructionIterator<TInstruction>> instructions() const {
+    return {ConstSpecificInstructionIterator<TInstruction>(begin()),
+            ConstSpecificInstructionIterator<TInstruction>(end())};
+  }
 #pragma endregion
 
   bool is_entry_block() const { return is_entry; }

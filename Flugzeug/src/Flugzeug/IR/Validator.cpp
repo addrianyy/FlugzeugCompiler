@@ -231,11 +231,11 @@ class Validator : public ConstInstructionVisitor {
     validation_check(type->is_arithmetic_or_pointer(),
                      "Phi return type ({}) isn't arithmetic or pointer", type->format());
 
-    for (size_t i = 0; i < phi->get_incoming_count(); ++i) {
-      const auto value_type = phi->get_incoming_value(i)->get_type();
+    for (const auto incoming : *phi) {
+      const auto value_type = incoming.value->get_type();
       validation_check(value_type == type,
-                       "Phi incoming value nr {} ({}) has different type than Phi ({})", i,
-                       value_type->format(), type->format());
+                       "Phi incoming value `{}` ({}) has different type than Phi ({})",
+                       incoming.value->format(), value_type->format(), type->format());
     }
   }
 
@@ -279,8 +279,7 @@ class Validator : public ConstInstructionVisitor {
       validation_check(incoming_count == current_block_predecessors.size(),
                        "Phi incoming blocks and block predecessors are mismatched");
 
-      for (size_t i = 0; i < incoming_count; ++i) {
-        const auto incoming = phi->get_incoming(i);
+      for (const auto incoming : *phi) {
         validation_check(current_block_predecessors.contains(incoming.block),
                          "Phi has incoming block `{}` which isn't a predecessor",
                          incoming.block->format());

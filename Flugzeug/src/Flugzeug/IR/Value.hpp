@@ -1,6 +1,7 @@
 #pragma once
 #include "Context.hpp"
 #include "Type.hpp"
+#include "TypeFilteringIterator.hpp"
 #include "Use.hpp"
 
 #include <Flugzeug/Core/Casting.hpp>
@@ -105,9 +106,19 @@ public:
   using UserIterator = ValueUses::iterator;
   using ConstUserIterator = ValueUses::const_iterator;
 
+  template <typename TUser> using SpecificUserIterator = TypeFilteringIterator<TUser, UserIterator>;
+  template <typename TUser>
+  using ConstSpecificUserIterator = TypeFilteringIterator<const TUser, ConstUserIterator>;
+
   IteratorRange<UserIterator> users() { return {uses.begin(), uses.end()}; }
-  IteratorRange<ConstUserIterator> users() const {
-    return {ConstUserIterator(uses.begin()), ConstUserIterator(uses.end())};
+  IteratorRange<ConstUserIterator> users() const { return {uses.begin(), uses.end()}; }
+
+  template <typename TUser> IteratorRange<SpecificUserIterator<TUser>> users() {
+    return {SpecificUserIterator<TUser>(uses.begin()), SpecificUserIterator<TUser>(uses.end())};
+  }
+  template <typename TUser> IteratorRange<ConstSpecificUserIterator<TUser>> users() const {
+    return {ConstSpecificUserIterator<TUser>(uses.begin()),
+            ConstSpecificUserIterator<TUser>(uses.end())};
   }
 };
 
@@ -135,7 +146,7 @@ class Parameter : public Value {
 
   friend class Function;
 
-  explicit Parameter(Context* context, Type* type) : Value(context, Kind::Parameter, type) {}
+  Parameter(Context* context, Type* type) : Value(context, Kind::Parameter, type) {}
 };
 
 class Undef : public Value {
@@ -143,7 +154,7 @@ class Undef : public Value {
 
   friend class Context;
 
-  explicit Undef(Context* context, Type* type) : Value(context, Kind::Undef, type) {}
+  Undef(Context* context, Type* type) : Value(context, Kind::Undef, type) {}
 
 public:
   std::string format() const override;

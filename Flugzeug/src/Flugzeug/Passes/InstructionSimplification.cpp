@@ -30,8 +30,8 @@ static uint64_t bin_log2(uint64_t x) {
 }
 
 static OptimizationResult make_undef_if_uses_undef(Instruction* instruction) {
-  for (size_t i = 0; i < instruction->get_operand_count(); ++i) {
-    if (instruction->get_operand(i)->is_undef()) {
+  for (const auto& operand : instruction->operands()) {
+    if (operand.is_undef()) {
       return instruction->get_type()->get_undef();
     }
   }

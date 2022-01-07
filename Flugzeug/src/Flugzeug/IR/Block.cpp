@@ -10,10 +10,9 @@ using namespace flugzeug;
 template <typename TBlock> TBlock* get_single_predecessor_generic(TBlock* block) {
   TBlock* predecessor = nullptr;
 
-  for (auto& user : block->users()) {
-    const auto instruction = cast<Instruction>(user);
-    if (instruction && instruction->is_branching()) {
-      const auto instruction_block = instruction->get_block();
+  for (auto& instruction : block->users<Instruction>()) {
+    if (instruction.is_branching()) {
+      const auto instruction_block = instruction.get_block();
 
       if (!predecessor) {
         predecessor = instruction_block;
@@ -32,10 +31,9 @@ template <typename TBlock> std::unordered_set<TBlock*> get_predecessors_generic(
   std::unordered_set<TBlock*> predecessors;
   predecessors.reserve(block->get_user_count());
 
-  for (auto& user : block->users()) {
-    const auto instruction = cast<Instruction>(user);
-    if (instruction && instruction->is_branching()) {
-      predecessors.insert(instruction->get_block());
+  for (auto& instruction : block->users<Instruction>()) {
+    if (instruction.is_branching()) {
+      predecessors.insert(instruction.get_block());
     }
   }
 
@@ -147,15 +145,13 @@ void Block::update_instruction_order() const {
 }
 
 void Block::remove_all_references_in_phis() {
-  for (User& user : dont_invalidate_current(users())) {
-    if (const auto phi = cast<Phi>(user)) {
-      phi->remove_incoming(this);
-    }
+  for (Phi& phi : dont_invalidate_current(users<Phi>())) {
+    phi.remove_incoming(this);
   }
 }
 
 Block::~Block() {
-  verify(instructions.is_empty(), "Cannot remove non-empty block.");
+  verify(instruction_list.is_empty(), "Cannot remove non-empty block.");
   verify(!get_function(), "Cannot remove block that is attached to the function.");
 }
 
@@ -165,7 +161,7 @@ void Block::print(IRPrinter& printer) const {
     p.print(this, IRPrinter::Item::Colon);
   }
 
-  for (const Instruction& instruction : instructions) {
+  for (const Instruction& instruction : instruction_list) {
     printer.tab();
     instruction.print(printer);
   }
@@ -195,10 +191,8 @@ void Block::replace_incoming_blocks_in_phis(const Block* old_incoming, Block* ne
     return;
   }
 
-  for (Instruction& instruction : *this) {
-    if (const auto phi = cast<Phi>(instruction)) {
-      phi->replace_incoming_block_opt(old_incoming, new_incoming);
-    }
+  for (Phi& phi : instructions<Phi>()) {
+    phi.replace_incoming_block_opt(old_incoming, new_incoming);
   }
 }
 
@@ -207,11 +201,9 @@ void Block::remove_incoming_block_from_phis(const Block* incoming, bool destroy_
     return;
   }
 
-  for (Instruction& instruction : dont_invalidate_current(*this)) {
-    if (const auto phi = cast<Phi>(instruction)) {
-      if (phi->remove_incoming_opt(incoming) && destroy_empty_phis && phi->is_empty()) {
-        phi->destroy();
-      }
+  for (Phi& phi : dont_invalidate_current(instructions<Phi>())) {
+    if (phi.remove_incoming_opt(incoming) && destroy_empty_phis && phi.is_empty()) {
+      phi.destroy();
     }
   }
 }
@@ -249,12 +241,9 @@ bool Block::has_successor(const Block* successor) const {
 }
 
 bool Block::has_predecessor(const Block* predecessor) const {
-  for (const User& user : users()) {
-    const auto instruction = cast<Instruction>(user);
-    if (instruction && instruction->is_branching()) {
-      if (instruction->get_block() == predecessor) {
-        return true;
-      }
+  for (const Instruction& instruction : users<Instruction>()) {
+    if (instruction.is_branching() && instruction.get_block() == predecessor) {
+      return true;
     }
   }
 

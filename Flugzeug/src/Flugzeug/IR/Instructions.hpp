@@ -379,6 +379,48 @@ class Phi : public Instruction {
   static inline size_t get_block_index(size_t i) { return i * 2 + 0; }
   static inline size_t get_value_index(size_t i) { return i * 2 + 1; }
 
+  template <typename TPhi, typename TIncoming> class IncomingIteratorInternal {
+    TPhi* phi;
+    TIncoming incoming;
+    size_t incoming_index = 0;
+
+    void load_incoming() {
+      if (incoming_index < phi->get_incoming_count()) {
+        incoming = phi->get_incoming(incoming_index);
+      } else {
+        incoming = TIncoming{};
+      }
+    }
+
+  public:
+    using iterator_category = std::forward_iterator_tag;
+    using difference_type = std::ptrdiff_t;
+    using value_type = TIncoming;
+
+    explicit IncomingIteratorInternal(TPhi* phi, size_t index) : phi(phi), incoming_index(index) {
+      load_incoming();
+    }
+
+    IncomingIteratorInternal& operator++() {
+      ++incoming_index;
+      load_incoming();
+      return *this;
+    }
+
+    IncomingIteratorInternal operator++(int) {
+      const auto before = *this;
+      ++(*this);
+      return before;
+    }
+
+    value_type operator*() const { return incoming; }
+
+    bool operator==(const IncomingIteratorInternal& rhs) const {
+      return phi == rhs.phi && incoming_index == rhs.incoming_index;
+    }
+    bool operator!=(const IncomingIteratorInternal& rhs) const { return !(*this == rhs); }
+  };
+
   bool index_for_block(const Block* block, size_t& index) const;
   void remove_incoming_by_index(size_t index);
 
@@ -429,6 +471,15 @@ public:
 
   Value* get_incoming_by_block(const Block* block);
   const Value* get_incoming_by_block(const Block* block) const;
+
+  using const_iterator = IncomingIteratorInternal<const Phi, ConstIncoming>;
+  using iterator = IncomingIteratorInternal<Phi, Incoming>;
+
+  iterator begin() { return iterator(this, 0); }
+  iterator end() { return iterator(this, get_incoming_count()); }
+
+  const_iterator begin() const { return const_iterator(this, 0); }
+  const_iterator end() const { return const_iterator(this, get_incoming_count()); }
 
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;

@@ -81,20 +81,21 @@ void Value::replace_uses_with(Value* new_value) {
         // Make sure there is only one entry for this block in Phi instruction.
         // If there is more then one entry then make sure value is common and remove redundant ones.
 
-        Value* previous = nullptr;
+        Value* common = nullptr;
         size_t count = 0;
 
-        for (size_t i = 0; i < phi->get_incoming_count(); ++i) {
-          const auto incoming = phi->get_incoming(i);
-          if (incoming.block == block) {
-            count++;
-
-            if (!previous) {
-              previous = incoming.value;
-            }
-
-            verify(previous == incoming.value, "Phi value isn't common for the same blocks");
+        for (const auto incoming : *phi) {
+          if (incoming.block != block) {
+            continue;
           }
+
+          count++;
+
+          if (!common) {
+            common = incoming.value;
+          }
+
+          verify(common == incoming.value, "Phi value isn't common for the same blocks");
         }
 
         for (size_t i = 1; i < count; ++i) {

@@ -100,7 +100,7 @@ class ValueUses {
     }
 
     reference operator*() const { return *current->get_user(); }
-    pointer operator->() const { return current->get_user(); }
+    pointer operator->() const { return current ? current->get_user() : nullptr; }
 
     bool operator==(const UserIteratorInternal& rhs) const { return current == rhs.current; }
     bool operator!=(const UserIteratorInternal& rhs) const { return current != rhs.current; }
