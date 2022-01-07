@@ -22,7 +22,6 @@ void PhiToMemory::convert_phi_to_memory(Phi* phi) {
 
   for (const auto incoming : *phi) {
     const auto store = new Store(context, stackalloc, incoming.value);
-
     store->insert_before(incoming.block->get_last_instruction());
   }
 

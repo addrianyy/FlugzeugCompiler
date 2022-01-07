@@ -28,14 +28,12 @@ bool CFGSimplification::do_phis_depend_on_predecessors(const Block* block, const
                                                        const Block* p2) {
   verify(p1 != p2 && block != p1 && block != p2, "Invalid blocks");
 
-  for (const Instruction& instruction : *block) {
-    if (const auto phi = cast<Phi>(instruction)) {
-      const auto p1_value = phi->get_incoming_by_block(p1);
-      const auto p2_value = phi->get_incoming_by_block(p2);
+  for (const Phi& phi : block->instructions<Phi>()) {
+    const auto p1_value = phi.get_incoming_by_block(p1);
+    const auto p2_value = phi.get_incoming_by_block(p2);
 
-      if ((p1_value && p2_value) && p1_value != p2_value) {
-        return true;
-      }
+    if ((p1_value && p2_value) && p1_value != p2_value) {
+      return true;
     }
   }
 
