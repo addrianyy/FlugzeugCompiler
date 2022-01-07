@@ -70,7 +70,7 @@ static OptimizationResult chain_commutative_expressions(BinaryInstr* binary) {
   const auto new_instruction =
     new BinaryInstr(binary->get_context(), operand, op, evaluated_constant);
 
-  binary->replace_instruction_and_destroy(new_instruction);
+  binary->replace_with_instruction_and_destroy(new_instruction);
   parent_binary->destroy_if_unused();
 
   return OptimizationResult::changed();
@@ -128,7 +128,7 @@ static OptimizationResult simplify_cmp_select_cmp_sequence(IntCompare* cmp) {
 
   // We know that both `cmps` are corelated with each other.
   if (!inverted) {
-    cmp->replace_uses_and_destroy(select->get_cond());
+    cmp->replace_uses_with_and_destroy(select->get_cond());
 
     select->destroy_if_unused();
 
@@ -137,7 +137,7 @@ static OptimizationResult simplify_cmp_select_cmp_sequence(IntCompare* cmp) {
     const auto new_cmp =
       new IntCompare(cmp->get_context(), parent_cmp->get_lhs(),
                      IntCompare::inverted_predicate(parent_cmp->get_pred()), parent_cmp->get_rhs());
-    cmp->replace_instruction_and_destroy(new_cmp);
+    cmp->replace_with_instruction_and_destroy(new_cmp);
 
     select->destroy_if_unused();
     parent_cmp->destroy_if_unused();
@@ -162,7 +162,7 @@ public:
     // !!x == x
     if (const auto other_unary = cast<UnaryInstr>(unary->get_val())) {
       if (unary->get_op() == other_unary->get_op()) {
-        unary->replace_uses_and_destroy(other_unary->get_val());
+        unary->replace_uses_with_and_destroy(other_unary->get_val());
         other_unary->destroy_if_unused();
 
         return OptimizationResult::changed();
@@ -435,7 +435,7 @@ public:
         const auto new_cast =
           new Cast(context, parent_cast->get_val(), parent_kind, cast_instr->get_type());
 
-        cast_instr->replace_instruction_and_destroy(new_cast);
+        cast_instr->replace_with_instruction_and_destroy(new_cast);
         parent_cast->destroy_if_unused();
 
         return OptimizationResult::changed();
@@ -463,7 +463,7 @@ public:
 
         const auto new_cast = new Cast(context, original, new_kind, cast_instr->get_type());
 
-        cast_instr->replace_instruction_and_destroy(new_cast);
+        cast_instr->replace_with_instruction_and_destroy(new_cast);
         parent_cast->destroy_if_unused();
 
         return OptimizationResult::changed();

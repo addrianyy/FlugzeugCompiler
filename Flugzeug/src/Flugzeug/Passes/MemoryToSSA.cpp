@@ -76,7 +76,7 @@ void MemoryToSSA::optimize_stackalloc(StackAlloc* stackalloc) {
           }
 
           // This load will use currently known value.
-          load->replace_uses_and_destroy(current_value);
+          load->replace_uses_with_and_destroy(current_value);
         }
       } else if (const auto store = cast<Store>(instruction)) {
         if (store->get_ptr() == stackalloc) {

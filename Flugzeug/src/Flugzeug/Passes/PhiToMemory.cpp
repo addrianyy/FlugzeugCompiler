@@ -20,11 +20,6 @@ void PhiToMemory::convert_phi_to_memory(Phi* phi) {
   const auto stackalloc = new StackAlloc(context, type);
   const auto load = new Load(context, stackalloc);
 
-  entry_block->push_instruction_front(stackalloc);
-
-  load->insert_before(phi);
-  phi->replace_uses(load);
-
   for (size_t i = 0; i < phi->get_incoming_count(); ++i) {
     const auto incoming = phi->get_incoming(i);
     const auto store = new Store(context, stackalloc, incoming.value);
@@ -32,7 +27,8 @@ void PhiToMemory::convert_phi_to_memory(Phi* phi) {
     store->insert_before(incoming.block->get_last_instruction());
   }
 
-  phi->destroy();
+  entry_block->push_instruction_front(stackalloc);
+  phi->replace_with_instruction_and_destroy(load);
 }
 
 bool PhiToMemory::run(Function* function) {

@@ -61,12 +61,12 @@ std::optional<int64_t> Value::get_constant_i_opt() const {
   return c ? std::optional(c->get_constant_i()) : std::nullopt;
 }
 
-void Value::replace_uses(Value* new_value) {
+void Value::replace_uses_with(Value* new_value) {
   if (this == new_value) {
     return;
   }
 
-  verify(!is_void(), "Cannot raplce uses of void value");
+  verify(!is_void(), "Cannot replace uses of void value");
   verify(new_value->get_type() == get_type(), "Cannot replace value with value of different type");
 
   const auto block = cast<Block>(this);
@@ -106,10 +106,10 @@ void Value::replace_uses(Value* new_value) {
 }
 
 void Value::replace_uses_with_constant(uint64_t constant) {
-  replace_uses(get_type()->get_constant(constant));
+  replace_uses_with(get_type()->get_constant(constant));
 }
 
-void Value::replace_uses_with_undef() { replace_uses(get_type()->get_undef()); }
+void Value::replace_uses_with_undef() { replace_uses_with(get_type()->get_undef()); }
 
 void Constant::constrain_constant(Type* type, uint64_t c, uint64_t* u, int64_t* i) {
   const auto bit_size = type->get_bit_size();

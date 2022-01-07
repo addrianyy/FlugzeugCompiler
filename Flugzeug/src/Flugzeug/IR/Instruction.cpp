@@ -61,11 +61,11 @@ bool Instruction::destroy_if_unused() {
   return false;
 }
 
-void Instruction::replace_instruction_and_destroy(Instruction* instruction) {
+void Instruction::replace_with_instruction_and_destroy(Instruction* instruction) {
   verify(instruction != this, "Cannot replace instruction with itself");
 
   instruction->insert_after(this);
-  replace_uses(instruction);
+  replace_uses_with(instruction);
   destroy();
 }
 
@@ -74,10 +74,10 @@ void Instruction::replace_uses_with_constant_and_destroy(uint64_t constant) {
   destroy();
 }
 
-void Instruction::replace_uses_and_destroy(Value* new_value) {
+void Instruction::replace_uses_with_and_destroy(Value* new_value) {
   verify(new_value != this, "Cannot replace instruction with itself");
 
-  replace_uses(new_value);
+  replace_uses_with(new_value);
   destroy();
 }
 
@@ -86,9 +86,9 @@ void Instruction::replace_instruction_or_uses_and_destroy(Value* new_value) {
 
   const auto other = cast<Instruction>(new_value);
   if (other && !other->get_block()) {
-    replace_instruction_and_destroy(other);
+    replace_with_instruction_and_destroy(other);
   } else {
-    replace_uses_and_destroy(new_value);
+    replace_uses_with_and_destroy(new_value);
   }
 }
 

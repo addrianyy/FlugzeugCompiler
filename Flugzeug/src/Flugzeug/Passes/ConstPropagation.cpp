@@ -99,7 +99,7 @@ public:
     const auto block = cond_branch->get_block();
     const auto branch = new Branch(cond_branch->get_context(), actual_target);
 
-    cond_branch->replace_instruction_and_destroy(branch);
+    cond_branch->replace_with_instruction_and_destroy(branch);
 
     const bool destroy_empty_phis = removed_target != block;
     block->on_removed_branch_to(removed_target, destroy_empty_phis);

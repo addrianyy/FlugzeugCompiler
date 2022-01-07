@@ -82,7 +82,7 @@ public:
 
   bool is_void() const { return get_type()->is_void(); }
 
-  void replace_uses(Value* new_value);
+  void replace_uses_with(Value* new_value);
   void replace_uses_with_constant(uint64_t constant);
   void replace_uses_with_undef();
 
