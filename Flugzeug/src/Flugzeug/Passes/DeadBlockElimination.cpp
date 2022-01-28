@@ -14,7 +14,7 @@ void DeadBlockElimination::destroy_dead_block(Block* block) {
   // Remove branches to this block (they are in dead blocks anyway).
   for (Instruction& instruction : dont_invalidate_current(block->users<Instruction>())) {
     if (instruction.is_branching()) {
-      // These branches are in dead blocks so we can remove them.
+      // These branches are in dead blocks, so we can remove them.
       instruction.destroy();
     }
   }

@@ -44,8 +44,6 @@ class Block : public Value, public IntrusiveNode<Block, Function> {
 
   void update_instruction_order() const;
 
-  void remove_all_references_in_phis();
-
 public:
   explicit Block(Context* context)
       : Value(context, Value::Kind::Block, context->get_block_ty()), instruction_list(this) {}

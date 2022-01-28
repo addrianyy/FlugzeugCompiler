@@ -69,6 +69,8 @@ public:
 
   void set_val(Value* val) { return set_operand(0, val); }
 
+  Instruction* clone() override { return new UnaryInstr(get_context(), get_op(), get_val()); }
+
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };
@@ -97,6 +99,10 @@ public:
 
   void set_lhs(Value* lhs) { return set_operand(0, lhs); }
   void set_rhs(Value* rhs) { return set_operand(1, rhs); }
+
+  Instruction* clone() override {
+    return new BinaryInstr(get_context(), get_lhs(), get_op(), get_rhs());
+  }
 
   static bool is_binary_op_commutative(BinaryOp op);
 
@@ -130,6 +136,10 @@ public:
   void set_rhs(Value* rhs) { return set_operand(1, rhs); }
   void set_pred(IntPredicate new_pred) { pred = new_pred; }
 
+  Instruction* clone() override {
+    return new IntCompare(get_context(), get_lhs(), get_pred(), get_rhs());
+  }
+
   static IntPredicate inverted_predicate(IntPredicate pred);
   static IntPredicate swapped_order_predicate(IntPredicate pred);
 
@@ -151,6 +161,8 @@ public:
   const Value* get_ptr() const { return get_operand(0); }
 
   void set_ptr(Value* ptr) { return set_operand(0, ptr); }
+
+  Instruction* clone() override { return new Load(get_context(), get_ptr()); }
 
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
@@ -176,6 +188,8 @@ public:
   void set_ptr(Value* ptr) { return set_operand(0, ptr); }
   void set_val(Value* val) { return set_operand(1, val); }
 
+  Instruction* clone() override { return new Store(get_context(), get_ptr(), get_val()); }
+
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };
@@ -196,6 +210,15 @@ public:
   Function* get_target() { return target; }
   const Function* get_target() const { return target; }
 
+  Instruction* clone() override {
+    std::vector<Value*> arguments;
+    arguments.reserve(get_arg_count());
+    for (size_t i = 0; i < get_arg_count(); ++i) {
+      arguments.push_back(get_arg(i));
+    }
+    return new Call(get_context(), get_target(), arguments);
+  }
+
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };
@@ -214,6 +237,8 @@ public:
   const Block* get_target() const { return cast<Block>(get_operand(0)); }
 
   void set_target(Block* target) { set_operand(0, target); }
+
+  Instruction* clone() override { return new Branch(get_context(), get_target()); }
 
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
@@ -247,6 +272,10 @@ public:
   void set_true_target(Block* true_target) { set_operand(1, true_target); }
   void set_false_target(Block* false_target) { set_operand(2, false_target); }
 
+  Instruction* clone() override {
+    return new CondBranch(get_context(), get_cond(), get_true_target(), get_false_target());
+  }
+
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };
@@ -262,6 +291,10 @@ public:
 
   size_t get_size() const { return size; }
   Type* get_allocated_type() const { return cast<PointerType>(get_type())->deref(); }
+
+  Instruction* clone() override {
+    return new StackAlloc(get_context(), get_allocated_type(), get_size());
+  }
 
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
@@ -289,6 +322,8 @@ public:
     return set_operand(0, val);
   }
 
+  Instruction* clone() override { return new Ret(get_context(), get_val()); }
+
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };
@@ -313,6 +348,8 @@ public:
   void set_base(Value* base) { return set_operand(0, base); }
   void set_index(Value* index) { return set_operand(1, index); }
 
+  Instruction* clone() override { return new Offset(get_context(), get_base(), get_index()); }
+
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
 };
@@ -336,6 +373,10 @@ public:
   const Value* get_val() const { return get_operand(0); }
 
   void set_val(Value* val) { return set_operand(0, val); }
+
+  Instruction* clone() override {
+    return new Cast(get_context(), get_val(), get_cast_kind(), get_type());
+  }
 
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
@@ -368,6 +409,10 @@ public:
   void set_cond(Value* cond) { return set_operand(0, cond); }
   void set_true_val(Value* true_val) { return set_operand(1, true_val); }
   void set_false_val(Value* false_val) { return set_operand(2, false_val); }
+
+  Instruction* clone() override {
+    return new Select(get_context(), get_cond(), get_true_val(), get_false_val());
+  }
 
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
@@ -480,6 +525,15 @@ public:
 
   const_iterator begin() const { return const_iterator(this, 0); }
   const_iterator end() const { return const_iterator(this, get_incoming_count()); }
+
+  Instruction* clone() override {
+    std::vector<Incoming> incoming;
+    incoming.reserve(get_incoming_count());
+    for (size_t i = 0; i < get_incoming_count(); ++i) {
+      incoming.push_back(get_incoming(i));
+    }
+    return new Phi(get_context(), incoming);
+  }
 
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;

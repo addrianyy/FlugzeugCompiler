@@ -144,12 +144,6 @@ void Block::update_instruction_order() const {
   }
 }
 
-void Block::remove_all_references_in_phis() {
-  for (Phi& phi : dont_invalidate_current(users<Phi>())) {
-    phi.remove_incoming(this);
-  }
-}
-
 Block::~Block() {
   verify(instruction_list.is_empty(), "Cannot remove non-empty block.");
   verify(!get_function(), "Cannot remove block that is attached to the function.");
@@ -182,7 +176,10 @@ void Block::destroy() {
   // throw an error.
 
   // Remove all incoming values in Phis that use this block.
-  remove_all_references_in_phis();
+  for (Phi& phi : dont_invalidate_current(users<Phi>())) {
+    phi.remove_incoming(this);
+  }
+
   IntrusiveNode::destroy();
 }
 

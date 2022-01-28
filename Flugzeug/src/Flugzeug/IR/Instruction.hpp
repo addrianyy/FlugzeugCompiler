@@ -55,6 +55,8 @@ public:
   using IntrusiveNode::move_before;
   using IntrusiveNode::unlink;
 
+  virtual Instruction* clone() = 0;
+
   void print(IRPrinter& printer) const;
 
   Block* get_block() { return get_owner(); }

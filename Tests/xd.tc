@@ -1,0 +1,17 @@
+i32 test(i32 x) {
+    return x + 1;
+}
+
+i32 func_1(i32 a, i32 b) {
+    if (a > b) {
+        return a + test(b) * 2;
+    } else {
+        return test(a) - b;
+    }
+
+    return 0;
+}
+
+i32 main() {
+    return func_1(14, 12) + 33;
+}

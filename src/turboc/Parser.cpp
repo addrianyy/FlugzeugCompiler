@@ -289,6 +289,7 @@ std::unique_ptr<Stmt> Parser::parse_statement() {
     }
     case Token::Keyword::While: {
       lexer.consume_token();
+
       auto condition = parse_paren_expression();
       auto body = parse_body();
 

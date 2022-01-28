@@ -70,7 +70,8 @@ public:
       return OptimizationResult::unchanged();
     }
 
-    const auto propagated = utils::evaluate_int_compare(type, lhs, int_compare->get_pred(), rhs);
+    const auto propagated = utils::evaluate_int_compare(int_compare->get_lhs()->get_type(), lhs,
+                                                        int_compare->get_pred(), rhs);
 
     return type->get_constant(propagated);
   }

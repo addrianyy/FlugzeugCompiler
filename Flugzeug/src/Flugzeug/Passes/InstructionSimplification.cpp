@@ -40,7 +40,7 @@ static OptimizationResult make_undef_if_uses_undef(Instruction* instruction) {
 }
 
 static OptimizationResult chain_commutative_expressions(BinaryInstr* binary) {
-  // Evaluate chain of (a op (C1 op (C2 op C3))) to (a op C).
+  // Evaluate chain of (C1 op (a op C2)) to (a op C).
 
   const auto op = binary->get_op();
   if (!BinaryInstr::is_binary_op_commutative(op)) {

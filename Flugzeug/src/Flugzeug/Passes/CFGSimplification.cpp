@@ -40,7 +40,7 @@ bool CFGSimplification::do_phis_depend_on_predecessors(const Block* block, const
   return false;
 }
 
-Block* CFGSimplification::thread_jump(Block* block, Block* target) {
+Block* CFGSimplification::thread_jump(Block* block, Block* target, bool* did_something) {
   if (block == target) {
     return nullptr;
   }
@@ -48,6 +48,9 @@ Block* CFGSimplification::thread_jump(Block* block, Block* target) {
   if (const auto actual_target = get_intermediate_block_target(target)) {
     if (!do_phis_depend_on_predecessors(actual_target, block, target)) {
       actual_target->replace_incoming_blocks_in_phis(target, block);
+
+      *did_something = true;
+
       return actual_target;
     }
   }
@@ -67,19 +70,18 @@ bool CFGSimplification::thread_jumps(Function* function) {
     const auto last_instruction = block.get_last_instruction();
 
     if (const auto branch = cast<Branch>(last_instruction)) {
-      if (const auto new_target = thread_jump(&block, branch->get_target())) {
+      if (const auto new_target = thread_jump(&block, branch->get_target(), &did_something)) {
         branch->set_target(new_target);
-        did_something = true;
       }
     } else if (const auto cond_branch = cast<CondBranch>(last_instruction)) {
-      if (const auto new_target = thread_jump(&block, cond_branch->get_true_target())) {
+      if (const auto new_target =
+            thread_jump(&block, cond_branch->get_true_target(), &did_something)) {
         cond_branch->set_true_target(new_target);
-        did_something = true;
       }
 
-      if (const auto new_target = thread_jump(&block, cond_branch->get_false_target())) {
+      if (const auto new_target =
+            thread_jump(&block, cond_branch->get_false_target(), &did_something)) {
         cond_branch->set_false_target(new_target);
-        did_something = true;
       }
     }
   }

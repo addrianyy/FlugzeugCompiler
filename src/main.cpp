@@ -14,6 +14,7 @@
 #include <Flugzeug/Passes/InstructionSimplification.hpp>
 #include <Flugzeug/Passes/LocalReordering.hpp>
 #include <Flugzeug/Passes/MemoryToSSA.hpp>
+#include <Flugzeug/Passes/Utils/Inline.hpp>
 
 #include <turboc/IRGenerator.hpp>
 #include <turboc/Parser.hpp>
@@ -25,34 +26,60 @@ static void test_validation(Context& context) {
   Type* i32 = context.get_i32_ty();
   Type* i64 = context.get_i64_ty();
 
-  const auto f = context.create_function(i32, "test", {});
+  const auto f = context.create_function(i32, "test", {i32});
+  const auto arg = f->get_parameter(0);
 
   const auto entry = f->create_block();
-  const auto a = f->create_block();
-  const auto b = f->create_block();
-  const auto merge = f->create_block();
+  //  const auto a = f->create_block();
+  //  const auto b = f->create_block();
+  //  const auto merge = f->create_block();
 
   InstructionInserter inserter;
   inserter.set_insertion_block(entry);
-  inserter.cond_branch(i1->get_zero(), a, b);
 
-  inserter.set_insertion_block(a);
-  auto x = inserter.add(i32->get_constant(2), i32->get_constant(3));
-  inserter.branch(merge);
+  auto one = i32->get_one();
+  auto value = inserter.add(arg, one);
+  value = inserter.add(value, one);
+  value = inserter.add(value, one);
+  value = inserter.add(value, one);
+  value = inserter.add(value, one);
 
-  inserter.set_insertion_block(b);
-  auto y = inserter.add(i32->get_constant(4), i32->get_constant(5));
-  inserter.branch(merge);
+  inserter.ret(value);
 
-  inserter.set_insertion_block(merge);
-  auto z = inserter.neg(y);
-  auto phi1 = inserter.phi({{entry, x}, {b, y}});
-  inserter.ret(i32->get_constant(1));
-  inserter.ret(i64->get_constant(3));
+  ConstPropagation::run(f);
+  InstructionSimplification::run(f);
+
+  //  inserter.add(i32->get_zero(), i32->get_zero());
+  //  inserter.cond_branch(i32->get_zero(), a, b);
+  //
+  //  inserter.set_insertion_block(a);
+  //  inserter.add(i32->get_zero(), i32->get_one());
+  //  inserter.branch(merge);
+  //
+  //  inserter.set_insertion_block(b);
+  //  inserter.branch(merge);
+  //
+  //  inserter.set_insertion_block(merge);
+  //  inserter.ret();
 
   f->print(true);
-  f->validate(ValidationBehaviour::ErrorsToStdout);
   f->destroy();
+}
+
+bool inline_all(Function* f) {
+  std::vector<Call*> inlinable_calls;
+
+  for (Call& call : f->instructions<Call>()) {
+    if (!call.get_target()->is_extern()) {
+      inlinable_calls.push_back(&call);
+    }
+  }
+
+  for (Call* call : inlinable_calls) {
+    flugzeug::utils::inline_call(call);
+  }
+
+  return !inlinable_calls.empty();
 }
 
 static void optimize_function(Function* f) {
@@ -66,6 +93,7 @@ static void optimize_function(Function* f) {
     did_something |= InstructionSimplification::run(f);
     did_something |= DeadBlockElimination::run(f);
     did_something |= LocalReordering::run(f);
+    did_something |= inline_all(f);
 
     if (!did_something) {
       f->reassign_display_indices();
@@ -78,8 +106,9 @@ int main() {
   Context context;
 
   //  test_validation(context);
+  //  return 0;
 
-  const auto parsed_source = turboc::Parser::parse_from_file("../Tests/main.tc");
+  const auto parsed_source = turboc::Parser::parse_from_file("../Tests/xd.tc");
   const auto functions = turboc::IRGenerator::generate(&context, parsed_source);
 
   ConsolePrinter printer(ConsolePrinter::Variant::Colorful);
@@ -91,10 +120,13 @@ int main() {
 
     f->validate(ValidationBehaviour::ErrorsAreFatal);
 
-    f->print(printer);
-    printer.newline();
+    //    f->print(printer);
+    //    printer.newline();
 
     optimize_function(f);
+
+    f->print(printer);
+    printer.newline();
 
     f->validate(ValidationBehaviour::ErrorsAreFatal);
   }

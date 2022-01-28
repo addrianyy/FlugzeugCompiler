@@ -65,7 +65,9 @@ void Instruction::replace_with_instruction_and_destroy(Instruction* instruction)
   verify(instruction != this, "Cannot replace instruction with itself");
 
   instruction->insert_after(this);
-  replace_uses_with(instruction);
+  if (!is_void()) {
+    replace_uses_with(instruction);
+  }
   destroy();
 }
 
