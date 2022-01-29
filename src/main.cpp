@@ -92,6 +92,15 @@ static void optimize_function(Function* f) {
   }
 }
 
+void show_calls(const Function* f) {
+  log_debug("Function {} called from:", f->get_name());
+
+  for (const Instruction& user : f->users<Instruction>()) {
+    log_debug("  function {}, block {}", user.get_function()->get_name(),
+              user.get_block()->format());
+  }
+}
+
 int main() {
   Context context;
 
@@ -104,6 +113,10 @@ int main() {
   const auto functions = turboc::IRGenerator::generate(&context, parsed_source);
 
   ConsolePrinter printer(ConsolePrinter::Variant::Colorful);
+
+  for (const auto& [_, f] : functions) {
+    show_calls(f);
+  }
 
   for (const auto& [_, f] : functions) {
     if (f->is_extern()) {
