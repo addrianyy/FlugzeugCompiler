@@ -3,6 +3,7 @@
 #include "Type.hpp"
 #include "TypeFilteringIterator.hpp"
 #include "Validator.hpp"
+#include "Value.hpp"
 
 #include <Flugzeug/Core/IntrusiveLinkedList.hpp>
 
@@ -13,7 +14,9 @@ namespace flugzeug {
 
 class Context;
 
-class Function {
+class Function : public Value {
+  DEFINE_INSTANCEOF(Value, Value::Kind::Function)
+
   friend class IntrusiveLinkedList<Block, Function>;
   friend class IntrusiveNode<Block, Function>;
   friend class Block;
@@ -75,8 +78,6 @@ class Function {
     bool operator!=(const InstructionIteratorInternal& rhs) const { return !(*this == rhs); }
   };
 
-  Context* const context;
-
   Type* const return_type;
   const std::string name;
   std::vector<Parameter*> parameters;
@@ -100,7 +101,8 @@ class Function {
 public:
   Function(Context* context, Type* return_type, std::string name,
            const std::vector<Type*>& arguments);
-  ~Function();
+
+  ~Function() override;
 
   ValidationResults validate(ValidationBehaviour behaviour) const;
 
@@ -126,9 +128,6 @@ public:
   const_iterator begin() const { return blocks.begin(); }
   const_iterator end() const { return blocks.end(); }
 #pragma endregion
-
-  Context* get_context() { return context; }
-  const Context* get_context() const { return context; }
 
   Type* get_return_type() const { return return_type; }
   std::string_view get_name() const { return name; }

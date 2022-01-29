@@ -21,7 +21,8 @@ size_t Type::get_bit_size() const {
   switch (kind) {
   case Kind::Void:
   case Kind::Block:
-    fatal_error("Cannot get size of void or block types");
+  case Kind::Function:
+    fatal_error("Cannot get size of void or block or function types");
   case Kind::I1:
     return 1;
   case Kind::I8:
@@ -74,6 +75,8 @@ std::string Type::format() const {
     return "void";
   case Kind::Block:
     return "block";
+  case Kind::Function:
+    return "function";
   case Kind::I1:
     return "i1";
   case Kind::I8:

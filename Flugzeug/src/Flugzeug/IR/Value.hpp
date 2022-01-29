@@ -25,6 +25,7 @@ public:
     Parameter,
     Undef,
     Block,
+    Function,
     UserBegin,
       InstructionBegin,
         UnaryInstr,

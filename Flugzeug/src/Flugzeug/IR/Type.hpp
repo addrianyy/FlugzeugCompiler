@@ -24,6 +24,7 @@ public:
     I32,
     I64,
     Pointer,
+    Function,
   };
 
 private:
@@ -50,6 +51,7 @@ public:
   bool is_i64() const { return kind == Kind::I64; }
   bool is_void() const { return kind == Kind::Void; }
   bool is_block() const { return kind == Kind::Block; }
+  bool is_function() const { return kind == Kind::Function; }
   bool is_pointer() const { return kind == Kind::Pointer; }
 
   bool is_arithmetic() const;
@@ -101,8 +103,9 @@ DEFINE_SIMPLE_TYPE(I8Type, I8)
 DEFINE_SIMPLE_TYPE(I16Type, I16)
 DEFINE_SIMPLE_TYPE(I32Type, I32)
 DEFINE_SIMPLE_TYPE(I64Type, I64)
-DEFINE_SIMPLE_TYPE(BlockType, Block)
 DEFINE_SIMPLE_TYPE(VoidType, Void)
+DEFINE_SIMPLE_TYPE(BlockType, Block)
+DEFINE_SIMPLE_TYPE(FunctionType, Function)
 
 #undef DEFINE_SIMPLE_TYPE
 

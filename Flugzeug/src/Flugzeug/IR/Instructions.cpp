@@ -72,13 +72,19 @@ IntPredicate IntCompare::swapped_order_predicate(IntPredicate pred) {
 }
 
 Call::Call(Context* context, Function* function, const std::vector<Value*>& arguments)
-    : Instruction(context, Value::Kind::Call, function->get_return_type()), target(function) {
-  set_operand_count(arguments.size());
+    : Instruction(context, Value::Kind::Call, function->get_return_type()) {
+  set_operand_count(arguments.size() + 1);
+
+  set_operand(0, function);
 
   for (size_t i = 0; i < arguments.size(); ++i) {
-    set_operand(i, arguments[i]);
+    set_operand(i + 1, arguments[i]);
   }
 }
+
+Function* Call::get_target() { return cast<Function>(get_operand(0)); }
+
+const Function* Call::get_target() const { return cast<Function>(get_operand(0)); }
 
 bool Phi::index_for_block(const Block* block, size_t& index) const {
   index = 0;

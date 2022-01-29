@@ -1,5 +1,6 @@
 #include "Value.hpp"
 #include "Block.hpp"
+#include "Function.hpp"
 #include "Instructions.hpp"
 
 using namespace flugzeug;
@@ -32,7 +33,8 @@ Value::~Value() {
 }
 
 void Value::set_display_index(size_t index) {
-  verify(!type->is_void(), "Void values cannot have user index.");
+  verify(!type->is_void() && !type->is_function(),
+         "Void or function values cannot have user index.");
   display_index = index;
 }
 
@@ -68,6 +70,21 @@ void Value::replace_uses_with(Value* new_value) {
 
   verify(!is_void(), "Cannot replace uses of void value");
   verify(new_value->get_type() == get_type(), "Cannot replace value with value of different type");
+
+  if (const auto new_function = cast<Function>(new_value)) {
+    const auto old_function = cast<Function>(this);
+
+    verify(new_function->get_return_type() == old_function->get_return_type(),
+           "Return type mismatch");
+    verify(new_function->get_parameter_count() == old_function->get_parameter_count(),
+           "Parameter count mismatch");
+
+    for (size_t i = 0; i < new_function->get_parameter_count(); ++i) {
+      const auto t1 = new_function->get_parameter(i)->get_type();
+      const auto t2 = old_function->get_parameter(i)->get_type();
+      verify(t1 == t2, "Parameter type mismatch");
+    }
+  }
 
   const auto block = cast<Block>(this);
 

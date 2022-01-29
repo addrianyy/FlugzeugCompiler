@@ -76,6 +76,7 @@ static void optimize_function(Function* f) {
   while (true) {
     bool did_something = false;
 
+    did_something |= inline_all(f);
     did_something |= CFGSimplification::run(f);
     did_something |= MemoryToSSA::run(f);
     did_something |= DeadCodeElimination::run(f);
@@ -83,7 +84,6 @@ static void optimize_function(Function* f) {
     did_something |= InstructionSimplification::run(f);
     did_something |= DeadBlockElimination::run(f);
     did_something |= LocalReordering::run(f);
-    did_something |= inline_all(f);
 
     if (!did_something) {
       f->reassign_display_indices();

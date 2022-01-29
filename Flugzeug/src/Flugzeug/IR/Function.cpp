@@ -33,9 +33,8 @@ void Function::on_removed_node(Block* block) {
 
 Function::Function(Context* context, Type* return_type, std::string name,
                    const std::vector<Type*>& arguments)
-    : blocks(this), context(context), name(std::move(name)), return_type(return_type) {
-  context->increase_refcount();
-
+    : Value(context, Value::Kind::Function, context->get_function_ty()), blocks(this),
+      name(std::move(name)), return_type(return_type) {
   verify(return_type->is_arithmetic_or_pointer() || return_type->is_void(),
          "Function return type must be arithmetic or pointer or void");
 
@@ -53,8 +52,6 @@ Function::Function(Context* context, Type* return_type, std::string name,
 Function::~Function() {
   verify(!entry_block, "There cannot be entry block before removing function.");
   verify(blocks.is_empty(), "Block list must be empty before removing function.");
-
-  context->decrease_refcount();
 }
 
 ValidationResults Function::validate(ValidationBehaviour behaviour) const {
@@ -134,7 +131,7 @@ void Function::reassign_display_indices() {
 }
 
 Block* Function::create_block() {
-  auto block = new Block(context);
+  auto block = new Block(get_context());
   insert_block(block);
   return block;
 }
@@ -156,6 +153,11 @@ void Function::destroy() {
   // Remove from last block so entry block will be removed last.
   while (!is_empty()) {
     get_last_block()->destroy();
+  }
+
+  // Remove all calls to this function.
+  for (Instruction& instruction : dont_invalidate_current(users<Instruction>())) {
+    instruction.destroy();
   }
 
   for (Parameter* param : parameters) {

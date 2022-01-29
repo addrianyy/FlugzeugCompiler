@@ -22,8 +22,9 @@ Context::Context() {
   i16_type = new I16Type(this);
   i32_type = new I32Type(this);
   i64_type = new I64Type(this);
-  block_type = new BlockType(this);
   void_type = new VoidType(this);
+  block_type = new BlockType(this);
+  function_type = new FunctionType(this);
 }
 
 Context::~Context() {
@@ -35,7 +36,7 @@ Context::~Context() {
     delete undef;
   }
 
-  constexpr size_t base_type_count = 7;
+  constexpr size_t base_type_count = 8;
   verify(refcount == base_type_count + pointer_types.size(), "Unexpected context refcount");
 
   for (auto [key, type] : pointer_types) {
@@ -47,14 +48,16 @@ Context::~Context() {
   delete i16_type;
   delete i32_type;
   delete i64_type;
-  delete block_type;
   delete void_type;
+  delete block_type;
+  delete function_type;
 
   verify(refcount == 0, "Context refcount is not zero");
 }
 
 Constant* Context::get_constant(Type* type, uint64_t constant) {
-  verify(!type->is_void() && !type->is_block(), "Cannot create constant with that type.");
+  verify(!type->is_void() && !type->is_block() && !type->is_function(),
+         "Cannot create constant with that type.");
 
   Constant::constrain_constant(type, constant, &constant, nullptr);
 
@@ -71,7 +74,8 @@ Constant* Context::get_constant(Type* type, uint64_t constant) {
 }
 
 Undef* Context::get_undef(Type* type) {
-  verify(!type->is_void() && !type->is_block(), "Cannot create undef with that type.");
+  verify(!type->is_void() && !type->is_block() && !type->is_function(),
+         "Cannot create undef with that type.");
 
   const auto it = undefs.find(type);
   if (it != undefs.end()) {
@@ -98,6 +102,7 @@ PointerType* Context::get_pointer_type_internal(Type* base, uint32_t indirection
   switch (base->get_kind()) {
   case Type::Kind::Void:
   case Type::Kind::Block:
+  case Type::Kind::Function:
   case Type::Kind::I1:
   case Type::Kind::Pointer:
     fatal_error("Invalid pointer base.");

@@ -58,8 +58,9 @@ class Context {
   I16Type* i16_type = nullptr;
   I32Type* i32_type = nullptr;
   I64Type* i64_type = nullptr;
-  BlockType* block_type = nullptr;
   VoidType* void_type = nullptr;
+  BlockType* block_type = nullptr;
+  FunctionType* function_type = nullptr;
 
   PointerType* get_pointer_type_internal(Type* base, uint32_t indirection);
 
@@ -69,13 +70,14 @@ public:
   Context();
   ~Context();
 
-  I1Type* get_i1_ty() const { return i1_type; }
-  I8Type* get_i8_ty() const { return i8_type; }
-  I16Type* get_i16_ty() const { return i16_type; }
-  I32Type* get_i32_ty() const { return i32_type; }
-  I64Type* get_i64_ty() const { return i64_type; }
-  BlockType* get_block_ty() const { return block_type; }
-  VoidType* get_void_ty() const { return void_type; }
+  Type* get_i1_ty() const { return i1_type; }
+  Type* get_i8_ty() const { return i8_type; }
+  Type* get_i16_ty() const { return i16_type; }
+  Type* get_i32_ty() const { return i32_type; }
+  Type* get_i64_ty() const { return i64_type; }
+  Type* get_void_ty() const { return void_type; }
+  Type* get_block_ty() const { return block_type; }
+  Type* get_function_ty() const { return function_type; }
 
   Constant* get_constant(Type* type, uint64_t constant);
   Undef* get_undef(Type* type);

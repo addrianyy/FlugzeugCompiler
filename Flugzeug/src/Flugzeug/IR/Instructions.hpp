@@ -197,18 +197,16 @@ protected:
 class Call : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Call)
 
-  Function* target = nullptr;
-
 public:
   Call(Context* context, Function* function, const std::vector<Value*>& arguments);
 
-  size_t get_arg_count() const { return get_operand_count(); }
+  size_t get_arg_count() const { return get_operand_count() - 1; }
 
-  Value* get_arg(size_t i) { return get_operand(i); }
-  const Value* get_arg(size_t i) const { return get_operand(i); }
+  Value* get_arg(size_t i) { return get_operand(i + 1); }
+  const Value* get_arg(size_t i) const { return get_operand(i + 1); }
 
-  Function* get_target() { return target; }
-  const Function* get_target() const { return target; }
+  Function* get_target();
+  const Function* get_target() const;
 
   Instruction* clone() override {
     std::vector<Value*> arguments;
