@@ -68,6 +68,10 @@ traverse_generic(TBlock* start_block, TraversalType traversal) {
       TBlock* block = queue.front();
       queue.pop_front();
 
+      if (visited.contains(block)) {
+        continue;
+      }
+
       if (!first_iteration || with_start) {
         visited.insert(block);
 
@@ -95,6 +99,10 @@ traverse_generic(TBlock* start_block, TraversalType traversal) {
     while (!stack.empty()) {
       TBlock* block = stack.back();
       stack.pop_back();
+
+      if (visited.contains(block)) {
+        continue;
+      }
 
       if (!first_iteration || with_start) {
         visited.insert(block);

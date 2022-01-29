@@ -1,4 +1,5 @@
 #include "Inline.hpp"
+#include "SimplifyPhi.hpp"
 #include <Flugzeug/Core/Error.hpp>
 #include <Flugzeug/IR/Block.hpp>
 #include <Flugzeug/IR/Function.hpp>
@@ -127,6 +128,8 @@ void flugzeug::utils::inline_call(Call* call) {
   if (return_phi) {
     return_block->push_instruction_front(return_phi);
     call->replace_uses_with_and_destroy(return_phi);
+
+    utils::simplify_phi(return_phi, true);
   } else {
     call->destroy();
   }

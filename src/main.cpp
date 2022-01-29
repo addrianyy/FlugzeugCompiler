@@ -117,8 +117,8 @@ int main() {
 
     optimize_function(f);
 
-    f->print(printer);
-    printer.newline();
+    //    f->print(printer);
+    //    printer.newline();
 
     f->validate(ValidationBehaviour::ErrorsAreFatal);
   }

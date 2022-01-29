@@ -87,10 +87,26 @@ void Function::print(IRPrinter& printer) const {
     p.print(IRPrinter::Item::ParenClose, IRPrinter::NonKeywordWord{" {"});
   }
 
-  for (const Block& block : *this) {
-    block.print(printer);
+  auto printing_order =
+    static_cast<const Block*>(entry_block)->get_reachable_blocks(TraversalType::BFS_WithStart);
 
-    if (&block != get_last_block()) {
+  std::unordered_set<const Block*> reachable_blocks;
+  reachable_blocks.reserve(printing_order.size());
+
+  for (const Block* block : printing_order) {
+    reachable_blocks.insert(block);
+  }
+
+  for (const Block& block : *this) {
+    if (!reachable_blocks.contains(&block)) {
+      printing_order.push_back(&block);
+    }
+  }
+
+  for (const Block* block : printing_order) {
+    block->print(printer);
+
+    if (block != printing_order.back()) {
       printer.newline();
     }
   }
