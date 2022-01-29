@@ -37,6 +37,8 @@ void flugzeug::utils::inline_call(Call* call) {
   const auto caller = call->get_function();
   const auto callee = call->get_target();
 
+  verify(!callee->is_extern(), "Cannot inline extern call.");
+
   // Split the block:
   //   block1:
   //      ...
@@ -61,7 +63,7 @@ void flugzeug::utils::inline_call(Call* call) {
     }
 
     const auto it = value_replacements.find(value);
-    verify(it != value_replacements.end(), "Unknown value used");
+    verify(it != value_replacements.end(), "No replacement for value (?)");
     return it->second;
   };
 
@@ -93,6 +95,7 @@ void flugzeug::utils::inline_call(Call* call) {
     }
   }
 
+  // Fixup operands.
   for (Block* block : created_blocks) {
     for (Instruction& instruction : dont_invalidate_current(*block)) {
       // Replace returns with branches to `return_block`.
@@ -114,7 +117,12 @@ void flugzeug::utils::inline_call(Call* call) {
   }
 
   // Add branch to callee entry just before `call` instruction which will be removed soon.
-  (new Branch(context, created_blocks[0]))->insert_before(call);
+  {
+    const auto entry = created_blocks[0];
+    const auto branch_to_entry = new Branch(context, entry);
+
+    branch_to_entry->insert_before(call);
+  }
 
   if (return_phi) {
     return_block->push_instruction_front(return_phi);
