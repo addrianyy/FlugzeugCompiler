@@ -3,6 +3,7 @@
 #include "Instructions.hpp"
 
 #include <Flugzeug/Core/Environment.hpp>
+#include <Flugzeug/Core/Process.hpp>
 
 #include <fmt/format.h>
 
@@ -162,22 +163,10 @@ void Function::generate_graph(const std::string& graph_path) const {
   std::stringstream stream;
   generate_dot_graph_source(stream, true);
 
-  const auto dotfile_path =
-    std::filesystem::temp_directory_path() / fmt::format("graph_dotfile_{}_{}.dot",
-                                                         environment::get_current_process_id(),
-                                                         environment::get_current_thread_id());
+  const std::string command_line = fmt::format(R"(-T{} -o "{}")", format, graph_path);
 
-  {
-    std::ofstream file(dotfile_path);
-    generate_dot_graph_source(file, true);
-  }
-
-  const std::string command_line =
-    fmt::format(R"(dot "{}" -T{} -o "{}")", dotfile_path.string(), format, graph_path);
-
-  verify(std::system(command_line.c_str()) == 0, "Failed to run `dot`");
-
-  std::filesystem::remove(dotfile_path);
+  verify(run_process("dot", command_line, stream.str()) == 0,
+         "Invoking `dot` to generate graph failed");
 }
 
 void Function::debug_graph() const {
