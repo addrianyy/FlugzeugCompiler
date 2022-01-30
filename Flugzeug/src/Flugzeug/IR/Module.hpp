@@ -73,6 +73,8 @@ public:
   ~Module();
 
   void print(IRPrinter& printer) const;
+  void print() const;
+
   void destroy();
 
   Context* get_context() { return context; }
