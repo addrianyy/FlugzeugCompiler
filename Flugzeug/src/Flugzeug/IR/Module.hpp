@@ -12,6 +12,49 @@ class Module {
 
   using FunctionList = IntrusiveLinkedList<Function, Module>;
 
+  template <typename TIterator, bool Extern> class FunctionFilteringIterator {
+    TIterator iterator;
+
+    void skip_non_matching_functions() {
+      while (true) {
+        const auto function = iterator.operator->();
+        if (!function || function->is_extern() == Extern) {
+          break;
+        }
+        ++iterator;
+      }
+    }
+
+  public:
+    using iterator_category = std::forward_iterator_tag;
+    using difference_type = std::ptrdiff_t;
+    using value_type = typename TIterator::value_type;
+    using pointer = typename TIterator::pointer;
+    using reference = typename TIterator::reference;
+
+    explicit FunctionFilteringIterator(TIterator iterator) : iterator(iterator) {
+      skip_non_matching_functions();
+    }
+
+    FunctionFilteringIterator& operator++() {
+      ++iterator;
+      skip_non_matching_functions();
+      return *this;
+    }
+
+    FunctionFilteringIterator operator++(int) {
+      const auto before = *this;
+      ++(*this);
+      return before;
+    }
+
+    reference operator*() const { return *iterator; }
+    pointer operator->() { return iterator->operator->(); }
+
+    bool operator==(const FunctionFilteringIterator& rhs) const { return iterator == rhs.iterator; }
+    bool operator!=(const FunctionFilteringIterator& rhs) const { return iterator != rhs.iterator; }
+  };
+
   Context* context;
   FunctionList function_list;
 
@@ -29,6 +72,7 @@ public:
 
   ~Module();
 
+  void print(IRPrinter& printer) const;
   void destroy();
 
   Context* get_context() { return context; }
@@ -43,11 +87,31 @@ public:
   using const_iterator = FunctionList::const_iterator;
   using iterator = FunctionList::iterator;
 
+  using LocalFunctionIterator = FunctionFilteringIterator<iterator, false>;
+  using ConstLocalFunctionIterator = FunctionFilteringIterator<const_iterator, false>;
+
+  using ExternFunctionIterator = FunctionFilteringIterator<iterator, true>;
+  using ConstExternFunctionIterator = FunctionFilteringIterator<const_iterator, true>;
+
   iterator begin() { return function_list.begin(); }
   iterator end() { return function_list.end(); }
 
   const_iterator begin() const { return function_list.begin(); }
   const_iterator end() const { return function_list.end(); }
+
+  IteratorRange<LocalFunctionIterator> local_functions() {
+    return {LocalFunctionIterator(begin()), LocalFunctionIterator(end())};
+  }
+  IteratorRange<ConstLocalFunctionIterator> local_functions() const {
+    return {ConstLocalFunctionIterator(begin()), ConstLocalFunctionIterator(end())};
+  }
+
+  IteratorRange<ExternFunctionIterator> extern_functions() {
+    return {ExternFunctionIterator(begin()), ExternFunctionIterator(end())};
+  }
+  IteratorRange<ConstExternFunctionIterator> extern_functions() const {
+    return {ConstExternFunctionIterator(begin()), ConstExternFunctionIterator(end())};
+  }
 };
 
 } // namespace flugzeug

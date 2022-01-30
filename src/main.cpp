@@ -94,7 +94,7 @@ static void optimize_function(Function* f) {
   }
 }
 
-void show_calls(const Function* f) {
+static void show_calls(const Function* f) {
   log_debug("Function {} called from:", f->get_name());
 
   for (const Instruction& user : f->users<Instruction>()) {
@@ -105,6 +105,7 @@ void show_calls(const Function* f) {
 
 int main() {
   Context context;
+  ConsolePrinter printer(ConsolePrinter::Variant::Colorful);
 
   if (false) {
     test_validation(context);
@@ -114,17 +115,11 @@ int main() {
   const auto parsed_source = turboc::Parser::parse_from_file("../Tests/inline.tc");
   const auto module = turboc::IRGenerator::generate(&context, parsed_source);
 
-  ConsolePrinter printer(ConsolePrinter::Variant::Colorful);
-
   for (const Function& f : *module) {
     show_calls(&f);
   }
 
-  for (Function& f : *module) {
-    if (f.is_extern()) {
-      continue;
-    }
-
+  for (Function& f : module->local_functions()) {
     f.validate(ValidationBehaviour::ErrorsAreFatal);
 
     //    f->print(printer);
@@ -138,16 +133,6 @@ int main() {
     f.validate(ValidationBehaviour::ErrorsAreFatal);
   }
 
-  printer.newline();
-
-  for (Function& f : *module) {
-    if (f.is_extern()) {
-      continue;
-    }
-
-    f.print(printer);
-    printer.newline();
-  }
-
+  module->print(printer);
   module->destroy();
 }

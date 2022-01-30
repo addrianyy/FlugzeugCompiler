@@ -22,6 +22,16 @@ Module::~Module() {
   context->decrease_refcount();
 }
 
+void Module::print(IRPrinter& printer) const {
+  for (const Function& function : *this) {
+    function.print(printer);
+
+    if (function.get_next()) {
+      printer.newline();
+    }
+  }
+}
+
 void Module::destroy() {
   for (Function& function : dont_invalidate_current(*this)) {
     // Remove all calls to this function.
