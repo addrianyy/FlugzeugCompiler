@@ -58,6 +58,8 @@ public:
   virtual Instruction* clone() = 0;
 
   void print(IRPrinter& printer) const;
+  void print() const;
+  void debug_print() const;
 
   Block* get_block() { return get_owner(); }
   const Block* get_block() const { return get_owner(); }

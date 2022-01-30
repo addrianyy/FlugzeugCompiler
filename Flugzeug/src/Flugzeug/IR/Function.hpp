@@ -108,8 +108,9 @@ public:
 
   ValidationResults validate(ValidationBehaviour behaviour) const;
 
-  void print(bool newline = false) const;
   void print(IRPrinter& printer) const;
+  void print() const;
+  void debug_print() const;
 
 #pragma region block_list
   Block* get_first_block() { return blocks.get_first(); }
@@ -130,6 +131,9 @@ public:
   const_iterator begin() const { return blocks.begin(); }
   const_iterator end() const { return blocks.end(); }
 #pragma endregion
+
+  Module* get_module() { return get_owner(); }
+  const Module* get_module() const { return get_owner(); }
 
   Type* get_return_type() const { return return_type; }
   std::string_view get_name() const { return name; }

@@ -11,10 +11,9 @@ public:
     ColorfulIfSupported,
   };
 
-  std::ostream& output_stream;
-
 private:
   Variant variant;
+  std::ostream& output_stream;
 
   void set_color(int color);
   void reset();
@@ -31,12 +30,12 @@ private:
   void end_type() override { reset(); }
   void end_block() override { reset(); }
 
+  void write_string(std::string_view string) override;
+
 public:
   explicit ConsolePrinter(Variant variant);
   ConsolePrinter(Variant variant, std::ostream& output_stream);
   ~ConsolePrinter() override;
-
-  void write_string(std::string_view string) override;
 };
 
 } // namespace flugzeug

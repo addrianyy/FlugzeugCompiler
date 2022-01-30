@@ -53,7 +53,7 @@ static void test_validation(Context& context) {
   inserter.ret(i32->get_constant(1));
   inserter.ret(i64->get_constant(3));
 
-  f->print(true);
+  f->print();
   f->validate(ValidationBehaviour::ErrorsToStdout);
   m->destroy();
 }
@@ -107,11 +107,6 @@ int main() {
   Context context;
   ConsolePrinter printer(ConsolePrinter::Variant::Colorful);
 
-  if (false) {
-    test_validation(context);
-    return 0;
-  }
-
   const auto parsed_source = turboc::Parser::parse_from_file("../Tests/inline.tc");
   const auto module = turboc::IRGenerator::generate(&context, parsed_source);
 
@@ -122,13 +117,7 @@ int main() {
   for (Function& f : module->local_functions()) {
     f.validate(ValidationBehaviour::ErrorsAreFatal);
 
-    //    f->print(printer);
-    //    printer.newline();
-
     optimize_function(&f);
-
-    //    f->print(printer);
-    //    printer.newline();
 
     f.validate(ValidationBehaviour::ErrorsAreFatal);
   }

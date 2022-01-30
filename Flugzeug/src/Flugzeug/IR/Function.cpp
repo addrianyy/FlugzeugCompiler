@@ -1,5 +1,6 @@
 #include "Function.hpp"
 #include "ConsolePrinter.hpp"
+#include "DebugPrinter.hpp"
 #include "Module.hpp"
 
 using namespace flugzeug;
@@ -63,16 +64,6 @@ ValidationResults Function::validate(ValidationBehaviour behaviour) const {
   return ValidationResults({});
 }
 
-void Function::print(bool newline) const {
-  ConsolePrinter printer(ConsolePrinter::Variant::ColorfulIfSupported);
-
-  print(printer);
-
-  if (newline) {
-    printer.newline();
-  }
-}
-
 void Function::print(IRPrinter& printer) const {
   {
     auto p = printer.create_line_printer();
@@ -112,6 +103,16 @@ void Function::print(IRPrinter& printer) const {
 
     printer.raw_write("}\n");
   }
+}
+
+void Function::print() const {
+  ConsolePrinter printer(ConsolePrinter::Variant::ColorfulIfSupported);
+  print(printer);
+}
+
+void Function::debug_print() const {
+  DebugPrinter printer;
+  print(printer);
 }
 
 void Function::reassign_display_indices() {

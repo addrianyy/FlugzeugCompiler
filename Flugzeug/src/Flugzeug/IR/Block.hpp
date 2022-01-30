@@ -51,6 +51,8 @@ public:
   ~Block() override;
 
   void print(IRPrinter& printer) const;
+  void print() const;
+  void debug_print() const;
 
 #pragma region instruction_list
   Instruction* get_first_instruction() { return instruction_list.get_first(); }

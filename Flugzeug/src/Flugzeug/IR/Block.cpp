@@ -1,4 +1,6 @@
 #include "Block.hpp"
+#include "ConsolePrinter.hpp"
+#include "DebugPrinter.hpp"
 #include "DominatorTree.hpp"
 #include "Function.hpp"
 #include "Instructions.hpp"
@@ -167,6 +169,16 @@ void Block::print(IRPrinter& printer) const {
     printer.tab();
     instruction.print(printer);
   }
+}
+
+void Block::print() const {
+  ConsolePrinter printer(ConsolePrinter::Variant::ColorfulIfSupported);
+  print(printer);
+}
+
+void Block::debug_print() const {
+  DebugPrinter printer;
+  print(printer);
 }
 
 std::string Block::format() const {

@@ -1,5 +1,7 @@
 #include "Instruction.hpp"
 #include "Block.hpp"
+#include "ConsolePrinter.hpp"
+#include "DebugPrinter.hpp"
 #include "Instructions.hpp"
 
 using namespace flugzeug;
@@ -35,6 +37,16 @@ void Instruction::print(IRPrinter& printer) const {
   }
 
   print_instruction_internal(p);
+}
+
+void Instruction::print() const {
+  ConsolePrinter printer(ConsolePrinter::Variant::ColorfulIfSupported);
+  print(printer);
+}
+
+void Instruction::debug_print() const {
+  DebugPrinter printer;
+  print(printer);
 }
 
 Function* Instruction::get_function() {
