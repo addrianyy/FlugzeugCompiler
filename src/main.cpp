@@ -107,7 +107,7 @@ int main() {
   Context context;
   ConsolePrinter printer(ConsolePrinter::Variant::Colorful);
 
-  const auto parsed_source = turboc::Parser::parse_from_file("../Tests/inline.tc");
+  const auto parsed_source = turboc::Parser::parse_from_file("../Tests/main.tc");
   const auto module = turboc::IRGenerator::generate(&context, parsed_source);
 
   for (const Function& f : *module) {
@@ -120,6 +120,8 @@ int main() {
     optimize_function(&f);
 
     f.validate(ValidationBehaviour::ErrorsAreFatal);
+
+    f.generate_graph(fmt::format("../Graphs/{}.svg", f.get_name()));
   }
 
   module->print(printer);

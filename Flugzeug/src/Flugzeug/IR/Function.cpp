@@ -33,6 +33,21 @@ void Function::on_removed_node(Block* block) {
   }
 }
 
+void Function::print_prototype(IRPrinter& printer, bool end_line) const {
+  auto p = printer.create_line_printer();
+  p.print(return_type, IRPrinter::NonKeywordWord{name}, IRPrinter::Item::ParenOpen);
+
+  for (auto param : parameters) {
+    p.print(param->get_type(), param, IRPrinter::Item::Comma);
+  }
+
+  p.print(IRPrinter::Item::ParenClose);
+
+  if (end_line) {
+    p.print(IRPrinter::NonKeywordWord{is_extern() ? ";" : " {"});
+  }
+}
+
 Function::Function(Context* context, Type* return_type, std::string name,
                    const std::vector<Type*>& arguments)
     : Value(context, Value::Kind::Function, context->get_function_ty()), blocks(this),
@@ -65,16 +80,7 @@ ValidationResults Function::validate(ValidationBehaviour behaviour) const {
 }
 
 void Function::print(IRPrinter& printer) const {
-  {
-    auto p = printer.create_line_printer();
-    p.print(return_type, IRPrinter::NonKeywordWord{name}, IRPrinter::Item::ParenOpen);
-
-    for (auto param : parameters) {
-      p.print(param->get_type(), param, IRPrinter::Item::Comma);
-    }
-
-    p.print(IRPrinter::Item::ParenClose, IRPrinter::NonKeywordWord{is_extern() ? ";" : " {"});
-  }
+  print_prototype(printer, true);
 
   if (!is_extern()) {
     auto printing_order =

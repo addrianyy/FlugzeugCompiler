@@ -100,6 +100,9 @@ class Function : public Value, public IntrusiveNode<Function, Module> {
   void on_added_node(Block* block);
   void on_removed_node(Block* block);
 
+  void print_prototype(IRPrinter& printer, bool end_line) const;
+  void generate_dot_graph_source(std::ostream& output, bool colors) const;
+
   Function(Context* context, Type* return_type, std::string name,
            const std::vector<Type*>& arguments);
 
@@ -111,6 +114,9 @@ public:
   void print(IRPrinter& printer) const;
   void print() const;
   void debug_print() const;
+
+  void generate_graph(const std::string& graph_path) const;
+  void debug_graph() const;
 
 #pragma region block_list
   Block* get_first_block() { return blocks.get_first(); }
