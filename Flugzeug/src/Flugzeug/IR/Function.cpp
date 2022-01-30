@@ -1,5 +1,6 @@
 #include "Function.hpp"
 #include "ConsolePrinter.hpp"
+#include "Module.hpp"
 
 using namespace flugzeug;
 
@@ -155,14 +156,9 @@ void Function::destroy() {
     get_last_block()->destroy();
   }
 
-  // Remove all calls to this function.
-  for (Instruction& instruction : dont_invalidate_current(users<Instruction>())) {
-    instruction.destroy();
-  }
-
   for (Parameter* param : parameters) {
     delete param;
   }
 
-  delete this;
+  IntrusiveNode::destroy();
 }

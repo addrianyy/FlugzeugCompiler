@@ -1,5 +1,6 @@
 #include "Context.hpp"
 #include "Function.hpp"
+#include "Module.hpp"
 
 #include <Flugzeug/Core/HashCombine.hpp>
 
@@ -134,7 +135,4 @@ PointerType* Context::get_pointer_type(Type* pointee, uint32_t indirection) {
   return get_pointer_type_internal(base, indirection);
 }
 
-Function* Context::create_function(Type* return_type, std::string name,
-                                   const std::vector<Type*>& arguments) {
-  return new Function(this, return_type, std::move(name), arguments);
-}
+Module* Context::create_module() { return new Module(this); }

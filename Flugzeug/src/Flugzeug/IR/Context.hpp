@@ -16,6 +16,7 @@ class Context {
   friend class Function;
   friend class Value;
   friend class Type;
+  friend class Module;
 
   int64_t refcount = 0;
 
@@ -84,8 +85,7 @@ public:
 
   PointerType* get_pointer_type(Type* pointee, uint32_t indirection = 1);
 
-  Function* create_function(Type* return_type, std::string name,
-                            const std::vector<Type*>& arguments);
+  Module* create_module();
 };
 
 } // namespace flugzeug

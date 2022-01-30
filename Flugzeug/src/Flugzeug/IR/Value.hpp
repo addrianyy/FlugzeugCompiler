@@ -83,6 +83,9 @@ public:
   void set_display_index(size_t index);
 
   bool is_void() const { return get_type()->is_void(); }
+  bool is_global() const {
+    return kind == Kind::Undef || kind == Kind::Function || kind == Kind::Constant;
+  }
 
   void replace_uses_with(Value* new_value);
   void replace_uses_with_constant(uint64_t constant);

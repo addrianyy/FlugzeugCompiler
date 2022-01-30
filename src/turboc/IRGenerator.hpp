@@ -11,7 +11,6 @@ namespace turboc {
 namespace fz = flugzeug;
 
 class IRGenerator : public ConstASTVisitor {
-  using IRFunctionMap = std::unordered_map<std::string, fz::Function*>;
   using FunctionMap = std::unordered_map<std::string, const Function*>;
 
   struct Loop {
@@ -69,8 +68,8 @@ class IRGenerator : public ConstASTVisitor {
   friend auto visitor::visit_statement(TStmt* stmt, TVisitor& visitor);
 
   fz::Context* context;
+  fz::Module* module;
 
-  IRFunctionMap ir_function_map;
   FunctionMap function_map;
 
   fz::InstructionInserter inserter;
@@ -133,7 +132,7 @@ class IRGenerator : public ConstASTVisitor {
   explicit IRGenerator(fz::Context* context);
 
 public:
-  static IRFunctionMap generate(fz::Context* context, const std::vector<Function>& functions);
+  static fz::Module* generate(fz::Context* context, const std::vector<Function>& functions);
 };
 
 } // namespace turboc

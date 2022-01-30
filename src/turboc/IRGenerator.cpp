@@ -1,4 +1,5 @@
 #include "IRGenerator.hpp"
+#include <Flugzeug/IR/Module.hpp>
 
 using namespace turboc;
 
@@ -546,7 +547,7 @@ IRGenerator::VisitResult IRGenerator::visit_call_expr(Argument<CallExpr> call_ex
   verify(it != function_map.end(), "Called unknown function {}", call_expr->get_function_name());
 
   const auto& target_prototype = it->second->get_prototype();
-  const auto target_ir_function = ir_function_map[call_expr->get_function_name()];
+  const auto target_ir_function = module->get_function(call_expr->get_function_name());
 
   std::vector<fz::Value*> arguments(call_expr->get_arguments().size());
   verify(arguments.size() == target_prototype.get_arguments().size(),
@@ -674,16 +675,14 @@ void IRGenerator::create_declarations(const std::vector<Function>& functions) {
 
     const auto& name = prototype.get_name();
     const auto ir_function =
-      context->create_function(convert_type(prototype.get_return_type()), name, arguments);
+      module->create_function(convert_type(prototype.get_return_type()), name, arguments);
 
-    verify(ir_function_map.insert({name, ir_function}).second &
-             function_map.insert({name, &function}).second,
-           "Defined multiple functions named {}.", name);
+    verify(function_map.insert({name, &function}).second, "Defined multiple functions named {}.",
+           name);
   }
 }
 
 void IRGenerator::generate_ir_for_functions(const std::vector<Function>& functions) {
-  ir_function_map.clear();
   function_map.clear();
 
   create_declarations(functions);
@@ -691,17 +690,17 @@ void IRGenerator::generate_ir_for_functions(const std::vector<Function>& functio
   for (const Function& function : functions) {
     if (function.get_body()) {
       const auto& name = function.get_prototype().get_name();
-      generate_local_function(function, ir_function_map[name]);
+      generate_local_function(function, module->get_function(name));
     }
   }
 }
 
-IRGenerator::IRGenerator(fz::Context* context) : context(context) {}
+IRGenerator::IRGenerator(fz::Context* context)
+    : context(context), module(context->create_module()) {}
 
-IRGenerator::IRFunctionMap IRGenerator::generate(fz::Context* context,
-                                                 const std::vector<Function>& functions) {
+fz::Module* IRGenerator::generate(fz::Context* context, const std::vector<Function>& functions) {
   IRGenerator generator(context);
   generator.generate_ir_for_functions(functions);
 
-  return generator.ir_function_map;
+  return generator.module;
 }

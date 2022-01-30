@@ -59,7 +59,7 @@ void flugzeug::utils::inline_call(Call* call) {
 
   std::unordered_map<Value*, Value*> value_replacements;
   const auto get_replacement = [&value_replacements](Value* value) -> Value* {
-    if (cast<Constant>(value) || cast<Undef>(value) || cast<Function>(value)) {
+    if (value->is_global()) {
       return value;
     }
 

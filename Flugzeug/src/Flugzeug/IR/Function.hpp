@@ -13,13 +13,15 @@
 namespace flugzeug {
 
 class Context;
+class Module;
 
-class Function : public Value {
+class Function : public Value, public IntrusiveNode<Function, Module> {
   DEFINE_INSTANCEOF(Value, Value::Kind::Function)
 
   friend class IntrusiveLinkedList<Block, Function>;
   friend class IntrusiveNode<Block, Function>;
   friend class Block;
+  friend class Module;
 
   using BlockList = IntrusiveLinkedList<Block, Function>;
 
@@ -98,10 +100,10 @@ class Function : public Value {
   void on_added_node(Block* block);
   void on_removed_node(Block* block);
 
-public:
   Function(Context* context, Type* return_type, std::string name,
            const std::vector<Type*>& arguments);
 
+public:
   ~Function() override;
 
   ValidationResults validate(ValidationBehaviour behaviour) const;

@@ -47,6 +47,7 @@ class Block : public Value, public IntrusiveNode<Block, Function> {
 public:
   explicit Block(Context* context)
       : Value(context, Value::Kind::Block, context->get_block_ty()), instruction_list(this) {}
+
   ~Block() override;
 
   void print(IRPrinter& printer) const;

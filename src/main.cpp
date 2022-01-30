@@ -6,6 +6,7 @@
 #include <Flugzeug/IR/DominatorTree.hpp>
 #include <Flugzeug/IR/Function.hpp>
 #include <Flugzeug/IR/InstructionInserter.hpp>
+#include <Flugzeug/IR/Module.hpp>
 
 #include <Flugzeug/Passes/CFGSimplification.hpp>
 #include <Flugzeug/Passes/ConstPropagation.hpp>
@@ -26,7 +27,8 @@ static void test_validation(Context& context) {
   Type* i32 = context.get_i32_ty();
   Type* i64 = context.get_i64_ty();
 
-  const auto f = context.create_function(i32, "test", {});
+  const auto m = context.create_module();
+  const auto f = m->create_function(i32, "test", {});
 
   const auto entry = f->create_block();
   const auto a = f->create_block();
@@ -53,7 +55,7 @@ static void test_validation(Context& context) {
 
   f->print(true);
   f->validate(ValidationBehaviour::ErrorsToStdout);
-  f->destroy();
+  m->destroy();
 }
 
 static bool inline_all(Function* f) {
@@ -110,44 +112,42 @@ int main() {
   }
 
   const auto parsed_source = turboc::Parser::parse_from_file("../Tests/inline.tc");
-  const auto functions = turboc::IRGenerator::generate(&context, parsed_source);
+  const auto module = turboc::IRGenerator::generate(&context, parsed_source);
 
   ConsolePrinter printer(ConsolePrinter::Variant::Colorful);
 
-  for (const auto& [_, f] : functions) {
-    show_calls(f);
+  for (const Function& f : *module) {
+    show_calls(&f);
   }
 
-  for (const auto& [_, f] : functions) {
-    if (f->is_extern()) {
+  for (Function& f : *module) {
+    if (f.is_extern()) {
       continue;
     }
 
-    f->validate(ValidationBehaviour::ErrorsAreFatal);
+    f.validate(ValidationBehaviour::ErrorsAreFatal);
 
     //    f->print(printer);
     //    printer.newline();
 
-    optimize_function(f);
+    optimize_function(&f);
 
     //    f->print(printer);
     //    printer.newline();
 
-    f->validate(ValidationBehaviour::ErrorsAreFatal);
+    f.validate(ValidationBehaviour::ErrorsAreFatal);
   }
 
   printer.newline();
 
-  for (const auto& [_, f] : functions) {
-    if (f->is_extern()) {
+  for (Function& f : *module) {
+    if (f.is_extern()) {
       continue;
     }
 
-    f->print(printer);
+    f.print(printer);
     printer.newline();
   }
 
-  for (const auto& [_, f] : functions) {
-    f->destroy();
-  }
+  module->destroy();
 }
