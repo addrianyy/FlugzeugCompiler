@@ -60,5 +60,7 @@ i32 test2() {
         }
     }
 
+    while (1) {}
+
     return sum;
 }

@@ -46,6 +46,10 @@ Block* CFGSimplification::thread_jump(Block* block, Block* target, bool* did_som
   }
 
   if (const auto actual_target = get_intermediate_block_target(target)) {
+    if (block == actual_target) {
+      return nullptr;
+    }
+
     if (!do_phis_depend_on_predecessors(actual_target, block, target)) {
       actual_target->replace_incoming_blocks_in_phis(target, block);
 
