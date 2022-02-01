@@ -175,7 +175,7 @@ int main() {
     analyze_loops(&f);
     LoopUnrolling::run(&f);
 
-    f.validate(ValidationBehaviour::ErrorsAreFatal);
+    //    f.validate(ValidationBehaviour::ErrorsAreFatal);
 
     f.generate_graph(fmt::format("../Graphs/{}.svg", f.get_name()));
   }
