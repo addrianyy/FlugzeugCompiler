@@ -81,7 +81,7 @@ static void verify_subloops_backedges(const Loop& subloop,
   }
 }
 
-static void
+static bool
 get_loops_in_scc(Function* function, const std::vector<Block*>& scc_vector,
                  const DominatorTree& dominator_tree,
                  const std::unordered_map<Block*, std::unordered_set<Block*>>& predecessors,
@@ -90,7 +90,8 @@ get_loops_in_scc(Function* function, const std::vector<Block*>& scc_vector,
   loop.header = scc_vector.front();
   loop.blocks = std::unordered_set<Block*>(scc_vector.begin(), scc_vector.end());
 
-  // Find the block that dominates all other block in the SCC. This will be potentially loop header.
+  // Find the block that dominates all other blocks in the SCC. This will be potentially a loop
+  // header.
   while (true) {
     const auto dominator = const_cast<Block*>(dominator_tree.get_immediate_dominator(loop.header));
     if (loop.blocks.contains(dominator)) {
@@ -103,7 +104,7 @@ get_loops_in_scc(Function* function, const std::vector<Block*>& scc_vector,
   DfsContext dfs_context{};
   std::vector<MaybeSubLoopBackedge> maybe_subloops_backedges;
   if (!visit_loop_block(dfs_context, loop.header, loop, maybe_subloops_backedges, predecessors)) {
-    return;
+    return false;
   }
 
   for (Block* block : loop.blocks) {
@@ -114,9 +115,22 @@ get_loops_in_scc(Function* function, const std::vector<Block*>& scc_vector,
   const auto sub_sccs = calculate_sccs(scc_context, loop.blocks);
   loop.blocks.insert(loop.header);
 
+  bool flattened = false;
+
   std::vector<std::unique_ptr<Loop>> sub_loops;
   for (const auto& scc : sub_sccs) {
-    get_loops_in_scc(function, scc, dominator_tree, predecessors, scc_context, sub_loops);
+    flattened |=
+      get_loops_in_scc(function, scc, dominator_tree, predecessors, scc_context, sub_loops);
+  }
+
+  const auto move_sub_loops_to_loops = [&loops, &sub_loops]() {
+    loops.insert(loops.end(), std::make_move_iterator(sub_loops.begin()),
+                 std::make_move_iterator(sub_loops.end()));
+  };
+
+  if (flattened) {
+    move_sub_loops_to_loops();
+    return true;
   }
 
   // Verify that backedges that aren't jumping to our header are actually part of subloops.
@@ -128,30 +142,26 @@ get_loops_in_scc(Function* function, const std::vector<Block*>& scc_vector,
     for (const auto& backedge : maybe_subloops_backedges) {
       // This loop is invalid, return sub-loops.
       if (!backedge.in_subloop) {
-        loops.insert(loops.end(), std::make_move_iterator(sub_loops.begin()),
-                     std::make_move_iterator(sub_loops.end()));
-        return;
+        move_sub_loops_to_loops();
+        return true;
       }
     }
   }
 
-  const auto remove_improperly_nested_predicate = [&loop](const std::unique_ptr<Loop>& sub_loop) {
+  // Make sure that all sub-loops exit into our loop.
+  for (const auto& sub_loop : sub_loops) {
     for (auto [exit_from, exit_to] : sub_loop->exiting_edges) {
       if (!loop.blocks.contains(exit_to)) {
+        move_sub_loops_to_loops();
         return true;
       }
     }
-
-    return false;
-  };
-
-  // Remove sub-loops which't don't exit to our loop.
-  sub_loops.erase(
-    std::remove_if(sub_loops.begin(), sub_loops.end(), remove_improperly_nested_predicate),
-    sub_loops.end());
+  }
 
   loop.sub_loops = std::move(sub_loops);
   loops.push_back(std::make_unique<Loop>(std::move(loop)));
+
+  return false;
 }
 
 std::vector<std::unique_ptr<Loop>> flugzeug::analyze_function_loops(Function* function) {
