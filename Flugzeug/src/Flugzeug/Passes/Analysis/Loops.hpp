@@ -16,6 +16,7 @@ class Loop {
 public:
   Block* header = nullptr;
   std::unordered_set<Block*> blocks;
+  std::unordered_set<Block*> blocks_without_subloops;
 
   std::unordered_set<Block*> back_edges_from;
   std::vector<std::pair<Block*, Block*>> exiting_edges;

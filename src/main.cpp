@@ -97,11 +97,16 @@ static void optimize_function(Function* f) {
 
 static void print_loop(const std::string& indentation, const Loop& loop) {
   std::string blocks;
+  std::string blocks_no_subloops;
   std::string back_edges_from;
   std::string exiting_edges;
 
   for (Block* block : loop.blocks) {
     blocks += block->format() + ", ";
+  }
+
+  for (Block* block : loop.blocks_without_subloops) {
+    blocks_no_subloops += block->format() + ", ";
   }
 
   for (Block* block : loop.back_edges_from) {
@@ -119,12 +124,14 @@ static void print_loop(const std::string& indentation, const Loop& loop) {
   };
 
   remove_comma(blocks);
+  remove_comma(blocks_no_subloops);
   remove_comma(back_edges_from);
   remove_comma(exiting_edges);
 
   log_debug("{}Loop", indentation);
   log_debug("{}  header: {}", indentation, loop.header->format());
   log_debug("{}  blocks: {}", indentation, blocks);
+  log_debug("{}  blocks (no sub-loops): {}", indentation, blocks_no_subloops);
   log_debug("{}  back edges from: {}", indentation, back_edges_from);
   log_debug("{}  exiting edges: {}", indentation, exiting_edges);
 
@@ -148,11 +155,13 @@ static void analyze_loops(Function* f) {
   log_debug("");
 }
 
+#include <Flugzeug/Passes/LoopUnrolling.hpp>
+
 int main() {
   Context context;
   ConsolePrinter printer(ConsolePrinter::Variant::Colorful);
 
-  const auto parsed_source = turboc::Parser::parse_from_file("../Tests/main.tc");
+  const auto parsed_source = turboc::Parser::parse_from_file("../Tests/simple.tc");
   const auto module = turboc::IRGenerator::generate(&context, parsed_source);
 
   for (const Function& f : *module) {
@@ -164,6 +173,7 @@ int main() {
 
     optimize_function(&f);
     analyze_loops(&f);
+    LoopUnrolling::run(&f);
 
     f.validate(ValidationBehaviour::ErrorsAreFatal);
 

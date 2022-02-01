@@ -1,0 +1,25 @@
+i32 test_for() {
+    i32 sum = 0;
+
+    for (i32 i = 0; i < 3; i += 1) {
+        sum += 1;
+    }
+
+    return sum;
+}
+
+i32 test_while() {
+    i32 sum = 0;
+
+    i32 i = 0;
+    while (1) {
+        sum += i;
+
+        i += 1;
+        if (i == 3) {
+            break;
+        }
+    }
+
+    return sum;
+}

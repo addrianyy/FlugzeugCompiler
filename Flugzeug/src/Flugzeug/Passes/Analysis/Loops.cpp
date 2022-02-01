@@ -153,7 +153,7 @@ find_loops_in_scc(Function* function, const std::vector<Block*>& scc_vector,
   };
 
   // It's possible that SCCs themselves described invalid loop which contained valid sub-loops. In
-  // this case `sub_loops` will contain flattened, valid loops.
+  // this case `sub_loops` will contain innermost loops.
   //   this loop:
   //     (invalid loop)
   //       valid sub-loop of invalid loop
@@ -192,6 +192,14 @@ find_loops_in_scc(Function* function, const std::vector<Block*>& scc_vector,
   }
 
   loop.sub_loops = std::move(sub_loops);
+
+  loop.blocks_without_subloops = loop.blocks;
+  for (const auto& sub_loop : loop.sub_loops) {
+    for (const auto& block : sub_loop->blocks) {
+      loop.blocks_without_subloops.erase(block);
+    }
+  }
+
   loops.push_back(std::make_unique<Loop>(std::move(loop)));
 
   return false;

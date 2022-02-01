@@ -19,26 +19,6 @@ class Propagator : public InstructionVisitor {
     return c;
   }
 
-  static uint64_t propagate_cast(uint64_t from, Type* from_type, Type* to_type,
-                                 CastKind cast_kind) {
-    const uint64_t from_mask = from_type->get_bit_mask();
-    const uint64_t to_mask = to_type->get_bit_mask();
-
-    const bool sign_bit = (from & (1ull << (from_type->get_bit_size() - 1))) != 0;
-
-    switch (cast_kind) {
-    case CastKind::Bitcast:
-    case CastKind::Truncate:
-    case CastKind::ZeroExtend:
-      return from & to_mask;
-    case CastKind::SignExtend:
-      return (from & to_mask) | (sign_bit ? (to_mask & ~from_mask) : 0);
-
-    default:
-      unreachable();
-    }
-  }
-
 public:
   explicit Propagator(Type* type) : type(type) {}
 
@@ -83,7 +63,7 @@ public:
     }
 
     const uint64_t propagated =
-      propagate_cast(val, cast->get_val()->get_type(), type, cast->get_cast_kind());
+      utils::evaluate_cast(val, cast->get_val()->get_type(), type, cast->get_cast_kind());
 
     return type->get_constant(propagated);
   }
