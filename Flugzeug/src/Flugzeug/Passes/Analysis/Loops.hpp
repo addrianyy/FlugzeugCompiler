@@ -7,6 +7,11 @@
 
 namespace flugzeug {
 
+/// Properties of the loop:
+///   1. All blocks of the loop are strongly connected.
+///   2. Loop can be entered only via header.
+///   3. All back edges in the loop (but not in sub-loops) must point to loop header.
+///   4. All sub-loops can be entered only from this loop and can exit only into this loop.
 class Loop {
 public:
   Block* header = nullptr;
