@@ -22,16 +22,18 @@ struct MaybeSubLoopBackedge {
 
 static bool
 visit_loop_block(DfsContext& dfs_context, Block* block, Loop& loop,
+                 std::vector<std::pair<Block*, Block*>>& exiting_edges,
+                 std::unordered_set<Block*>& back_edges_from,
                  std::vector<MaybeSubLoopBackedge>& maybe_subloops_backedges,
                  const std::unordered_map<Block*, std::unordered_set<Block*>>& predecessors) {
   verify(!dfs_context.block_state.contains(block),
          "Running `visit_loop_block` on already visited block");
 
-  if (block != loop.header) {
+  if (block != loop.get_header()) {
     // Loop can be only entered via its header. If block other than header has non-loop
     // predecessor then it's an invalid loop.
     for (Block* predecessor : predecessors.find(block)->second) {
-      if (!loop.blocks.contains(predecessor)) {
+      if (!loop.contains_block(predecessor)) {
         return false;
       }
     }
@@ -42,15 +44,16 @@ visit_loop_block(DfsContext& dfs_context, Block* block, Loop& loop,
 
   for (Block* successor : block->get_successors()) {
     // If this block jumps into non-loop block then it's an exiting block.
-    if (!loop.blocks.contains(successor)) {
-      loop.exiting_edges.emplace_back(block, successor);
+    if (!loop.contains_block(successor)) {
+      exiting_edges.emplace_back(block, successor);
       continue;
     }
 
     const auto successor_it = dfs_context.block_state.find(successor);
     if (successor_it == dfs_context.block_state.end()) {
       // Visit successor.
-      if (!visit_loop_block(dfs_context, successor, loop, maybe_subloops_backedges, predecessors)) {
+      if (!visit_loop_block(dfs_context, successor, loop, exiting_edges, back_edges_from,
+                            maybe_subloops_backedges, predecessors)) {
         return false;
       }
     } else {
@@ -62,10 +65,10 @@ visit_loop_block(DfsContext& dfs_context, Block* block, Loop& loop,
         //      later in `find_loops_in_scc`).
         // In other cases this loop is invalid.
 
-        if (successor != loop.header) {
+        if (successor != loop.get_header()) {
           maybe_subloops_backedges.push_back(MaybeSubLoopBackedge{block, successor});
         } else {
-          loop.back_edges_from.insert(block);
+          back_edges_from.insert(block);
         }
       }
     }
@@ -78,23 +81,23 @@ visit_loop_block(DfsContext& dfs_context, Block* block, Loop& loop,
 static void verify_subloops_backedges(const Loop& subloop,
                                       std::vector<MaybeSubLoopBackedge>& maybe_subloops_backedges) {
   for (auto& maybe_backedge : maybe_subloops_backedges) {
-    if (maybe_backedge.to == subloop.header && subloop.blocks.contains(maybe_backedge.from)) {
+    if (maybe_backedge.to == subloop.get_header() && subloop.contains_block(maybe_backedge.from)) {
       maybe_backedge.in_subloop = true;
     }
   }
 
-  for (const auto& subsubloop : subloop.sub_loops) {
+  for (const auto& subsubloop : subloop.get_sub_loops()) {
     verify_subloops_backedges(*subsubloop, maybe_subloops_backedges);
   }
 }
 
 /// Returns `true` is loops were flattened (actual loop described by the SCC was invalid but
 /// sub-loops were valid and were added to the loop list as non-child loops).
-static bool
-find_loops_in_scc(Function* function, const std::vector<Block*>& scc_vector,
-                  const DominatorTree& dominator_tree,
-                  const std::unordered_map<Block*, std::unordered_set<Block*>>& predecessors,
-                  SccContext& scc_context, std::vector<std::unique_ptr<Loop>>& loops) {
+bool Loop::find_loops_in_scc(
+  Function* function, const std::vector<Block*>& scc_vector, const DominatorTree& dominator_tree,
+  const std::unordered_map<Block*, std::unordered_set<Block*>>& predecessors,
+  SccContext& scc_context, std::vector<std::unique_ptr<Loop>>& loops) {
+
   Loop loop;
   loop.blocks = std::unordered_set<Block*>(scc_vector.begin(), scc_vector.end());
 
@@ -121,7 +124,8 @@ find_loops_in_scc(Function* function, const std::vector<Block*>& scc_vector,
   // potential sub-loop back edges.
   DfsContext dfs_context{};
   std::vector<MaybeSubLoopBackedge> maybe_subloops_backedges;
-  if (!visit_loop_block(dfs_context, loop.header, loop, maybe_subloops_backedges, predecessors)) {
+  if (!visit_loop_block(dfs_context, loop.header, loop, loop.exiting_edges, loop.back_edges_from,
+                        maybe_subloops_backedges, predecessors)) {
     return false;
   }
 
@@ -193,10 +197,10 @@ find_loops_in_scc(Function* function, const std::vector<Block*>& scc_vector,
 
   loop.sub_loops = std::move(sub_loops);
 
-  loop.blocks_without_subloops = loop.blocks;
+  loop.blocks_without_sub_loops = loop.blocks;
   for (const auto& sub_loop : loop.sub_loops) {
     for (Block* block : sub_loop->blocks) {
-      loop.blocks_without_subloops.erase(block);
+      loop.blocks_without_sub_loops.erase(block);
     }
   }
 
@@ -226,7 +230,7 @@ flugzeug::analyze_function_loops(Function* function, const DominatorTree& domina
 
   // Find loops in the SCCs.
   for (const auto& scc : sccs) {
-    find_loops_in_scc(function, scc, dominator_tree, predecessors, scc_context, loops);
+    Loop::find_loops_in_scc(function, scc, dominator_tree, predecessors, scc_context, loops);
   }
 
   return loops;
@@ -236,3 +240,38 @@ std::vector<std::unique_ptr<Loop>> flugzeug::analyze_function_loops(Function* fu
   DominatorTree dominator_tree(function);
   return analyze_function_loops(function, dominator_tree);
 }
+
+Block* Loop::get_header() const { return header; }
+
+const std::unordered_set<Block*>& Loop::get_blocks() const { return blocks; }
+const std::unordered_set<Block*>& Loop::get_blocks_without_sub_loops() const {
+  return blocks_without_sub_loops;
+}
+
+const std::unordered_set<Block*>& Loop::get_back_edges_from() const { return back_edges_from; }
+const std::vector<std::pair<Block*, Block*>>& Loop::get_exiting_edges() const {
+  return exiting_edges;
+}
+
+Block* Loop::get_single_back_edge() const {
+  if (back_edges_from.size() == 1) {
+    return *back_edges_from.begin();
+  }
+
+  return nullptr;
+}
+
+std::pair<Block*, Block*> Loop::get_single_exiting_edge() const {
+  if (exiting_edges.size() == 1) {
+    return exiting_edges[0];
+  }
+
+  return {};
+}
+
+bool Loop::contains_block(Block* block) const { return blocks.contains(block); }
+bool Loop::contains_block_skipping_sub_loops(Block* block) const {
+  return blocks_without_sub_loops.contains(block);
+}
+
+const std::vector<std::unique_ptr<Loop>>& Loop::get_sub_loops() const { return sub_loops; }

@@ -27,7 +27,7 @@ static bool get_loop_count_related_instructions(Instruction* instruction,
 
   if (const auto phi = cast<Phi>(instruction)) {
     // Phis related to loop count can be only placed in the loop header.
-    if (phi->get_block() != loop->header) {
+    if (phi->get_block() != loop->get_header()) {
       return false;
     }
 
@@ -74,7 +74,7 @@ static bool get_loop_count_related_instructions(Instruction* instruction,
   }
 
   // This instruction must be part of the loop.
-  if (!loop->blocks_without_subloops.contains(instruction->get_block())) {
+  if (!loop->contains_block_skipping_sub_loops(instruction->get_block())) {
     return false;
   }
 
@@ -104,7 +104,7 @@ order_loop_count_related_instructions(const Loop* loop,
 
   std::unordered_set<Block*> visited;
   std::vector<Block*> stack;
-  stack.push_back(loop->header);
+  stack.push_back(loop->get_header());
 
   while (!stack.empty()) {
     Block* block = stack.back();
@@ -123,7 +123,7 @@ order_loop_count_related_instructions(const Loop* loop,
     }
 
     for (Block* successor : block->get_successors()) {
-      if (!visited.contains(successor) && loop->blocks.contains(successor)) {
+      if (!visited.contains(successor) && loop->contains_block(successor)) {
         stack.push_back(successor);
       }
     }
@@ -298,7 +298,7 @@ static bool do_unroll(Function* function, const Loop* loop, Block* exit_from, Bl
   exit_to->replace_incoming_blocks_in_phis(exit_from, new_loop_exit);
 
   std::unordered_map<Instruction*, Phi*> values_escaping_loop;
-  for (Block* block : loop->blocks) {
+  for (Block* block : loop->get_blocks()) {
     for (Instruction& instruction : *block) {
       if (instruction.is_void()) {
         continue;
@@ -306,7 +306,7 @@ static bool do_unroll(Function* function, const Loop* loop, Block* exit_from, Bl
 
       bool is_used_outside_loop = false;
       for (Instruction& user : instruction.users<Instruction>()) {
-        if (!loop->blocks.contains(user.get_block())) {
+        if (!loop->contains_block(user.get_block())) {
           is_used_outside_loop = true;
           break;
         }
@@ -327,7 +327,7 @@ static bool do_unroll(Function* function, const Loop* loop, Block* exit_from, Bl
   for (const auto& [value, phi] : values_escaping_loop) {
     value->replace_uses_with_predicated(phi, [&](User* user) -> bool {
       const auto instruction = cast<Instruction>(user);
-      return instruction && !loop->blocks.contains(instruction->get_block()) &&
+      return instruction && !loop->contains_block(instruction->get_block()) &&
              instruction->get_block() != new_loop_exit;
     });
   }
@@ -336,7 +336,7 @@ static bool do_unroll(Function* function, const Loop* loop, Block* exit_from, Bl
   for (size_t unroll = 0; unroll < unroll_count - 1; ++unroll) {
     UnrolledIteration unroll_data;
 
-    for (Block* original_block : loop->blocks) {
+    for (Block* original_block : loop->get_blocks()) {
       const auto new_block = function->create_block();
 
       unroll_data.add_mapping(original_block, new_block);
@@ -398,8 +398,8 @@ static bool do_unroll(Function* function, const Loop* loop, Block* exit_from, Bl
 
   // Replace back edges to next unrolled iteration.
   if (unroll_count > 1) {
-    const auto old_target = loop->header;
-    const auto new_target = unrolls.front().map(loop->header);
+    const auto old_target = loop->get_header();
+    const auto new_target = unrolls.front().map(loop->get_header());
 
     replace_branch(back_edge_from->get_last_instruction(), old_target, new_target);
   }
@@ -408,8 +408,8 @@ static bool do_unroll(Function* function, const Loop* loop, Block* exit_from, Bl
       const auto back_edge_instruction =
         unrolls[unroll].map(back_edge_from->get_last_instruction());
 
-      const auto old_target = unrolls[unroll].map(loop->header);
-      const auto new_target = unrolls[unroll + 1].map(loop->header);
+      const auto old_target = unrolls[unroll].map(loop->get_header());
+      const auto new_target = unrolls[unroll + 1].map(loop->get_header());
 
       replace_branch(back_edge_instruction, old_target, new_target);
     }
@@ -418,7 +418,7 @@ static bool do_unroll(Function* function, const Loop* loop, Block* exit_from, Bl
   // Remove back edge in the last unrolled iteration. It can never happen.
   {
     Instruction* back_edge_instruction = back_edge_from->get_last_instruction();
-    Block* loop_header = loop->header;
+    Block* loop_header = loop->get_header();
 
     if (!unrolls.empty()) {
       UnrolledIteration& unroll = unrolls.back();
@@ -448,9 +448,9 @@ static bool do_unroll(Function* function, const Loop* loop, Block* exit_from, Bl
     back_edge_instruction->replace_with_instruction_and_destroy(new_instruction);
   }
 
-  loop->header->remove_incoming_block_from_phis(back_edge_from, false);
+  loop->get_header()->remove_incoming_block_from_phis(back_edge_from, false);
 
-  for (Phi& phi : dont_invalidate_current(loop->header->instructions<Phi>())) {
+  for (Phi& phi : dont_invalidate_current(loop->get_header()->instructions<Phi>())) {
     utils::simplify_phi(&phi, false);
   }
 
@@ -459,12 +459,12 @@ static bool do_unroll(Function* function, const Loop* loop, Block* exit_from, Bl
 
 static bool try_unroll_loop(Function* function, const Loop* loop,
                             const DominatorTree& dominator_tree) {
-  if (loop->exiting_edges.size() != 1 || loop->back_edges_from.size() != 1) {
+  const auto [exit_from, exit_to] = loop->get_single_exiting_edge();
+  const auto back_edge_from = loop->get_single_back_edge();
+
+  if (!exit_from || !exit_to || !back_edge_from) {
     return false;
   }
-
-  const auto [exit_from, exit_to] = loop->exiting_edges[0];
-  const auto back_edge_from = *loop->back_edges_from.begin();
 
   const auto exit_instruction = cast<CondBranch>(exit_from->get_last_instruction());
   if (!exit_instruction) {
@@ -477,10 +477,10 @@ static bool try_unroll_loop(Function* function, const Loop* loop,
 
   bool condition_to_continue = false;
   if (exit_instruction->get_true_target() == exit_to &&
-      loop->blocks_without_subloops.contains(exit_instruction->get_false_target())) {
+      loop->contains_block_skipping_sub_loops(exit_instruction->get_false_target())) {
     condition_to_continue = false;
   } else if (exit_instruction->get_false_target() == exit_to &&
-             loop->blocks_without_subloops.contains(exit_instruction->get_true_target())) {
+             loop->contains_block_skipping_sub_loops(exit_instruction->get_true_target())) {
     condition_to_continue = true;
   } else {
     return false;
@@ -514,7 +514,7 @@ static bool unroll_loop(Function* function, const Loop* loop, const DominatorTre
     return true;
   }
 
-  for (const auto& sub_loop : loop->sub_loops) {
+  for (const auto& sub_loop : loop->get_sub_loops()) {
     if (unroll_loop(function, sub_loop.get(), dominator_tree)) {
       return true;
     }
