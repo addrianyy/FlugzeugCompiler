@@ -8,6 +8,7 @@
 #include <Flugzeug/Core/ClassTraits.hpp>
 #include <Flugzeug/Core/Iterator.hpp>
 
+#include <functional>
 #include <optional>
 #include <string>
 #include <vector>
@@ -16,6 +17,7 @@ namespace flugzeug {
 
 class Context;
 class User;
+class Block;
 
 class Value {
 public:
@@ -63,6 +65,9 @@ private:
   void add_use(Use* use);
   void remove_use(Use* use);
 
+  void replace_uses_with_type_check(Value* new_value);
+  void replace_uses_with_handle_block_user(Block* block, User* user);
+
 protected:
   Value(Context* context, Kind kind, Type* type);
 
@@ -90,6 +95,8 @@ public:
   void replace_uses_with(Value* new_value);
   void replace_uses_with_constant(uint64_t constant);
   void replace_uses_with_undef();
+
+  void replace_uses_with_predicated(Value* new_value, const std::function<bool(User*)>& predicate);
 
   bool is_zero() const;
   bool is_one() const;

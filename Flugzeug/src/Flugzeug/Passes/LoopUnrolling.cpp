@@ -250,6 +250,15 @@ struct UnrolledIteration {
     return nullptr;
   }
 
+  template <typename T> T* reverse_map(T* value) {
+    const auto it = reverse_mapping.find(value);
+    if (it != reverse_mapping.end()) {
+      return cast<T>(it->second);
+    }
+
+    return nullptr;
+  }
+
   void replace_value(Value* old_v, Value* new_v) {
     const auto original_value = reverse_mapping.find(old_v)->second;
 
@@ -262,19 +271,35 @@ struct UnrolledIteration {
   }
 };
 
+static void replace_branch(Instruction* instruction, Block* old_target, Block* new_target) {
+  if (const auto branch = cast<Branch>(instruction)) {
+    if (branch->get_target() == old_target) {
+      branch->set_target(new_target);
+    }
+  } else if (const auto branch_cond = cast<CondBranch>(instruction)) {
+    if (branch_cond->get_true_target() == old_target) {
+      branch_cond->set_true_target(new_target);
+    }
+
+    if (branch_cond->get_false_target() == old_target) {
+      branch_cond->set_false_target(new_target);
+    }
+  }
+}
+
 static bool do_unroll(Function* function, const Loop* loop, Block* exit_from, Block* exit_to,
                       Block* back_edge_from, size_t unroll_count) {
-  verify(unroll_count > 1, "Need to unroll at least once");
+  verify(unroll_count > 0, "Need to unroll at least once");
 
   const auto context = function->get_context();
 
-  std::vector<UnrolledIteration> unrolls;
+  const auto new_loop_exit = function->create_block();
+  new_loop_exit->push_instruction_back(new Branch(context, exit_to));
 
-  Block* new_exit = function->create_block();
-  new_exit->push_instruction_back(new Branch(context, exit_to));
-  exit_to->replace_incoming_blocks_in_phis(exit_from, new_exit);
+  replace_branch(exit_from->get_last_instruction(), exit_to, new_loop_exit);
+  exit_to->replace_incoming_blocks_in_phis(exit_from, new_loop_exit);
 
-  std::unordered_map<Instruction*, Phi*> used_outside;
+  std::unordered_map<Instruction*, Phi*> values_escaping_loop;
   for (Block* block : loop->blocks) {
     for (Instruction& instruction : *block) {
       if (instruction.is_void()) {
@@ -291,33 +316,25 @@ static bool do_unroll(Function* function, const Loop* loop, Block* exit_from, Bl
 
       if (is_used_outside_loop) {
         const auto phi = new Phi(context, instruction.get_type());
-        phi->add_incoming(exit_from, &instruction);
-        
-        new_exit->push_instruction_front(phi);
 
-        used_outside.insert({&instruction, phi});
+        phi->add_incoming(exit_from, &instruction);
+
+        new_loop_exit->push_instruction_front(phi);
+
+        values_escaping_loop.insert({&instruction, phi});
       }
     }
   }
 
-  const auto replace_branch = [&](Instruction* instruction, Block* old_target, Block* new_target) {
-    if (const auto branch = cast<Branch>(instruction)) {
-      if (branch->get_target() == old_target) {
-        branch->set_target(new_target);
-      }
-    } else if (const auto branch_cond = cast<CondBranch>(instruction)) {
-      if (branch_cond->get_true_target() == old_target) {
-        branch_cond->set_true_target(new_target);
-      }
+  for (const auto& [value, phi] : values_escaping_loop) {
+    value->replace_uses_with_predicated(phi, [&](User* user) -> bool {
+      const auto instruction = cast<Instruction>(user);
+      return instruction && !loop->blocks.contains(instruction->get_block()) &&
+             instruction->get_block() != new_loop_exit;
+    });
+  }
 
-      if (branch_cond->get_false_target() == old_target) {
-        branch_cond->set_false_target(new_target);
-      }
-    }
-  };
-
-  replace_branch(exit_from->get_last_instruction(), exit_to, new_exit);
-
+  std::vector<UnrolledIteration> unrolls;
   for (size_t unroll = 0; unroll < unroll_count - 1; ++unroll) {
     UnrolledIteration unroll_data;
 
@@ -342,11 +359,10 @@ static bool do_unroll(Function* function, const Loop* loop, Block* exit_from, Bl
       for (Instruction& instruction : dont_invalidate_current(*block)) {
         Phi* exit_phi = nullptr;
         {
-          const auto it = unroll_data.reverse_mapping.find(&instruction);
-          if (it != unroll_data.reverse_mapping.end()) {
-            const auto it2 = used_outside.find(cast<Instruction>(it->second));
-            if (it2 != used_outside.end()) {
-              exit_phi = it2->second;
+          if (const auto original = unroll_data.reverse_map(&instruction)) {
+            const auto it = values_escaping_loop.find(original);
+            if (it != values_escaping_loop.end()) {
+              exit_phi = it->second;
             }
           }
         }
@@ -356,8 +372,8 @@ static bool do_unroll(Function* function, const Loop* loop, Block* exit_from, Bl
           if (back_edge_value) {
             Value* new_value = unroll == 0 ? back_edge_value : unrolls.back().map(back_edge_value);
 
-            unroll_data.replace_value(phi, new_value);
             phi->replace_uses_with_and_destroy(new_value);
+            unroll_data.replace_value(phi, new_value);
 
             if (exit_phi) {
               exit_phi->add_incoming(new_exit_from, new_value);
@@ -382,14 +398,14 @@ static bool do_unroll(Function* function, const Loop* loop, Block* exit_from, Bl
     unrolls.push_back(std::move(unroll_data));
   }
 
-  if (unroll_count >= 1) {
+  // Replace back edges to next unrolled iteration.
+  if (unroll_count > 1) {
     const auto old_target = loop->header;
     const auto new_target = unrolls.front().map(loop->header);
 
     replace_branch(back_edge_from->get_last_instruction(), old_target, new_target);
   }
-
-  if (unroll_count >= 2) {
+  if (unroll_count > 2) {
     for (size_t unroll = 0; unroll < unroll_count - 2; ++unroll) {
       const auto back_edge_instruction =
         unrolls[unroll].map(back_edge_from->get_last_instruction());
@@ -401,11 +417,17 @@ static bool do_unroll(Function* function, const Loop* loop, Block* exit_from, Bl
     }
   }
 
+  // Remove back edge in the last unrolled iteration. It can never happen.
   {
-    UnrolledIteration& unroll = unrolls.back();
+    Instruction* back_edge_instruction = back_edge_from->get_last_instruction();
+    Block* loop_header = loop->header;
 
-    const auto back_edge_instruction = unroll.map(back_edge_from->get_last_instruction());
-    const auto loop_header = unroll.map(loop->header);
+    if (!unrolls.empty()) {
+      UnrolledIteration& unroll = unrolls.back();
+
+      back_edge_instruction = unroll.map(back_edge_instruction);
+      loop_header = unroll.map(loop_header);
+    }
 
     Block* new_target = nullptr;
     if (const auto cond_branch = cast<CondBranch>(back_edge_instruction)) {
@@ -482,7 +504,7 @@ static bool try_unroll_loop(Function* function, const Loop* loop,
   const auto instructions = order_loop_count_related_instructions(loop, instruction_set);
   const auto unroll_count = get_unroll_count(instructions, loop_phis, condition_to_continue);
 
-  if (true) {
+  if (false) {
     log_debug("Function {}, loop {}: loop condition: {} ({} to continue)", function->get_name(),
               loop->header->format(), exit_condition->format(), condition_to_continue);
     if (unroll_count) {

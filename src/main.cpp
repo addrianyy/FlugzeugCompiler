@@ -15,6 +15,7 @@
 #include <Flugzeug/Passes/DeadCodeElimination.hpp>
 #include <Flugzeug/Passes/InstructionSimplification.hpp>
 #include <Flugzeug/Passes/LocalReordering.hpp>
+#include <Flugzeug/Passes/LoopUnrolling.hpp>
 #include <Flugzeug/Passes/MemoryToSSA.hpp>
 #include <Flugzeug/Passes/Utils/Inline.hpp>
 
@@ -87,6 +88,7 @@ static void optimize_function(Function* f) {
     did_something |= InstructionSimplification::run(f);
     did_something |= DeadBlockElimination::run(f);
     did_something |= LocalReordering::run(f);
+    did_something |= LoopUnrolling::run(f);
 
     if (!did_something) {
       f->reassign_display_indices();
@@ -155,13 +157,11 @@ static void analyze_loops(Function* f) {
   log_debug("");
 }
 
-#include <Flugzeug/Passes/LoopUnrolling.hpp>
-
 int main() {
   Context context;
   ConsolePrinter printer(ConsolePrinter::Variant::Colorful);
 
-  const auto parsed_source = turboc::Parser::parse_from_file("../Tests/simple.tc");
+  const auto parsed_source = turboc::Parser::parse_from_file("../Tests/main.tc");
   const auto module = turboc::IRGenerator::generate(&context, parsed_source);
 
   for (const Function& f : *module) {
@@ -172,14 +172,12 @@ int main() {
     f.validate(ValidationBehaviour::ErrorsAreFatal);
 
     optimize_function(&f);
-    analyze_loops(&f);
-    LoopUnrolling::run(&f);
+    //    analyze_loops(&f);
 
-    //    f.validate(ValidationBehaviour::ErrorsAreFatal);
+    f.validate(ValidationBehaviour::ErrorsAreFatal);
 
     f.generate_graph(fmt::format("../Graphs/{}.svg", f.get_name()));
   }
 
-  //  module->print(printer);
   module->destroy();
 }

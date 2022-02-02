@@ -1,8 +1,22 @@
+i32 factorial(i32 n) {
+	i32 result = 1;
+	
+	for (i32 i = 1; i <= n; i += 1) {
+		result *= i;
+	}
+	
+	return result;
+}
+
+i32 test_factorial() {
+	return factorial(7);
+}
+
 i32 test_for() {
     i32 sum = 0;
 
-    for (i32 i = 0; i < 3; i += 1) {
-        sum += 1;
+    for (i32 i = 0; i < 6; i += 1) {
+        sum += i;
     }
 
     return sum;
@@ -16,7 +30,7 @@ i32 test_while() {
         sum += i;
 
         i += 1;
-        if (i == 3) {
+        if (i == 6) {
             break;
         }
     }

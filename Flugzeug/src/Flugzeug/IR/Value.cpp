@@ -21,6 +21,54 @@ void Value::remove_use(Use* use) {
   }
 }
 
+void Value::replace_uses_with_type_check(Value* new_value) {
+  verify(!is_void(), "Cannot replace uses of void value");
+  verify(new_value->get_type() == get_type(), "Cannot replace value with value of different type");
+
+  if (const auto new_function = cast<Function>(new_value)) {
+    const auto old_function = cast<Function>(this);
+
+    verify(new_function->get_return_type() == old_function->get_return_type(),
+           "Return type mismatch");
+    verify(new_function->get_parameter_count() == old_function->get_parameter_count(),
+           "Parameter count mismatch");
+
+    for (size_t i = 0; i < new_function->get_parameter_count(); ++i) {
+      const auto t1 = new_function->get_parameter(i)->get_type();
+      const auto t2 = old_function->get_parameter(i)->get_type();
+      verify(t1 == t2, "Parameter type mismatch");
+    }
+  }
+}
+
+void Value::replace_uses_with_handle_block_user(Block* block, User* user) {
+  if (const auto phi = cast<Phi>(user)) {
+    // Make sure there is only one entry for this block in Phi instruction.
+    // If there is more then one entry then make sure value is common and remove redundant ones.
+
+    Value* common = nullptr;
+    size_t count = 0;
+
+    for (const auto incoming : *phi) {
+      if (incoming.block != block) {
+        continue;
+      }
+
+      count++;
+
+      if (!common) {
+        common = incoming.value;
+      }
+
+      verify(common == incoming.value, "Phi value isn't common for the same blocks");
+    }
+
+    for (size_t i = 1; i < count; ++i) {
+      phi->remove_incoming(block);
+    }
+  }
+}
+
 Value::Value(Context* context, Value::Kind kind, Type* type)
     : context(context), kind(kind), type(type), uses(this) {
   verify(type->get_context() == context, "Context mismatch");
@@ -68,23 +116,7 @@ void Value::replace_uses_with(Value* new_value) {
     return;
   }
 
-  verify(!is_void(), "Cannot replace uses of void value");
-  verify(new_value->get_type() == get_type(), "Cannot replace value with value of different type");
-
-  if (const auto new_function = cast<Function>(new_value)) {
-    const auto old_function = cast<Function>(this);
-
-    verify(new_function->get_return_type() == old_function->get_return_type(),
-           "Return type mismatch");
-    verify(new_function->get_parameter_count() == old_function->get_parameter_count(),
-           "Parameter count mismatch");
-
-    for (size_t i = 0; i < new_function->get_parameter_count(); ++i) {
-      const auto t1 = new_function->get_parameter(i)->get_type();
-      const auto t2 = old_function->get_parameter(i)->get_type();
-      verify(t1 == t2, "Parameter type mismatch");
-    }
-  }
+  replace_uses_with_type_check(new_value);
 
   const auto block = cast<Block>(this);
 
@@ -94,31 +126,7 @@ void Value::replace_uses_with(Value* new_value) {
     user->set_operand(use->get_operand_index(), new_value);
 
     if (block) {
-      if (const auto phi = cast<Phi>(user)) {
-        // Make sure there is only one entry for this block in Phi instruction.
-        // If there is more then one entry then make sure value is common and remove redundant ones.
-
-        Value* common = nullptr;
-        size_t count = 0;
-
-        for (const auto incoming : *phi) {
-          if (incoming.block != block) {
-            continue;
-          }
-
-          count++;
-
-          if (!common) {
-            common = incoming.value;
-          }
-
-          verify(common == incoming.value, "Phi value isn't common for the same blocks");
-        }
-
-        for (size_t i = 1; i < count; ++i) {
-          phi->remove_incoming(block);
-        }
-      }
+      replace_uses_with_handle_block_user(block, user);
     }
   }
 }
@@ -128,6 +136,33 @@ void Value::replace_uses_with_constant(uint64_t constant) {
 }
 
 void Value::replace_uses_with_undef() { replace_uses_with(get_type()->get_undef()); }
+
+void Value::replace_uses_with_predicated(Value* new_value,
+                                         const std::function<bool(User*)>& predicate) {
+  if (this == new_value) {
+    return;
+  }
+
+  replace_uses_with_type_check(new_value);
+
+  const auto block = cast<Block>(this);
+
+  Use* current_use = uses.get_first();
+  while (current_use) {
+    Use* next_use = current_use->get_next();
+
+    User* user = current_use->get_user();
+    if (predicate(user)) {
+      user->set_operand(current_use->get_operand_index(), new_value);
+
+      if (block) {
+        replace_uses_with_handle_block_user(block, user);
+      }
+    }
+
+    current_use = next_use;
+  }
+}
 
 void Constant::constrain_constant(Type* type, uint64_t c, uint64_t* u, int64_t* i) {
   const auto bit_size = type->get_bit_size();
