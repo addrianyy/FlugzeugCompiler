@@ -8,8 +8,6 @@
 #include <Flugzeug/Passes/Utils/Evaluation.hpp>
 #include <Flugzeug/Passes/Utils/SimplifyPhi.hpp>
 
-#include <Flugzeug/Core/Log.hpp>
-
 using namespace flugzeug;
 
 struct LoopPhi {
@@ -504,21 +502,6 @@ static bool try_unroll_loop(Function* function, const Loop* loop,
   const auto instructions = order_loop_count_related_instructions(loop, instruction_set);
   const auto unroll_count = get_unroll_count(instructions, loop_phis, condition_to_continue);
 
-  if (false) {
-    log_debug("Function {}, loop {}: loop condition: {} ({} to continue)", function->get_name(),
-              loop->header->format(), exit_condition->format(), condition_to_continue);
-    if (unroll_count) {
-      log_debug("Unroll count: {}", *unroll_count);
-    } else {
-      log_debug("Unroll count: unknown");
-    }
-    log_debug("Instructions related to loop count:");
-    for (auto& instruction : instructions) {
-      instruction->print();
-    }
-    log_debug("");
-  }
-
   if (unroll_count) {
     return do_unroll(function, loop, exit_from, exit_to, back_edge_from, *unroll_count);
   }
@@ -543,7 +526,7 @@ static bool unroll_loop(Function* function, const Loop* loop, const DominatorTre
 bool LoopUnrolling::run(Function* function) {
   DominatorTree dominator_tree(function);
 
-  const auto loops = analyze_function_loops(function);
+  const auto loops = analyze_function_loops(function, dominator_tree);
 
   bool did_something = false;
 

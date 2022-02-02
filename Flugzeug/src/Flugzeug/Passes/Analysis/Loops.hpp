@@ -7,6 +7,8 @@
 
 namespace flugzeug {
 
+class DominatorTree;
+
 /// Properties of the loop:
 ///   1. All blocks of the loop are strongly connected.
 ///   2. Loop can be entered only via header.
@@ -24,6 +26,8 @@ public:
   std::vector<std::unique_ptr<Loop>> sub_loops;
 };
 
+std::vector<std::unique_ptr<Loop>> analyze_function_loops(Function* function,
+                                                          const DominatorTree& dominator_tree);
 std::vector<std::unique_ptr<Loop>> analyze_function_loops(Function* function);
 
 } // namespace flugzeug

@@ -10,7 +10,7 @@ static void scc_visit(SccContext& context, Block* block, const std::unordered_se
     return context.vertices[it->second];
   };
 
-  // Skip vertex if it was already visited.
+  // Skip the block if it was already visited.
   if (get_vertex(block).index) {
     return;
   }
@@ -23,7 +23,7 @@ static void scc_visit(SccContext& context, Block* block, const std::unordered_se
   context.stack.push_back(block);
   context.index += 1;
 
-  for (const auto other : block->get_successors()) {
+  for (Block* other : block->get_successors()) {
     if (!blocks.contains(other)) {
       continue;
     }
@@ -58,12 +58,13 @@ static void scc_visit(SccContext& context, Block* block, const std::unordered_se
         }
       }
 
+      // Skip single-block SCCs where block doesn't jump to itself.
       if (current_scc.size() == 1) {
         bool valid = false;
 
         const auto scc_block = current_scc[0];
 
-        for (const auto successor : scc_block->get_successors()) {
+        for (Block* successor : scc_block->get_successors()) {
           if (successor == scc_block) {
             valid = true;
             break;
@@ -82,24 +83,24 @@ static void scc_visit(SccContext& context, Block* block, const std::unordered_se
 
 std::vector<std::vector<Block*>>
 flugzeug::calculate_sccs(SccContext& context, const std::unordered_set<Block*>& blocks) {
-  // Clear context.
+  // Clear the context.
   context.index = 0;
   context.vertices.clear();
   context.stack.clear();
   context.sccs.clear();
   context.indices.clear();
 
-  // Assign index to every vertex.
+  // Assign index to every block.
   {
     uint32_t next_index = 0;
-    for (const auto block : blocks) {
+    for (Block* block : blocks) {
       context.indices.insert({block, next_index++});
     }
   }
 
   context.vertices.resize(blocks.size());
 
-  for (const auto block : blocks) {
+  for (Block* block : blocks) {
     scc_visit(context, block, blocks);
   }
 

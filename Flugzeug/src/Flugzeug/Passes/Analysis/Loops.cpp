@@ -11,7 +11,7 @@ struct DfsContext {
     Discovered,
     Finished,
   };
-  std::unordered_map<Block*, State> visited;
+  std::unordered_map<Block*, State> block_state;
 };
 
 struct MaybeSubLoopBackedge {
@@ -24,7 +24,7 @@ static bool
 visit_loop_block(DfsContext& dfs_context, Block* block, Loop& loop,
                  std::vector<MaybeSubLoopBackedge>& maybe_subloops_backedges,
                  const std::unordered_map<Block*, std::unordered_set<Block*>>& predecessors) {
-  verify(!dfs_context.visited.contains(block),
+  verify(!dfs_context.block_state.contains(block),
          "Running `visit_loop_block` on already visited block");
 
   if (block != loop.header) {
@@ -37,8 +37,8 @@ visit_loop_block(DfsContext& dfs_context, Block* block, Loop& loop,
     }
   }
 
-  auto& visited_state = dfs_context.visited[block];
-  visited_state = DfsContext::State::Discovered;
+  auto& block_state = dfs_context.block_state[block];
+  block_state = DfsContext::State::Discovered;
 
   for (Block* successor : block->get_successors()) {
     // If this block jumps into non-loop block then it's an exiting block.
@@ -47,8 +47,8 @@ visit_loop_block(DfsContext& dfs_context, Block* block, Loop& loop,
       continue;
     }
 
-    const auto successor_it = dfs_context.visited.find(successor);
-    if (successor_it == dfs_context.visited.end()) {
+    const auto successor_it = dfs_context.block_state.find(successor);
+    if (successor_it == dfs_context.block_state.end()) {
       // Visit successor.
       if (!visit_loop_block(dfs_context, successor, loop, maybe_subloops_backedges, predecessors)) {
         return false;
@@ -71,7 +71,7 @@ visit_loop_block(DfsContext& dfs_context, Block* block, Loop& loop,
     }
   }
 
-  visited_state = DfsContext::State::Finished;
+  block_state = DfsContext::State::Finished;
   return true;
 }
 
@@ -128,12 +128,12 @@ find_loops_in_scc(Function* function, const std::vector<Block*>& scc_vector,
   // Make sure that DFS visited all blocks in the loop. This should always happen as blocks are
   // strongly connected.
   for (Block* block : loop.blocks) {
-    verify(dfs_context.visited.contains(block), "Not all loop blocks were visited using DFS");
+    verify(dfs_context.block_state.contains(block), "Not all loop blocks were visited using DFS");
   }
 
   // All back edges in this loop (but not in sub-loops) must branch to the loop header. By removing
   // header from the block set we make original loop non strongly connected. This will allow us to
-  // find smaller SCCs that are inside loop.
+  // find smaller SCCs that are inside the loop.
   loop.blocks.erase(loop.header);
   const auto sub_sccs = calculate_sccs(scc_context, loop.blocks);
   loop.blocks.insert(loop.header);
@@ -195,7 +195,7 @@ find_loops_in_scc(Function* function, const std::vector<Block*>& scc_vector,
 
   loop.blocks_without_subloops = loop.blocks;
   for (const auto& sub_loop : loop.sub_loops) {
-    for (const auto& block : sub_loop->blocks) {
+    for (Block* block : sub_loop->blocks) {
       loop.blocks_without_subloops.erase(block);
     }
   }
@@ -205,12 +205,11 @@ find_loops_in_scc(Function* function, const std::vector<Block*>& scc_vector,
   return false;
 }
 
-std::vector<std::unique_ptr<Loop>> flugzeug::analyze_function_loops(Function* function) {
+std::vector<std::unique_ptr<Loop>>
+flugzeug::analyze_function_loops(Function* function, const DominatorTree& dominator_tree) {
   // Loops are defined only for reachable blocks.
   const auto reachable_blocks =
     function->get_entry_block()->get_reachable_blocks_set(IncludeStart::Yes);
-
-  DominatorTree dominator_tree(function);
 
   // Create map (block -> predecessors of block) for faster lookups.
   std::unordered_map<Block*, std::unordered_set<Block*>> predecessors;
@@ -231,4 +230,9 @@ std::vector<std::unique_ptr<Loop>> flugzeug::analyze_function_loops(Function* fu
   }
 
   return loops;
+}
+
+std::vector<std::unique_ptr<Loop>> flugzeug::analyze_function_loops(Function* function) {
+  DominatorTree dominator_tree(function);
+  return analyze_function_loops(function, dominator_tree);
 }
