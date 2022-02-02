@@ -34,6 +34,8 @@ class Loop {
                     const std::unordered_map<Block*, std::unordered_set<Block*>>& predecessors,
                     SccContext& scc_context, std::vector<std::unique_ptr<Loop>>& loops);
 
+  void debug_print_internal(const std::string& indentation) const;
+
 public:
   Block* get_header() const;
 
@@ -50,6 +52,8 @@ public:
   bool contains_block_skipping_sub_loops(Block* block) const;
 
   const std::vector<std::unique_ptr<Loop>>& get_sub_loops() const;
+
+  void debug_print(const std::string& start_indentation = std::string()) const;
 };
 
 std::vector<std::unique_ptr<Loop>> analyze_function_loops(Function* function,

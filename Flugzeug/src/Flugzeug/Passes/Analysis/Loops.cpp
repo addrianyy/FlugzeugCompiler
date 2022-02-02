@@ -4,6 +4,8 @@
 #include <Flugzeug/IR/DominatorTree.hpp>
 #include <Flugzeug/IR/Function.hpp>
 
+#include <Flugzeug/Core/Log.hpp>
+
 using namespace flugzeug;
 
 struct DfsContext {
@@ -275,3 +277,57 @@ bool Loop::contains_block_skipping_sub_loops(Block* block) const {
 }
 
 const std::vector<std::unique_ptr<Loop>>& Loop::get_sub_loops() const { return sub_loops; }
+
+void Loop::debug_print_internal(const std::string& indentation) const {
+  std::string blocks_s;
+  std::string blocks_without_sub_loops_s;
+  std::string back_edges_from_s;
+  std::string exiting_edges_s;
+
+  for (Block* block : get_blocks()) {
+    blocks_s += block->format() + ", ";
+  }
+
+  for (Block* block : get_blocks_without_sub_loops()) {
+    blocks_without_sub_loops_s += block->format() + ", ";
+  }
+
+  for (Block* block : get_back_edges_from()) {
+    back_edges_from_s += block->format() + ", ";
+  }
+
+  for (const auto [from, to] : get_exiting_edges()) {
+    exiting_edges_s += fmt::format("({} -> {}), ", from->format(), to->format());
+  }
+
+  const auto remove_trailing_comma = [](std::string& s) {
+    if (s.ends_with(", ")) {
+      s = s.substr(0, s.size() - 2);
+    }
+  };
+
+  remove_trailing_comma(blocks_s);
+  remove_trailing_comma(blocks_without_sub_loops_s);
+  remove_trailing_comma(back_edges_from_s);
+  remove_trailing_comma(exiting_edges_s);
+
+  log_debug("{}Loop {}", indentation, get_header()->format());
+  log_debug("{}  blocks: {}", indentation, blocks_s);
+  if (!get_sub_loops().empty()) {
+    log_debug("{}  blocks (no sub-loops): {}", indentation, blocks_without_sub_loops_s);
+  }
+  log_debug("{}  back edges from: {}", indentation, back_edges_from_s);
+  log_debug("{}  exiting edges: {}", indentation, exiting_edges_s);
+
+  if (!get_sub_loops().empty()) {
+    log_debug("{}  sub loops:", indentation);
+
+    for (const auto& sub_loop : get_sub_loops()) {
+      sub_loop->debug_print_internal(indentation + "    ");
+    }
+  }
+}
+
+void Loop::debug_print(const std::string& start_indentation) const {
+  debug_print_internal(start_indentation);
+}

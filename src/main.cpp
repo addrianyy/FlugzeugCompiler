@@ -97,62 +97,12 @@ static void optimize_function(Function* f) {
   }
 }
 
-static void print_loop(const std::string& indentation, const Loop& loop) {
-  std::string blocks;
-  std::string blocks_without_sub_loops;
-  std::string back_edges_from;
-  std::string exiting_edges;
-
-  for (Block* block : loop.get_blocks()) {
-    blocks += block->format() + ", ";
-  }
-
-  for (Block* block : loop.get_blocks_without_sub_loops()) {
-    blocks_without_sub_loops += block->format() + ", ";
-  }
-
-  for (Block* block : loop.get_back_edges_from()) {
-    back_edges_from += block->format() + ", ";
-  }
-
-  for (const auto [from, to] : loop.get_exiting_edges()) {
-    exiting_edges += fmt::format("({} -> {}), ", from->format(), to->format());
-  }
-
-  const auto remove_comma = [](std::string& s) {
-    if (s.ends_with(", ")) {
-      s = s.substr(0, s.size() - 2);
-    }
-  };
-
-  remove_comma(blocks);
-  remove_comma(blocks_without_sub_loops);
-  remove_comma(back_edges_from);
-  remove_comma(exiting_edges);
-
-  log_debug("{}Loop", indentation);
-  log_debug("{}  header: {}", indentation, loop.get_header()->format());
-  log_debug("{}  blocks: {}", indentation, blocks);
-  log_debug("{}  blocks (no sub-loops): {}", indentation, blocks_without_sub_loops);
-  log_debug("{}  back edges from: {}", indentation, back_edges_from);
-  log_debug("{}  exiting edges: {}", indentation, exiting_edges);
-
-  if (!loop.get_sub_loops().empty()) {
-    log_debug("{}  sub loops:", indentation);
-
-    for (const auto& sub_loop : loop.get_sub_loops()) {
-      print_loop(indentation + "    ", *sub_loop);
-    }
-  }
-}
-
-static void analyze_loops(Function* f) {
+static void debug_print_loops(Function* f) {
   const auto loops = analyze_function_loops(f);
 
   log_debug("{}:", f->get_name());
-
   for (const auto& loop : loops) {
-    print_loop("  ", *loop);
+    loop->debug_print("  ");
   }
   log_debug("");
 }
@@ -164,15 +114,11 @@ int main() {
   const auto parsed_source = turboc::Parser::parse_from_file("../Tests/main.tc");
   const auto module = turboc::IRGenerator::generate(&context, parsed_source);
 
-  for (const Function& f : *module) {
-    //    show_calls(&f);
-  }
-
   for (Function& f : module->local_functions()) {
     f.validate(ValidationBehaviour::ErrorsAreFatal);
 
     optimize_function(&f);
-    //    analyze_loops(&f);
+    //    debug_print_loops(&f);
 
     f.validate(ValidationBehaviour::ErrorsAreFatal);
 
