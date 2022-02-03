@@ -120,6 +120,8 @@ class Validator : public ConstInstructionVisitor {
     const auto type = call->get_type();
     const auto called_function = call->get_callee();
 
+    validation_check(called_function->get_module() == function->get_module(),
+                     "Call instruction crosses module boundary.");
     validation_check(type == called_function->get_return_type(),
                      "Call return type ({}) differs from functon return type", type->format(),
                      called_function->get_return_type()->format());

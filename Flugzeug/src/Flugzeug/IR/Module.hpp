@@ -77,6 +77,9 @@ public:
 
   void destroy();
 
+  std::unordered_map<const Function*, ValidationResults>
+  validate(ValidationBehaviour behaviour) const;
+
   Context* get_context() { return context; }
   const Context* get_context() const { return context; }
 

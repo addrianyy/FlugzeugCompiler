@@ -692,6 +692,8 @@ void IRGenerator::generate_ir_for_functions(const std::vector<Function>& functio
       generate_local_function(function, module->get_function(name));
     }
   }
+
+  module->validate(fz::ValidationBehaviour::ErrorsAreFatal);
 }
 
 IRGenerator::IRGenerator(fz::Context* context)

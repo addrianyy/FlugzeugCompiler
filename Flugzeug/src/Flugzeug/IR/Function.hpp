@@ -84,10 +84,8 @@ class Function : public Value, public IntrusiveNode<Function, Module> {
   const std::string name;
   std::vector<Parameter*> parameters;
 
+  /// Entry block is always first block in the list.
   BlockList blocks;
-
-  /// Always first block in the list.
-  Block* entry_block = nullptr;
 
   size_t next_value_index = 0;
   size_t next_block_index = 0;

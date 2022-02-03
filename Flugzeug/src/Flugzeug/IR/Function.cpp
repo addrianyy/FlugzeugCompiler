@@ -25,11 +25,9 @@ void Function::on_added_node(Block* block) {
 }
 
 void Function::on_removed_node(Block* block) {
-  if (block == entry_block) {
+  if (block->is_entry) {
     verify(get_list().is_empty(), "Entry block must be removed last");
-
     block->is_entry = false;
-    entry_block = nullptr;
   }
 }
 
@@ -50,7 +48,6 @@ void Function::print_prototype(IRPrinter& printer, bool end_line) const {
 
 void Function::insert_block(Block* block) {
   if (blocks.is_empty()) {
-    entry_block = block;
     block->is_entry = true;
   }
 
@@ -76,7 +73,6 @@ Function::Function(Context* context, Type* return_type, std::string name,
 }
 
 Function::~Function() {
-  verify(!entry_block, "There cannot be entry block before removing function.");
   verify(blocks.is_empty(), "Block list must be empty before removing function.");
 }
 
@@ -92,8 +88,7 @@ void Function::print(IRPrinter& printer) const {
   print_prototype(printer, true);
 
   if (!is_extern()) {
-    auto printing_order =
-      static_cast<const Block*>(entry_block)->get_reachable_blocks(TraversalType::BFS_WithStart);
+    auto printing_order = get_entry_block()->get_reachable_blocks(TraversalType::BFS_WithStart);
 
     std::unordered_set<const Block*> reachable_blocks;
     reachable_blocks.reserve(printing_order.size());

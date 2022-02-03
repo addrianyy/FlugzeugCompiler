@@ -52,6 +52,34 @@ void Module::destroy() {
   delete this;
 }
 
+std::unordered_map<const Function*, ValidationResults>
+Module::validate(ValidationBehaviour behaviour) const {
+  std::unordered_map<const Function*, ValidationResults> all_results;
+  size_t total_erors = 0;
+
+  const auto new_behaviour = behaviour == ValidationBehaviour::ErrorsAreFatal
+                               ? ValidationBehaviour::ErrorsToStdout
+                               : behaviour;
+
+  for (const Function& function : local_functions()) {
+    auto results = function.validate(new_behaviour);
+    if (results.has_errors()) {
+      total_erors += results.get_errors().size();
+      all_results.insert({&function, std::move(results)});
+    }
+  }
+
+  if (behaviour == ValidationBehaviour::ErrorsAreFatal && total_erors > 0) {
+    if (total_erors == 1) {
+      fatal_error("Encountered 1 validation error in the module.");
+    } else {
+      fatal_error("Encountered {} validation errors in the module.", total_erors);
+    }
+  }
+
+  return all_results;
+}
+
 Function* Module::create_function(Type* return_type, std::string name,
                                   const std::vector<Type*>& arguments) {
   auto function = new Function(context, return_type, std::move(name), arguments);

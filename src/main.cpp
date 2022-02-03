@@ -22,6 +22,8 @@
 #include <turboc/IRGenerator.hpp>
 #include <turboc/Parser.hpp>
 
+#include <filesystem>
+
 using namespace flugzeug;
 
 static void test_validation(Context& context) {
@@ -55,8 +57,8 @@ static void test_validation(Context& context) {
   inserter.ret(i32->get_constant(1));
   inserter.ret(i64->get_constant(3));
 
-  f->print();
-  f->validate(ValidationBehaviour::ErrorsToStdout);
+  m->print();
+  m->validate(ValidationBehaviour::ErrorsAreFatal);
   m->destroy();
 }
 
@@ -108,21 +110,21 @@ static void debug_print_loops(Function* f) {
 }
 
 int main() {
+  std::filesystem::current_path("../");
+  std::filesystem::remove_all("Graphs/");
+  std::filesystem::create_directory("Graphs/");
+
   Context context;
 
-  const auto parsed_source = turboc::Parser::parse_from_file("../Tests/main.tc");
+  const auto parsed_source = turboc::Parser::parse_from_file("Tests/main.tc");
   const auto module = turboc::IRGenerator::generate(&context, parsed_source);
 
   for (Function& f : module->local_functions()) {
-    f.validate(ValidationBehaviour::ErrorsAreFatal);
-
     optimize_function(&f);
-    //    debug_print_loops(&f);
 
-    f.validate(ValidationBehaviour::ErrorsAreFatal);
-
-    f.generate_graph(fmt::format("../Graphs/{}.svg", f.get_name()));
+    f.generate_graph(fmt::format("Graphs/{}.svg", f.get_name()));
   }
 
+  module->validate(ValidationBehaviour::ErrorsAreFatal);
   module->destroy();
 }
