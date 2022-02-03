@@ -190,7 +190,7 @@ order_loop_count_related_instructions(const Loop* loop,
       }
     }
 
-    for (Block* successor : block->get_successors()) {
+    for (Block* successor : block->successors()) {
       // We are only interested in blocks that are part of our loop.
       if (!visited.contains(successor) && loop->contains_block(successor)) {
         stack.push_back(successor);

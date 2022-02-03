@@ -137,11 +137,11 @@ public:
   Block* get_single_predecessor();
   const Block* get_single_predecessor() const;
 
-  BlockTargets<Block> get_successors();
-  BlockTargets<const Block> get_successors() const;
+  BlockTargets<Block> successors();
+  BlockTargets<const Block> successors() const;
 
-  std::unordered_set<Block*> get_predecessors();
-  std::unordered_set<const Block*> get_predecessors() const;
+  std::unordered_set<Block*> predecessors();
+  std::unordered_set<const Block*> predecessors() const;
 
   std::vector<Block*> get_reachable_blocks(TraversalType traversal);
   std::vector<const Block*> get_reachable_blocks(TraversalType traversal) const;

@@ -153,6 +153,7 @@ public:
   const Block* get_entry_block() const { return get_first_block(); }
 
   bool is_extern() const { return is_empty(); }
+  bool is_local() const { return !is_empty(); }
 
   void reassign_display_indices();
 

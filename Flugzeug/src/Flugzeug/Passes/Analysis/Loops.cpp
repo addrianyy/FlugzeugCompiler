@@ -44,7 +44,7 @@ visit_loop_block(DfsContext& dfs_context, Block* block, Loop& loop,
   auto& block_state = dfs_context.block_state[block];
   block_state = DfsContext::State::Discovered;
 
-  for (Block* successor : block->get_successors()) {
+  for (Block* successor : block->successors()) {
     // If this block jumps into non-loop block then it's an exiting block.
     if (!loop.contains_block(successor)) {
       exiting_edges.emplace_back(block, successor);
@@ -220,7 +220,7 @@ flugzeug::analyze_function_loops(Function* function, const DominatorTree& domina
   // Create map (block -> predecessors of block) for faster lookups.
   std::unordered_map<Block*, std::unordered_set<Block*>> predecessors;
   for (Block& block : *function) {
-    predecessors.insert({&block, block.get_predecessors()});
+    predecessors.insert({&block, block.predecessors()});
   }
 
   std::vector<std::unique_ptr<Loop>> loops;

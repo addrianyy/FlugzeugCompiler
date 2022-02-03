@@ -79,7 +79,7 @@ void User::set_operand_count(size_t count) {
 
   if (before_count > count) {
     for (size_t i = count; i < before_count; ++i) {
-      verify(get_operand(i) == nullptr, "Tried to remove exsiting operand.");
+      verify(used_operands[i] == nullptr, "Tried to remove exsiting operand.");
     }
   }
 

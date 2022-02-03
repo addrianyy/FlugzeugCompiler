@@ -63,11 +63,11 @@ public:
   bool is_arithmetic() const;
   bool is_arithmetic_or_pointer() const;
 
-  Constant* get_constant(uint64_t constant);
-  Constant* get_zero();
-  Constant* get_one();
+  Constant* get_constant(uint64_t constant) const;
+  Constant* get_zero() const;
+  Constant* get_one() const;
 
-  Undef* get_undef();
+  Undef* get_undef() const;
 
   size_t get_bit_size() const;
   uint64_t get_bit_mask() const;

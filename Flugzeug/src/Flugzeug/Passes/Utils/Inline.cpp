@@ -49,7 +49,7 @@ static Block* split_block(Instruction* instruction) {
   }
 
   // Update Phis that depend on `old_block`.
-  for (Block* successor : new_block->get_successors()) {
+  for (Block* successor : new_block->successors()) {
     successor->replace_incoming_blocks_in_phis(old_block, new_block);
   }
 

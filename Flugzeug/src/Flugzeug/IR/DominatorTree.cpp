@@ -23,7 +23,7 @@ static std::vector<const Block*> traverse_dfs_postorder(const Block* entry_block
     const auto block = stack.back();
 
     if (visited.insert(block).second) {
-      for (const Block* successor : block->get_successors()) {
+      for (const Block* successor : block->successors()) {
         if (!visited.contains(successor)) {
           stack.push_back(successor);
         }
@@ -77,7 +77,7 @@ calculate_immediate_dominators(const Block* entry_block) {
     }
 
     for (const Block* block : postorder) {
-      const auto predecessors = block->get_predecessors();
+      const auto predecessors = block->predecessors();
 
       std::vector<size_t> predecessor_indices;
       predecessor_indices.reserve(predecessors.size());

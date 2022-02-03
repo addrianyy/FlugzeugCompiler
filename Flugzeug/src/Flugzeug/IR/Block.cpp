@@ -84,7 +84,7 @@ traverse_generic(TBlock* start_block, TraversalType traversal) {
 
       first_iteration = false;
 
-      for (TBlock* successor : block->get_successors()) {
+      for (TBlock* successor : block->successors()) {
         if (!visited.contains(successor)) {
           queue.push_back(successor);
         }
@@ -116,7 +116,7 @@ traverse_generic(TBlock* start_block, TraversalType traversal) {
 
       first_iteration = false;
 
-      for (TBlock* successor : block->get_successors()) {
+      for (TBlock* successor : block->successors()) {
         if (!visited.contains(successor)) {
           stack.push_back(successor);
         }
@@ -273,25 +273,23 @@ const Block* Block::get_single_predecessor() const {
   return get_single_predecessor_generic<const Block>(this);
 }
 
-BlockTargets<Block> Block::get_successors() {
+BlockTargets<Block> Block::successors() {
   if (const auto terminator = get_last_instruction()) {
-    return terminator->get_targets();
+    return terminator->targets();
   }
   return {};
 }
 
-BlockTargets<const Block> Block::get_successors() const {
+BlockTargets<const Block> Block::successors() const {
   if (const auto terminator = get_last_instruction()) {
-    return terminator->get_targets();
+    return terminator->targets();
   }
   return {};
 }
 
-std::unordered_set<Block*> Block::get_predecessors() {
-  return get_predecessors_generic<Block>(this);
-}
+std::unordered_set<Block*> Block::predecessors() { return get_predecessors_generic<Block>(this); }
 
-std::unordered_set<const Block*> Block::get_predecessors() const {
+std::unordered_set<const Block*> Block::predecessors() const {
   return get_predecessors_generic<const Block>(this);
 }
 

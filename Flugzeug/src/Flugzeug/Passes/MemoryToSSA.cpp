@@ -97,7 +97,7 @@ void MemoryToSSA::optimize_stackalloc(StackAlloc* stackalloc) {
   for (Phi* phi : inserted_phis) {
     Block* block = phi->get_block();
 
-    for (Block* pred : block->get_predecessors()) {
+    for (Block* pred : block->predecessors()) {
       const auto it = block_values.find(pred);
       const auto value =
         it != block_values.end() ? it->second : stackalloc->get_allocated_type()->get_undef();

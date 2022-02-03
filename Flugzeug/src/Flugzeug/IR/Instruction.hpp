@@ -52,8 +52,8 @@ public:
   using IntrusiveNode::insert_after;
   using IntrusiveNode::insert_before;
   using IntrusiveNode::move_after;
-  using IntrusiveNode::move_to_back;
   using IntrusiveNode::move_before;
+  using IntrusiveNode::move_to_back;
   using IntrusiveNode::move_to_front;
   using IntrusiveNode::push_back;
   using IntrusiveNode::push_front;
@@ -83,8 +83,8 @@ public:
   /// In both cases current instruction will be destroyed.
   void replace_instruction_or_uses_and_destroy(Value* new_value);
 
-  BlockTargets<Block> get_targets();
-  BlockTargets<const Block> get_targets() const;
+  BlockTargets<Block> targets();
+  BlockTargets<const Block> targets() const;
 
   bool is_before(const Instruction* other) const;
   bool is_after(const Instruction* other) const;

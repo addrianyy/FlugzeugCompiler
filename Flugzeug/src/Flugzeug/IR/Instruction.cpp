@@ -65,7 +65,7 @@ void Instruction::destroy() {
 }
 
 bool Instruction::destroy_if_unused() {
-  if (get_user_count_excluding_self() == 0) {
+  if (!is_used()) {
     destroy();
     return true;
   }
@@ -106,9 +106,9 @@ void Instruction::replace_instruction_or_uses_and_destroy(Value* new_value) {
   }
 }
 
-BlockTargets<Block> Instruction::get_targets() { return get_targets_generic<Block>(this); }
+BlockTargets<Block> Instruction::targets() { return get_targets_generic<Block>(this); }
 
-BlockTargets<const Block> Instruction::get_targets() const {
+BlockTargets<const Block> Instruction::targets() const {
   return get_targets_generic<const Block>(this);
 }
 

@@ -121,7 +121,7 @@ bool CFGSimplification::merge_blocks(Function* function) {
     // Destroy branch to `block`. `predecessor` will now branch to `block` successors.
     branch_to_block->destroy();
 
-    for (Block* successor : predecessor->get_successors()) {
+    for (Block* successor : predecessor->successors()) {
       successor->replace_incoming_blocks_in_phis(&block, predecessor);
     }
 

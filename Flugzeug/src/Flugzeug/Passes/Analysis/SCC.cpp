@@ -23,7 +23,7 @@ static void scc_visit(SccContext& context, Block* block, const std::unordered_se
   context.stack.push_back(block);
   context.index += 1;
 
-  for (Block* other : block->get_successors()) {
+  for (Block* other : block->successors()) {
     if (!blocks.contains(other)) {
       continue;
     }
@@ -64,7 +64,7 @@ static void scc_visit(SccContext& context, Block* block, const std::unordered_se
 
         const auto scc_block = current_scc[0];
 
-        for (Block* successor : scc_block->get_successors()) {
+        for (Block* successor : scc_block->successors()) {
           if (successor == scc_block) {
             valid = true;
             break;

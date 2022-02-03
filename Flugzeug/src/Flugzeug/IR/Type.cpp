@@ -14,15 +14,17 @@ Type::~Type() { context->decrease_refcount(); }
 PointerType* Type::ref(uint32_t indirection) const {
   verify(indirection > 0, "Cannnot specify no indirection");
 
+  const auto non_const = const_cast<Type*>(this);
+
   if (indirection == 1) {
     if (!pointer_to_this) {
-      pointer_to_this = get_context()->get_pointer_type(const_cast<Type*>(this), 1);
+      pointer_to_this = get_context()->get_pointer_type(non_const, 1);
     }
 
     return pointer_to_this;
   }
 
-  return get_context()->get_pointer_type(const_cast<Type*>(this), indirection);
+  return get_context()->get_pointer_type(non_const, indirection);
 }
 
 size_t Type::get_bit_size() const {
@@ -101,10 +103,12 @@ std::string Type::format() const {
   }
 }
 
-Constant* Type::get_constant(uint64_t constant) {
+Constant* Type::get_constant(uint64_t constant) const {
+  const auto non_const = const_cast<Type*>(this);
+
   if (constant == 0) {
     if (!zero) {
-      zero = context->get_constant(this, 0);
+      zero = context->get_constant(non_const, 0);
     }
 
     return zero;
@@ -112,21 +116,21 @@ Constant* Type::get_constant(uint64_t constant) {
 
   if (constant == 1) {
     if (!one) {
-      one = context->get_constant(this, 1);
+      one = context->get_constant(non_const, 1);
     }
 
     return one;
   }
 
-  return context->get_constant(this, constant);
+  return context->get_constant(non_const, constant);
 }
 
-Constant* Type::get_zero() { return get_constant(0); }
-Constant* Type::get_one() { return get_constant(1); }
+Constant* Type::get_zero() const { return get_constant(0); }
+Constant* Type::get_one() const { return get_constant(1); }
 
-Undef* Type::get_undef() {
+Undef* Type::get_undef() const {
   if (!undef) {
-    undef = context->get_undef(this);
+    undef = context->get_undef(const_cast<Type*>(this));
   }
 
   return undef;
