@@ -44,10 +44,10 @@ class Block : public Value, public IntrusiveNode<Block, Function> {
 
   void update_instruction_order() const;
 
-public:
   explicit Block(Context* context)
       : Value(context, Value::Kind::Block, context->get_block_ty()), instruction_list(this) {}
 
+public:
   ~Block() override;
 
   void print(IRPrinter& printer) const;

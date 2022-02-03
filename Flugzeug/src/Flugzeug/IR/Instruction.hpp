@@ -52,7 +52,11 @@ public:
   using IntrusiveNode::insert_after;
   using IntrusiveNode::insert_before;
   using IntrusiveNode::move_after;
+  using IntrusiveNode::move_to_back;
   using IntrusiveNode::move_before;
+  using IntrusiveNode::move_to_front;
+  using IntrusiveNode::push_back;
+  using IntrusiveNode::push_front;
   using IntrusiveNode::unlink;
 
   virtual Instruction* clone() = 0;

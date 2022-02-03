@@ -118,7 +118,7 @@ class Validator : public ConstInstructionVisitor {
 
   void visit_call(Argument<Call> call) {
     const auto type = call->get_type();
-    const auto called_function = call->get_target();
+    const auto called_function = call->get_callee();
 
     validation_check(type == called_function->get_return_type(),
                      "Call return type ({}) differs from functon return type", type->format(),

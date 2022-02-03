@@ -48,6 +48,15 @@ void Function::print_prototype(IRPrinter& printer, bool end_line) const {
   }
 }
 
+void Function::insert_block(Block* block) {
+  if (blocks.is_empty()) {
+    entry_block = block;
+    block->is_entry = true;
+  }
+
+  blocks.push_back(block);
+}
+
 Function::Function(Context* context, Type* return_type, std::string name,
                    const std::vector<Type*>& arguments)
     : Value(context, Value::Kind::Function, context->get_function_ty()), blocks(this),
@@ -144,15 +153,6 @@ Block* Function::create_block() {
   auto block = new Block(get_context());
   insert_block(block);
   return block;
-}
-
-void Function::insert_block(Block* block) {
-  if (blocks.is_empty()) {
-    entry_block = block;
-    block->is_entry = true;
-  }
-
-  blocks.push_back(block);
 }
 
 void Function::destroy() {

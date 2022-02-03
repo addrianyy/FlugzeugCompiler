@@ -205,8 +205,8 @@ public:
   Value* get_arg(size_t i) { return get_operand(i + 1); }
   const Value* get_arg(size_t i) const { return get_operand(i + 1); }
 
-  Function* get_target();
-  const Function* get_target() const;
+  Function* get_callee();
+  const Function* get_callee() const;
 
   Instruction* clone() override {
     std::vector<Value*> arguments;
@@ -214,7 +214,7 @@ public:
     for (size_t i = 0; i < get_arg_count(); ++i) {
       arguments.push_back(get_arg(i));
     }
-    return new Call(get_context(), get_target(), arguments);
+    return new Call(get_context(), get_callee(), arguments);
   }
 
 protected:

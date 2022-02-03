@@ -114,7 +114,7 @@ void Store::print_instruction_internal(IRPrinter::LinePrinter& p) const {
 }
 
 void Call::print_instruction_internal(IRPrinter::LinePrinter& p) const {
-  p.print("call", get_type(), IRPrinter::NonKeywordWord{get_target()->get_name()},
+  p.print("call", get_type(), IRPrinter::NonKeywordWord{get_callee()->get_name()},
           SpecialItem::ParenOpen);
 
   for (size_t i = 0; i < get_arg_count(); ++i) {

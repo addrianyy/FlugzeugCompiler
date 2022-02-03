@@ -103,6 +103,8 @@ class Function : public Value, public IntrusiveNode<Function, Module> {
   void print_prototype(IRPrinter& printer, bool end_line) const;
   void generate_dot_graph_source(std::ostream& output, bool colors) const;
 
+  void insert_block(Block* block);
+
   Function(Context* context, Type* return_type, std::string name,
            const std::vector<Type*>& arguments);
 
@@ -157,7 +159,6 @@ public:
   void reassign_display_indices();
 
   Block* create_block();
-  void insert_block(Block* block);
 
   void destroy();
 

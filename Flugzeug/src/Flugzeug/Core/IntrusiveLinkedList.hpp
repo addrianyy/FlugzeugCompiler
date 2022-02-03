@@ -40,6 +40,9 @@ protected:
   void insert_before(T* before) { before->get_list().insert_before(to_underlying(), before); }
   void insert_after(T* after) { after->get_list().insert_after(to_underlying(), after); }
 
+  void push_front(Owner* new_owner) { new_owner->get_list().push_front(to_underlying()); }
+  void push_back(Owner* new_owner) { new_owner->get_list().push_back(to_underlying()); }
+
   void move_before(T* before) {
     unlink();
     insert_before(before);
@@ -48,6 +51,16 @@ protected:
   void move_after(T* after) {
     unlink();
     insert_after(after);
+  }
+
+  void move_to_front(Owner* new_owner) {
+    unlink();
+    push_front(new_owner);
+  }
+
+  void move_to_back(Owner* new_owner) {
+    unlink();
+    push_back(new_owner);
   }
 
   void unlink() { get_list().unlink(to_underlying()); }

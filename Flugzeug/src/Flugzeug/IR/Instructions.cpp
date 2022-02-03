@@ -82,9 +82,9 @@ Call::Call(Context* context, Function* function, const std::vector<Value*>& argu
   }
 }
 
-Function* Call::get_target() { return cast<Function>(get_operand(0)); }
+Function* Call::get_callee() { return cast<Function>(get_operand(0)); }
 
-const Function* Call::get_target() const { return cast<Function>(get_operand(0)); }
+const Function* Call::get_callee() const { return cast<Function>(get_operand(0)); }
 
 bool Phi::index_for_block(const Block* block, size_t& index) const {
   index = 0;

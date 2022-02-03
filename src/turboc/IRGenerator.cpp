@@ -674,8 +674,7 @@ void IRGenerator::create_declarations(const std::vector<Function>& functions) {
     }
 
     const auto& name = prototype.get_name();
-    const auto ir_function =
-      module->create_function(convert_type(prototype.get_return_type()), name, arguments);
+    module->create_function(convert_type(prototype.get_return_type()), name, arguments);
 
     verify(function_map.insert({name, &function}).second, "Defined multiple functions named {}.",
            name);
