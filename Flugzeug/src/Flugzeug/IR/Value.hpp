@@ -65,8 +65,7 @@ private:
   void add_use(Use* use);
   void remove_use(Use* use);
 
-  void replace_uses_with_type_check(Value* new_value);
-  void replace_uses_with_handle_block_user(Block* block, User* user);
+  void deduplicate_phi_incoming_blocks(Block* block, User* user);
 
 protected:
   Value(Context* context, Kind kind, Type* type);
@@ -91,6 +90,8 @@ public:
   bool is_global() const {
     return kind == Kind::Undef || kind == Kind::Function || kind == Kind::Constant;
   }
+
+  bool is_same_type_as(const Value* other) const;
 
   void replace_uses_with(Value* new_value);
   void replace_uses_with_constant(uint64_t constant);

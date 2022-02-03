@@ -21,27 +21,7 @@ void Value::remove_use(Use* use) {
   }
 }
 
-void Value::replace_uses_with_type_check(Value* new_value) {
-  verify(!is_void(), "Cannot replace uses of void value");
-  verify(new_value->get_type() == get_type(), "Cannot replace value with value of different type");
-
-  if (const auto new_function = cast<Function>(new_value)) {
-    const auto old_function = cast<Function>(this);
-
-    verify(new_function->get_return_type() == old_function->get_return_type(),
-           "Return type mismatch");
-    verify(new_function->get_parameter_count() == old_function->get_parameter_count(),
-           "Parameter count mismatch");
-
-    for (size_t i = 0; i < new_function->get_parameter_count(); ++i) {
-      const auto t1 = new_function->get_parameter(i)->get_type();
-      const auto t2 = old_function->get_parameter(i)->get_type();
-      verify(t1 == t2, "Parameter type mismatch");
-    }
-  }
-}
-
-void Value::replace_uses_with_handle_block_user(Block* block, User* user) {
+void Value::deduplicate_phi_incoming_blocks(Block* block, User* user) {
   if (const auto phi = cast<Phi>(user)) {
     // Make sure there is only one entry for this block in Phi instruction.
     // If there is more then one entry then make sure value is common and remove redundant ones.
@@ -111,14 +91,47 @@ std::optional<int64_t> Value::get_constant_i_opt() const {
   return c ? std::optional(c->get_constant_i()) : std::nullopt;
 }
 
+bool Value::is_same_type_as(const Value* other) const {
+  if (this == other) {
+    return true;
+  }
+
+  if (get_type() != other->get_type()) {
+    return false;
+  }
+
+  if (const auto other_function = cast<Function>(other)) {
+    const auto function = cast<Function>(this);
+
+    if (other_function->get_return_type() != function->get_return_type()) {
+      return false;
+    }
+
+    if (other_function->get_parameter_count() != function->get_parameter_count()) {
+      return false;
+    }
+
+    for (size_t i = 0; i < function->get_parameter_count(); ++i) {
+      const auto t1 = function->get_parameter(i)->get_type();
+      const auto t2 = other_function->get_parameter(i)->get_type();
+      if (t1 != t2) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 void Value::replace_uses_with(Value* new_value) {
   if (this == new_value) {
     return;
   }
 
-  replace_uses_with_type_check(new_value);
+  verify(!is_void(), "Cannot replace uses of void value");
+  verify(is_same_type_as(new_value), "Cannot replace value with value of different type");
 
-  const auto block = cast<Block>(this);
+  const auto block = cast<Block>(new_value);
 
   while (!uses.is_empty()) {
     Use* use = uses.get_first();
@@ -126,7 +139,7 @@ void Value::replace_uses_with(Value* new_value) {
     user->set_operand(use->get_operand_index(), new_value);
 
     if (block) {
-      replace_uses_with_handle_block_user(block, user);
+      deduplicate_phi_incoming_blocks(block, user);
     }
   }
 }
@@ -143,9 +156,10 @@ void Value::replace_uses_with_predicated(Value* new_value,
     return;
   }
 
-  replace_uses_with_type_check(new_value);
+  verify(!is_void(), "Cannot replace uses of void value");
+  verify(is_same_type_as(new_value), "Cannot replace value with value of different type");
 
-  const auto block = cast<Block>(this);
+  const auto block = cast<Block>(new_value);
 
   Use* current_use = uses.get_first();
   while (current_use) {
@@ -156,7 +170,7 @@ void Value::replace_uses_with_predicated(Value* new_value,
       user->set_operand(current_use->get_operand_index(), new_value);
 
       if (block) {
-        replace_uses_with_handle_block_user(block, user);
+        deduplicate_phi_incoming_blocks(block, user);
       }
     }
 

@@ -72,6 +72,7 @@ public:
   void set_operand(size_t index, Value* operand);
 
   bool uses_value(Value* value) const;
+  void replace_operands(Value* old_value, Value* new_value);
 
   using OperandIterator = OperandIteratorInternal<Value>;
   using ConstOperandIterator = OperandIteratorInternal<const Value>;

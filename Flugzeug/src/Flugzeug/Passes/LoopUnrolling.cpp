@@ -314,18 +314,8 @@ static std::optional<size_t> get_unroll_count(const std::vector<Instruction*>& i
 }
 
 static void replace_branch(Instruction* instruction, Block* old_target, Block* new_target) {
-  if (const auto branch = cast<Branch>(instruction)) {
-    if (branch->get_target() == old_target) {
-      branch->set_target(new_target);
-    }
-  } else if (const auto branch_cond = cast<CondBranch>(instruction)) {
-    if (branch_cond->get_true_target() == old_target) {
-      branch_cond->set_true_target(new_target);
-    }
-
-    if (branch_cond->get_false_target() == old_target) {
-      branch_cond->set_false_target(new_target);
-    }
+  if (instruction->is_branching()) {
+    instruction->replace_operands(old_target, new_target);
   }
 }
 

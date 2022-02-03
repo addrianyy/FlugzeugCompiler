@@ -1,4 +1,5 @@
 #include "User.hpp"
+#include "Block.hpp"
 
 #include <Flugzeug/Core/Error.hpp>
 
@@ -145,4 +146,28 @@ void User::set_operand(size_t index, Value* operand) {
   }
 
   used_operands[index] = operand;
+}
+
+void User::replace_operands(Value* old_value, Value* new_value) {
+  if (old_value == new_value) {
+    return;
+  }
+
+  verify(old_value->is_same_type_as(new_value),
+         "Cannot replace operands with value of different type");
+
+  const auto block = cast<Block>(new_value);
+
+  size_t replace_count = 0;
+
+  for (size_t i = 0; i < get_operand_count(); ++i) {
+    if (used_operands[i] == old_value) {
+      set_operand(i, new_value);
+      replace_count++;
+    }
+  }
+
+  if (block && replace_count > 0) {
+    deduplicate_phi_incoming_blocks(block, this);
+  }
 }
