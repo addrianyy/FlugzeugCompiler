@@ -12,7 +12,15 @@ Type::Type(Context* context, Type::Kind kind) : context(context), kind(kind) {
 Type::~Type() { context->decrease_refcount(); }
 
 PointerType* Type::ref(uint32_t indirection) const {
-  verify(indirection > 0, "Cannnot specify 0 indirection");
+  verify(indirection > 0, "Cannnot specify no indirection");
+
+  if (indirection == 1) {
+    if (!pointer_to_this) {
+      pointer_to_this = get_context()->get_pointer_type(const_cast<Type*>(this), 1);
+    }
+
+    return pointer_to_this;
+  }
 
   return get_context()->get_pointer_type(const_cast<Type*>(this), indirection);
 }
@@ -93,11 +101,36 @@ std::string Type::format() const {
   }
 }
 
-Constant* Type::get_constant(uint64_t constant) { return context->get_constant(this, constant); }
+Constant* Type::get_constant(uint64_t constant) {
+  if (constant == 0) {
+    if (!zero) {
+      zero = context->get_constant(this, 0);
+    }
+
+    return zero;
+  }
+
+  if (constant == 1) {
+    if (!one) {
+      one = context->get_constant(this, 1);
+    }
+
+    return one;
+  }
+
+  return context->get_constant(this, constant);
+}
+
 Constant* Type::get_zero() { return get_constant(0); }
 Constant* Type::get_one() { return get_constant(1); }
 
-Undef* Type::get_undef() { return context->get_undef(this); }
+Undef* Type::get_undef() {
+  if (!undef) {
+    undef = context->get_undef(this);
+  }
+
+  return undef;
+}
 
 bool Type::is_arithmetic() const {
   return kind == Kind::I8 || kind == Kind::I16 || kind == Kind::I32 || kind == Kind::I64;

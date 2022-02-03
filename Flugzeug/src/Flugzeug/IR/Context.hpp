@@ -65,6 +65,9 @@ class Context {
 
   PointerType* get_pointer_type_internal(Type* base, uint32_t indirection);
 
+  Constant* get_constant(Type* type, uint64_t constant);
+  Undef* get_undef(Type* type);
+
 public:
   CLASS_NON_MOVABLE_NON_COPYABLE(Context)
 
@@ -79,9 +82,6 @@ public:
   Type* get_void_ty() const { return void_type; }
   Type* get_block_ty() const { return block_type; }
   Type* get_function_ty() const { return function_type; }
-
-  Constant* get_constant(Type* type, uint64_t constant);
-  Undef* get_undef(Type* type);
 
   PointerType* get_pointer_type(Type* pointee, uint32_t indirection = 1);
 

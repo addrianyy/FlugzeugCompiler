@@ -219,6 +219,8 @@ public:
       if (const auto constant = cast<Constant>(rhs)) {
         // Canonicalize
         // x - c == x + (-c)
+
+        // We do these casts to avoid compiler warning.
         const auto negated_constant =
           type->get_constant(uint64_t(-int64_t(constant->get_constant_u())));
         return new BinaryInstr(context, lhs, BinaryOp::Add, negated_constant);

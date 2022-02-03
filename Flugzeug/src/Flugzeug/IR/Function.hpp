@@ -161,6 +161,8 @@ public:
 
   void destroy();
 
+  std::string format() const override;
+
   using InstructionIterator = InstructionIteratorInternal<Block, Instruction>;
   using ConstInstructionIterator = InstructionIteratorInternal<const Block, const Instruction>;
 

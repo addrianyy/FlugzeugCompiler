@@ -31,6 +31,12 @@ private:
   const Kind kind;
   Context* const context;
 
+  mutable PointerType* pointer_to_this = nullptr;
+
+  mutable Constant* zero = nullptr;
+  mutable Constant* one = nullptr;
+  mutable Undef* undef = nullptr;
+
 protected:
   Type(Context* context, Kind kind);
 

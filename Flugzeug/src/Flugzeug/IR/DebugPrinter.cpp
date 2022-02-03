@@ -1,4 +1,5 @@
 #include "DebugPrinter.hpp"
+
 #include <Flugzeug/Core/DebugPrint.hpp>
 
 using namespace flugzeug;

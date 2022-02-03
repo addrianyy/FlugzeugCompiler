@@ -171,3 +171,5 @@ void Function::destroy() {
 
   IntrusiveNode::destroy();
 }
+
+std::string Function::format() const { return name; }
