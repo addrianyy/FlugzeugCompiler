@@ -22,6 +22,12 @@ struct MaybeSubLoopBackedge {
   bool in_subloop = false;
 };
 
+static std::vector<std::vector<Block*>> calculate_sccs(SccContext<Block*>& context,
+                                                       const std::unordered_set<Block*>& blocks) {
+  return calculate_sccs<Block*, true>(context, blocks,
+                                      [](Block* block) { return block->successors(); });
+}
+
 static bool
 visit_loop_block(DfsContext& dfs_context, Block* block, Loop& loop,
                  std::vector<std::pair<Block*, Block*>>& exiting_edges,
@@ -98,7 +104,7 @@ static void verify_subloops_backedges(const Loop& subloop,
 bool Loop::find_loops_in_scc(
   Function* function, const std::vector<Block*>& scc_vector, const DominatorTree& dominator_tree,
   const std::unordered_map<Block*, std::unordered_set<Block*>>& predecessors,
-  SccContext& scc_context, std::vector<std::unique_ptr<Loop>>& loops) {
+  SccContext<Block*>& scc_context, std::vector<std::unique_ptr<Loop>>& loops) {
 
   Loop loop;
   loop.blocks = std::unordered_set<Block*>(scc_vector.begin(), scc_vector.end());
@@ -224,7 +230,7 @@ flugzeug::analyze_function_loops(Function* function, const DominatorTree& domina
   }
 
   std::vector<std::unique_ptr<Loop>> loops;
-  SccContext scc_context{};
+  SccContext<Block*> scc_context{};
 
   // Calculate SCCs in the whole function. These contain potential loops (which may contain
   // sub-loops).

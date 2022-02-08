@@ -13,9 +13,9 @@ memory_to_ssa
 branch_to_select
 const_propagate
 propagate_block_invariants
+minimize_phis
 
 Done only in Rust compiler:
-minimize_phis
 optimize_known_bits
 global_reorder
 deduplicate

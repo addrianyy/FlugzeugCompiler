@@ -577,7 +577,7 @@ static bool unroll_loop(Function* function, const Loop* loop, const DominatorTre
     return false;
   }
   const auto exit_condition = cast<IntCompare>(exit_instruction->get_cond());
-  if (!exit_condition) {
+  if (!exit_condition || !loop->contains_block_skipping_sub_loops(exit_condition->get_block())) {
     return false;
   }
 

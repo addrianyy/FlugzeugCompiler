@@ -8,7 +8,7 @@
 namespace flugzeug {
 
 class DominatorTree;
-struct SccContext;
+template <typename T> struct SccContext;
 
 /// Properties of the loop:
 ///   1. All blocks of the loop are strongly connected.
@@ -32,7 +32,7 @@ class Loop {
   find_loops_in_scc(Function* function, const std::vector<Block*>& scc_vector,
                     const DominatorTree& dominator_tree,
                     const std::unordered_map<Block*, std::unordered_set<Block*>>& predecessors,
-                    SccContext& scc_context, std::vector<std::unique_ptr<Loop>>& loops);
+                    SccContext<Block*>& scc_context, std::vector<std::unique_ptr<Loop>>& loops);
 
   void debug_print_internal(const std::string& indentation) const;
 
