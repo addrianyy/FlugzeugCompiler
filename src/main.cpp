@@ -10,6 +10,7 @@
 
 #include <Flugzeug/Passes/Analysis/Loops.hpp>
 #include <Flugzeug/Passes/CFGSimplification.hpp>
+#include <Flugzeug/Passes/CallInlining.hpp>
 #include <Flugzeug/Passes/ConstPropagation.hpp>
 #include <Flugzeug/Passes/DeadBlockElimination.hpp>
 #include <Flugzeug/Passes/DeadCodeElimination.hpp>
@@ -18,7 +19,6 @@
 #include <Flugzeug/Passes/LoopInvariantOptimization.hpp>
 #include <Flugzeug/Passes/LoopUnrolling.hpp>
 #include <Flugzeug/Passes/MemoryToSSA.hpp>
-#include <Flugzeug/Passes/Utils/Inline.hpp>
 
 #include <turboc/IRGenerator.hpp>
 #include <turboc/Parser.hpp>
@@ -63,28 +63,11 @@ static void test_validation(Context& context) {
   m->destroy();
 }
 
-static bool inline_all(Function* f) {
-  std::vector<Call*> inlinable_calls;
-
-  for (Call& call : f->instructions<Call>()) {
-    Function* callee = call.get_callee();
-    if (!callee->is_extern() && callee != f) {
-      inlinable_calls.push_back(&call);
-    }
-  }
-
-  for (Call* call : inlinable_calls) {
-    flugzeug::utils::inline_call(call);
-  }
-
-  return !inlinable_calls.empty();
-}
-
 static void optimize_function(Function* f) {
   while (true) {
     bool did_something = false;
 
-    did_something |= inline_all(f);
+    did_something |= CallInlining::run(f, InliningStrategy::InlineEverything);
     did_something |= CFGSimplification::run(f);
     did_something |= MemoryToSSA::run(f);
     did_something |= DeadCodeElimination::run(f);
