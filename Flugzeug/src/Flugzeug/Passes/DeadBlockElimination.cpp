@@ -7,7 +7,7 @@
 
 using namespace flugzeug;
 
-void DeadBlockElimination::destroy_dead_block(Block* block) {
+static void destroy_dead_block(Block* block) {
   // Remove all instructions from this block.
   block->clear();
 

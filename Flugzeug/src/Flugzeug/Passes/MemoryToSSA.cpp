@@ -7,7 +7,7 @@
 
 using namespace flugzeug;
 
-bool MemoryToSSA::is_stackalloc_optimizable(const StackAlloc* stackalloc) {
+static bool is_stackalloc_optimizable(const StackAlloc* stackalloc) {
   // We cannot optimize out arrays.
   if (stackalloc->get_size() != 1) {
     return false;
@@ -27,7 +27,7 @@ bool MemoryToSSA::is_stackalloc_optimizable(const StackAlloc* stackalloc) {
   return true;
 }
 
-std::vector<StackAlloc*> MemoryToSSA::find_optimizable_stackallocs(Function* function) {
+static std::vector<StackAlloc*> find_optimizable_stackallocs(Function* function) {
   std::vector<StackAlloc*> stackallocs;
 
   for (StackAlloc& stackalloc : function->instructions<StackAlloc>()) {
@@ -39,8 +39,8 @@ std::vector<StackAlloc*> MemoryToSSA::find_optimizable_stackallocs(Function* fun
   return stackallocs;
 }
 
-Value* MemoryToSSA::get_value_for_first_use(Block* block, StackAlloc* stackalloc,
-                                            std::vector<Phi*>& inserted_phis) {
+static Value* get_value_for_first_use(Block* block, StackAlloc* stackalloc,
+                                      std::vector<Phi*>& inserted_phis) {
   const auto type = stackalloc->get_allocated_type();
 
   if (block->is_entry_block()) {
@@ -55,7 +55,7 @@ Value* MemoryToSSA::get_value_for_first_use(Block* block, StackAlloc* stackalloc
   }
 }
 
-void MemoryToSSA::optimize_stackalloc(StackAlloc* stackalloc) {
+static void optimize_stackalloc(StackAlloc* stackalloc) {
   std::unordered_map<Block*, Value*> block_values;
   std::vector<Phi*> inserted_phis;
 

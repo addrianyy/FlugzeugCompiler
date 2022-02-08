@@ -7,8 +7,7 @@
 
 using namespace flugzeug;
 
-bool DeadCodeElimination::try_to_eliminate(Instruction* instruction,
-                                           std::vector<Instruction*>& worklist) {
+static bool try_to_eliminate(Instruction* instruction, std::vector<Instruction*>& worklist) {
   // Skip instructions which cannot be eliminated.
   if (instruction->is_void() || instruction->is_volatile() ||
       instruction->get_user_count_excluding_self() > 0) {

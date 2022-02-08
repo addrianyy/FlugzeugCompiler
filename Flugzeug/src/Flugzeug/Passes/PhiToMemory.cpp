@@ -8,7 +8,7 @@
 
 using namespace flugzeug;
 
-void PhiToMemory::convert_phi_to_memory(Phi* phi) {
+static void convert_phi_to_memory(Phi* phi) {
   if (utils::simplify_phi(phi, true)) {
     return;
   }

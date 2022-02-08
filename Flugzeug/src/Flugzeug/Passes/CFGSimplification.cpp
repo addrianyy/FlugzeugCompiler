@@ -7,7 +7,7 @@
 
 using namespace flugzeug;
 
-Block* CFGSimplification::get_intermediate_block_target(Block* block) {
+static Block* get_intermediate_block_target(Block* block) {
   if (block->get_instruction_count() != 1) {
     return nullptr;
   }
@@ -24,8 +24,7 @@ Block* CFGSimplification::get_intermediate_block_target(Block* block) {
   return nullptr;
 }
 
-bool CFGSimplification::do_phis_depend_on_predecessors(const Block* block, const Block* p1,
-                                                       const Block* p2) {
+static bool do_phis_depend_on_predecessors(const Block* block, const Block* p1, const Block* p2) {
   verify(p1 != p2 && block != p1 && block != p2, "Invalid blocks");
 
   for (const Phi& phi : block->instructions<Phi>()) {
@@ -40,7 +39,7 @@ bool CFGSimplification::do_phis_depend_on_predecessors(const Block* block, const
   return false;
 }
 
-Block* CFGSimplification::thread_jump(Block* block, Block* target, bool* did_something) {
+static Block* thread_jump(Block* block, Block* target, bool* did_something) {
   if (block == target) {
     return nullptr;
   }
@@ -62,7 +61,7 @@ Block* CFGSimplification::thread_jump(Block* block, Block* target, bool* did_som
   return nullptr;
 }
 
-bool CFGSimplification::thread_jumps(Function* function) {
+static bool thread_jumps(Function* function) {
   bool did_something = false;
 
   for (Block& block : *function) {
@@ -93,7 +92,7 @@ bool CFGSimplification::thread_jumps(Function* function) {
   return did_something;
 }
 
-bool CFGSimplification::merge_blocks(Function* function) {
+static bool merge_blocks(Function* function) {
   bool did_something = false;
 
   for (Block& block : dont_invalidate_current(*function)) {
