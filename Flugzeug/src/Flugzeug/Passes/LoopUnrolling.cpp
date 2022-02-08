@@ -176,7 +176,7 @@ order_loop_count_related_instructions(const Loop* loop,
     Block* block = stack.back();
     stack.pop_back();
 
-    // Ignore already seen instructions.
+    // Ignore already seen blocks.
     if (visited.contains(block)) {
       continue;
     }

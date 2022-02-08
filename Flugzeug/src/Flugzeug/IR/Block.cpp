@@ -9,12 +9,16 @@
 
 using namespace flugzeug;
 
-template <typename TBlock> TBlock* get_single_predecessor_generic(TBlock* block) {
+template <typename TBlock, bool IncludeSelf> TBlock* get_single_predecessor_generic(TBlock* block) {
   TBlock* predecessor = nullptr;
 
   for (auto& instruction : block->users<Instruction>()) {
     if (instruction.is_branching()) {
       const auto instruction_block = instruction.get_block();
+
+      if (!IncludeSelf && instruction_block == block) {
+        continue;
+      }
 
       if (!predecessor) {
         predecessor = instruction_block;
@@ -267,10 +271,10 @@ bool Block::has_predecessor(const Block* predecessor) const {
   return false;
 }
 
-Block* Block::get_single_predecessor() { return get_single_predecessor_generic<Block>(this); }
+Block* Block::get_single_predecessor() { return get_single_predecessor_generic<Block, true>(this); }
 
 const Block* Block::get_single_predecessor() const {
-  return get_single_predecessor_generic<const Block>(this);
+  return get_single_predecessor_generic<const Block, true>(this);
 }
 
 BlockTargets<Block> Block::successors() {

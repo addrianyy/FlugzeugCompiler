@@ -3,7 +3,6 @@ i32 factorial(i32 n) {
 	
 	for (i32 i = 1; i <= n; i += 1) {
 		result *= i;
-		for (i32 j = 0; j < i; j += 1) { result += j; }
 	}
 	
 	return result;

@@ -15,6 +15,7 @@
 #include <Flugzeug/Passes/DeadCodeElimination.hpp>
 #include <Flugzeug/Passes/InstructionSimplification.hpp>
 #include <Flugzeug/Passes/LocalReordering.hpp>
+#include <Flugzeug/Passes/LoopInvariantOptimization.hpp>
 #include <Flugzeug/Passes/LoopUnrolling.hpp>
 #include <Flugzeug/Passes/MemoryToSSA.hpp>
 #include <Flugzeug/Passes/Utils/Inline.hpp>
@@ -66,7 +67,8 @@ static bool inline_all(Function* f) {
   std::vector<Call*> inlinable_calls;
 
   for (Call& call : f->instructions<Call>()) {
-    if (!call.get_callee()->is_extern()) {
+    Function* callee = call.get_callee();
+    if (!callee->is_extern() && callee != f) {
       inlinable_calls.push_back(&call);
     }
   }
@@ -91,6 +93,7 @@ static void optimize_function(Function* f) {
     did_something |= DeadBlockElimination::run(f);
     did_something |= LocalReordering::run(f);
     did_something |= LoopUnrolling::run(f);
+    did_something |= LoopInvariantOptimization::run(f);
 
     if (!did_something) {
       f->reassign_display_indices();
@@ -116,7 +119,7 @@ int main() {
 
   Context context;
 
-  const auto parsed_source = turboc::Parser::parse_from_file("Tests/main.tc");
+  const auto parsed_source = turboc::Parser::parse_from_file("Tests/test_invariant.tc");
   const auto module = turboc::IRGenerator::generate(&context, parsed_source);
 
   for (Function& f : module->local_functions()) {
