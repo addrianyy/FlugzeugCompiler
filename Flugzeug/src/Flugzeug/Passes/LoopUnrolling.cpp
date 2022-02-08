@@ -116,10 +116,10 @@ static bool get_loop_count_related_instructions(Instruction* instruction,
     instructions.insert(instruction);
 
     // Save information about this Phi as it will be used by the loop interpreter.
-    LoopPhi loop_phi{};
-    loop_phi.first_iteration_value = first_iteration_value;
-    loop_phi.previous_iteration_value = previous_iteration_value;
-    loop_phis[phi] = loop_phi;
+    loop_phis[phi] = LoopPhi{
+      .first_iteration_value = first_iteration_value,
+      .previous_iteration_value = previous_iteration_value,
+    };
 
     // If previous iteration value comes from the instruction we need to process it aswell.
     if (const auto prev_iteration_instruction = cast<Instruction>(previous_iteration_value)) {

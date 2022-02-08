@@ -11,6 +11,7 @@
 #include <Flugzeug/Passes/Analysis/Loops.hpp>
 #include <Flugzeug/Passes/CFGSimplification.hpp>
 #include <Flugzeug/Passes/CallInlining.hpp>
+#include <Flugzeug/Passes/ConditionalFlattening.hpp>
 #include <Flugzeug/Passes/ConstPropagation.hpp>
 #include <Flugzeug/Passes/DeadBlockElimination.hpp>
 #include <Flugzeug/Passes/DeadCodeElimination.hpp>
@@ -77,6 +78,7 @@ static void optimize_function(Function* f) {
     did_something |= LocalReordering::run(f);
     did_something |= LoopUnrolling::run(f);
     did_something |= LoopInvariantOptimization::run(f);
+    did_something |= ConditionalFlattening::run(f);
 
     if (!did_something) {
       f->reassign_display_indices();
@@ -102,7 +104,7 @@ int main() {
 
   Context context;
 
-  const auto parsed_source = turboc::Parser::parse_from_file("Tests/test_invariant.tc");
+  const auto parsed_source = turboc::Parser::parse_from_file("Tests/test_flatten.tc");
   const auto module = turboc::IRGenerator::generate(&context, parsed_source);
 
   for (Function& f : module->local_functions()) {

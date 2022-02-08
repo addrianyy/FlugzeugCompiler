@@ -9,16 +9,27 @@
 
 using namespace flugzeug;
 
-template <typename TBlock, bool IncludeSelf> TBlock* get_single_predecessor_generic(TBlock* block) {
+template <typename TBlock> TBlock* get_single_successor_generic(TBlock* block) {
+  if (const auto branch = cast<Branch>(block->get_last_instruction())) {
+    return branch->get_target();
+  } else if (const auto cond_branch = cast<CondBranch>(block->get_last_instruction())) {
+    const auto on_true = cond_branch->get_true_target();
+    const auto on_false = cond_branch->get_false_target();
+
+    if (on_true == on_false) {
+      return on_true;
+    }
+  }
+
+  return nullptr;
+}
+
+template <typename TBlock> TBlock* get_single_predecessor_generic(TBlock* block) {
   TBlock* predecessor = nullptr;
 
   for (auto& instruction : block->users<Instruction>()) {
     if (instruction.is_branching()) {
       const auto instruction_block = instruction.get_block();
-
-      if (!IncludeSelf && instruction_block == block) {
-        continue;
-      }
 
       if (!predecessor) {
         predecessor = instruction_block;
@@ -271,10 +282,16 @@ bool Block::has_predecessor(const Block* predecessor) const {
   return false;
 }
 
-Block* Block::get_single_predecessor() { return get_single_predecessor_generic<Block, true>(this); }
+Block* Block::get_single_successor() { return get_single_successor_generic<Block>(this); }
+
+const Block* Block::get_single_successor() const {
+  return get_single_successor_generic<const Block>(this);
+}
+
+Block* Block::get_single_predecessor() { return get_single_predecessor_generic<Block>(this); }
 
 const Block* Block::get_single_predecessor() const {
-  return get_single_predecessor_generic<const Block, true>(this);
+  return get_single_predecessor_generic<const Block>(this);
 }
 
 BlockTargets<Block> Block::successors() {

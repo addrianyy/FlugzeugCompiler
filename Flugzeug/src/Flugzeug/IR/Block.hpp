@@ -134,6 +134,9 @@ public:
   bool has_successor(const Block* successor) const;
   bool has_predecessor(const Block* predecessor) const;
 
+  Block* get_single_successor();
+  const Block* get_single_successor() const;
+
   Block* get_single_predecessor();
   const Block* get_single_predecessor() const;
 

@@ -1,0 +1,22 @@
+i32 test_symmetric(i32 x) {
+    i32 result;
+    if (x > 10) {
+        result = x + 4;
+    } else {
+        result = x - 888;
+        result *= 2;
+    }
+
+    return result;
+}
+
+i32 test_non_symmetric(i32 x) {
+    i32 result;
+    if (x > 10) {
+        result = x;
+    } else {
+        result = x - 888;
+    }
+
+    return result;
+}
