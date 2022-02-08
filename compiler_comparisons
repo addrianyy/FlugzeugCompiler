@@ -1,0 +1,28 @@
+Done in both compilers:
+undefined_propagate
+simplify_expressions
+simplify_compares
+simplify_cfg
+rewrite_values
+reorder
+remove_nops
+remove_ineffective_operations
+remove_dead_code
+remove_aliases
+memory_to_ssa
+branch_to_select
+const_propagate
+
+Done only in Rust compiler:
+minimize_phis
+optimize_known_bits
+propagate_block_invariants
+global_reorder
+deduplicate
+remove_dead_stores
+remove_known_loads
+
+Done only in C++ compiler:
+loop unrolling
+loop invariant optimization
+call inlining
