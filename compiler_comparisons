@@ -12,11 +12,11 @@ remove_aliases
 memory_to_ssa
 branch_to_select
 const_propagate
+propagate_block_invariants
 
 Done only in Rust compiler:
 minimize_phis
 optimize_known_bits
-propagate_block_invariants
 global_reorder
 deduplicate
 remove_dead_stores
