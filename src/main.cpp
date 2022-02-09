@@ -152,7 +152,7 @@ int main() {
 
   Context context;
 
-  const auto parsed_source = turboc::Parser::parse_from_file("Tests/test_block_invariant.tc");
+  const auto parsed_source = turboc::Parser::parse_from_file("Tests/main.tc");
   const auto module = turboc::IRGenerator::generate(&context, parsed_source);
 
   for (Function& f : module->local_functions()) {

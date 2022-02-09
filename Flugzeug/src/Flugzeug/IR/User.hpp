@@ -9,6 +9,8 @@
 
 namespace flugzeug {
 
+class Block;
+
 class User : public Value {
   DEFINE_INSTANCEOF_RANGE(Value, Value::Kind::UserBegin, Value::Kind::UserEnd)
 
@@ -73,6 +75,33 @@ public:
 
   bool uses_value(Value* value) const;
   void replace_operands(Value* old_value, Value* new_value);
+
+  template <typename Fn> void transform_operands(Fn&& transform) {
+    std::vector<Block*> new_blocks;
+    const auto phi = is_phi();
+
+    for (size_t i = 0; i < get_operand_count(); ++i) {
+      Value* operand = used_operands[i];
+      Value* new_operand = transform(operand);
+      if (new_operand && new_operand != operand) {
+        verify(operand->is_same_type_as(new_operand),
+               "Cannot replace operands with value of different type");
+        set_operand(i, new_operand);
+
+        if (phi) {
+          if (const auto block = cast_to_block(new_operand)) {
+            new_blocks.push_back(block);
+          }
+        }
+      }
+    }
+
+    if (!new_blocks.empty()) {
+      for (Block* block : new_blocks) {
+        deduplicate_phi_incoming_blocks(block, this);
+      }
+    }
+  }
 
   using OperandIterator = OperandIteratorInternal<Value>;
   using ConstOperandIterator = OperandIteratorInternal<const Value>;

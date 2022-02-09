@@ -6,9 +6,9 @@
 
 #include <Flugzeug/Core/Casting.hpp>
 #include <Flugzeug/Core/ClassTraits.hpp>
+#include <Flugzeug/Core/Error.hpp>
 #include <Flugzeug/Core/Iterator.hpp>
 
-#include <functional>
 #include <optional>
 #include <string>
 #include <vector>
@@ -62,9 +62,13 @@ private:
 
   size_t display_index = 0;
 
+  static Block* cast_to_block(Value* value);
+  static void set_user_operand(User* user, size_t operand_index, Value* value);
+
   void add_use(Use* use);
   void remove_use(Use* use);
 
+  bool is_phi() const;
   void deduplicate_phi_incoming_blocks(Block* block, User* user);
 
 protected:
@@ -97,7 +101,32 @@ public:
   void replace_uses_with_constant(uint64_t constant);
   void replace_uses_with_undef();
 
-  void replace_uses_with_predicated(Value* new_value, const std::function<bool(User*)>& predicate);
+  template <typename Fn> void replace_uses_with_predicated(Value* new_value, Fn&& predicate) {
+    if (this == new_value) {
+      return;
+    }
+
+    verify(!is_void(), "Cannot replace uses of void value");
+    verify(is_same_type_as(new_value), "Cannot replace value with value of different type");
+
+    const auto block = cast<Block>(new_value);
+
+    Use* current_use = uses.get_first();
+    while (current_use) {
+      Use* next_use = current_use->get_next();
+
+      User* user = current_use->get_user();
+      if (predicate(user)) {
+        set_user_operand(user, current_use->get_operand_index(), new_value);
+
+        if (block) {
+          deduplicate_phi_incoming_blocks(block, user);
+        }
+      }
+
+      current_use = next_use;
+    }
+  }
 
   bool is_zero() const;
   bool is_one() const;

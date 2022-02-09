@@ -5,6 +5,12 @@
 
 using namespace flugzeug;
 
+Block* Value::cast_to_block(Value* value) { return cast<Block>(value); }
+
+void Value::set_user_operand(User* user, size_t operand_index, Value* value) {
+  return user->set_operand(operand_index, value);
+}
+
 void Value::add_use(Use* use) {
   uses.add_use(use);
 
@@ -20,6 +26,8 @@ void Value::remove_use(Use* use) {
     user_count_excluding_self--;
   }
 }
+
+bool Value::is_phi() const { return cast<Phi>(this); }
 
 void Value::deduplicate_phi_incoming_blocks(Block* block, User* user) {
   if (const auto phi = cast<Phi>(user)) {
@@ -149,34 +157,6 @@ void Value::replace_uses_with_constant(uint64_t constant) {
 }
 
 void Value::replace_uses_with_undef() { replace_uses_with(get_type()->get_undef()); }
-
-void Value::replace_uses_with_predicated(Value* new_value,
-                                         const std::function<bool(User*)>& predicate) {
-  if (this == new_value) {
-    return;
-  }
-
-  verify(!is_void(), "Cannot replace uses of void value");
-  verify(is_same_type_as(new_value), "Cannot replace value with value of different type");
-
-  const auto block = cast<Block>(new_value);
-
-  Use* current_use = uses.get_first();
-  while (current_use) {
-    Use* next_use = current_use->get_next();
-
-    User* user = current_use->get_user();
-    if (predicate(user)) {
-      user->set_operand(current_use->get_operand_index(), new_value);
-
-      if (block) {
-        deduplicate_phi_incoming_blocks(block, user);
-      }
-    }
-
-    current_use = next_use;
-  }
-}
 
 void Constant::constrain_constant(Type* type, uint64_t c, uint64_t* u, int64_t* i) {
   const auto bit_size = type->get_bit_size();

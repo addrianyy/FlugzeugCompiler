@@ -19,26 +19,40 @@ User::~User() {
   }
 }
 
-size_t User::get_operand_count() const { return used_operands.size(); }
+void User::remove_phi_incoming_helper(size_t incoming_index) {
+  const auto incoming_count = get_operand_count() / 2;
+  const auto start_operand = incoming_index * 2;
 
-Value* User::get_operand(size_t index) {
-  verify(index < get_operand_count(), "Tried to use out of bounds operand.");
-  return used_operands[index];
-}
+  // Zero out 2 operands.
+  set_operand(start_operand + 0, nullptr);
+  set_operand(start_operand + 1, nullptr);
 
-const Value* User::get_operand(size_t index) const {
-  verify(index < get_operand_count(), "Tried to use out of bounds operand.");
-  return used_operands[index];
-}
+  if (incoming_index + 1 != incoming_count) {
+    // It's not the last index, we need to move operands.
+    // We need to be careful to not invalidate Users iterators.
 
-bool User::uses_value(Value* value) const {
-  for (size_t i = 0; i < get_operand_count(); ++i) {
-    if (used_operands[i] == value) {
-      return true;
+    Use* saved_u1 = uses_for_operands[start_operand + 0];
+    Use* saved_u2 = uses_for_operands[start_operand + 1];
+
+    const auto offset = std::ptrdiff_t(start_operand);
+    std::copy(used_operands.begin() + offset + 2, used_operands.end(),
+              used_operands.begin() + offset);
+    std::copy(uses_for_operands.begin() + offset + 2,
+              uses_for_operands.begin() + std::ptrdiff_t(get_operand_count()),
+              uses_for_operands.begin() + offset);
+
+    used_operands[get_operand_count() - 2] = nullptr;
+    used_operands[get_operand_count() - 1] = nullptr;
+
+    uses_for_operands[get_operand_count() - 2] = saved_u1;
+    uses_for_operands[get_operand_count() - 1] = saved_u2;
+
+    for (size_t i = start_operand; i < get_operand_count(); ++i) {
+      uses_for_operands[i]->operand_index = uint32_t(i);
     }
   }
 
-  return false;
+  set_operand_count(get_operand_count() - 2);
 }
 
 void User::adjust_uses_count(size_t count) {
@@ -89,43 +103,19 @@ void User::set_operand_count(size_t count) {
   adjust_uses_count(count);
 }
 
-void User::remove_phi_incoming_helper(size_t incoming_index) {
-  const auto incoming_count = get_operand_count() / 2;
-  const auto start_operand = incoming_index * 2;
+void User::grow_operand_count(size_t grow) { set_operand_count(get_operand_count() + grow); }
 
-  // Zero out 2 operands.
-  set_operand(start_operand + 0, nullptr);
-  set_operand(start_operand + 1, nullptr);
+size_t User::get_operand_count() const { return used_operands.size(); }
 
-  if (incoming_index + 1 != incoming_count) {
-    // It's not the last index, we need to move operands.
-    // We need to be careful to not invalidate Users iterators.
-
-    Use* saved_u1 = uses_for_operands[start_operand + 0];
-    Use* saved_u2 = uses_for_operands[start_operand + 1];
-
-    const auto offset = std::ptrdiff_t(start_operand);
-    std::copy(used_operands.begin() + offset + 2, used_operands.end(),
-              used_operands.begin() + offset);
-    std::copy(uses_for_operands.begin() + offset + 2,
-              uses_for_operands.begin() + std::ptrdiff_t(get_operand_count()),
-              uses_for_operands.begin() + offset);
-
-    used_operands[get_operand_count() - 2] = nullptr;
-    used_operands[get_operand_count() - 1] = nullptr;
-
-    uses_for_operands[get_operand_count() - 2] = saved_u1;
-    uses_for_operands[get_operand_count() - 1] = saved_u2;
-
-    for (size_t i = start_operand; i < get_operand_count(); ++i) {
-      uses_for_operands[i]->operand_index = uint32_t(i);
-    }
-  }
-
-  set_operand_count(get_operand_count() - 2);
+Value* User::get_operand(size_t index) {
+  verify(index < get_operand_count(), "Tried to use out of bounds operand.");
+  return used_operands[index];
 }
 
-void User::grow_operand_count(size_t grow) { set_operand_count(get_operand_count() + grow); }
+const Value* User::get_operand(size_t index) const {
+  verify(index < get_operand_count(), "Tried to use out of bounds operand.");
+  return used_operands[index];
+}
 
 void User::set_operand(size_t index, Value* operand) {
   verify(index < get_operand_count(), "Tried to use out of bounds operand.");
@@ -146,6 +136,16 @@ void User::set_operand(size_t index, Value* operand) {
   }
 
   used_operands[index] = operand;
+}
+
+bool User::uses_value(Value* value) const {
+  for (size_t i = 0; i < get_operand_count(); ++i) {
+    if (used_operands[i] == value) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 void User::replace_operands(Value* old_value, Value* new_value) {
