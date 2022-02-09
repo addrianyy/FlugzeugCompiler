@@ -76,7 +76,9 @@ public:
   bool uses_value(Value* value) const;
   void replace_operands(Value* old_value, Value* new_value);
 
-  template <typename Fn> void transform_operands(Fn&& transform) {
+  template <typename Fn> bool transform_operands(Fn&& transform) {
+    bool transformed_something = false;
+
     std::vector<Block*> new_blocks;
     const auto phi = is_phi();
 
@@ -87,6 +89,8 @@ public:
         verify(operand->is_same_type_as(new_operand),
                "Cannot replace operands with value of different type");
         set_operand(i, new_operand);
+
+        transformed_something = true;
 
         if (phi) {
           if (const auto block = cast_to_block(new_operand)) {
@@ -101,6 +105,8 @@ public:
         deduplicate_phi_incoming_blocks(block, this);
       }
     }
+
+    return transformed_something;
   }
 
   using OperandIterator = OperandIteratorInternal<Value>;

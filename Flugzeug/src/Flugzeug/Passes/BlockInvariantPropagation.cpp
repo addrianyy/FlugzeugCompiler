@@ -139,13 +139,14 @@ bool BlockInvariantPropagation::run(Function* function) {
 
     // Transform operands in the block based on calculated invariants.
     for (Instruction& instruction : *block) {
-      for (size_t i = 0; i < instruction.get_operand_count(); ++i) {
-        const auto it = final_invariants.find(instruction.get_operand(i));
+      did_something |= instruction.transform_operands([&](Value* operand) -> Value* {
+        const auto it = final_invariants.find(operand);
         if (it != final_invariants.end()) {
-          instruction.set_operand(i, it->second);
-          did_something = true;
+          return it->second;
         }
-      }
+
+        return nullptr;
+      });
     }
 
     // Set computed invariants for this block.

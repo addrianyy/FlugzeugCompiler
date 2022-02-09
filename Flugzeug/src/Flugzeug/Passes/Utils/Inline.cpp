@@ -123,9 +123,7 @@ void flugzeug::utils::inline_call(Call* call) {
       }
 
       // Replace all operands from callee values to caller values.
-      for (size_t i = 0; i < instruction.get_operand_count(); ++i) {
-        instruction.set_operand(i, inlined_function.map(instruction.get_operand(i)));
-      }
+      instruction.transform_operands([&](Value* operand) { return inlined_function.map(operand); });
     }
   }
 

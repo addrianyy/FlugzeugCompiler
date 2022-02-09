@@ -470,11 +470,7 @@ static void perform_unrolling(Function* function, const Loop* loop, Block* exit_
 
         // Make all instruction operands point to the new values that are local to this
         // unroll instance.
-        for (size_t i = 0; i < instruction.get_operand_count(); ++i) {
-          if (const auto new_value = unroll_data.map(instruction.get_operand(i))) {
-            instruction.set_operand(i, new_value);
-          }
-        }
+        instruction.transform_operands([&](Value* operand) { return unroll_data.map(operand); });
       }
     }
 
