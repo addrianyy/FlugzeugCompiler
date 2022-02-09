@@ -17,6 +17,7 @@
 #include <Flugzeug/Passes/DeadBlockElimination.hpp>
 #include <Flugzeug/Passes/DeadCodeElimination.hpp>
 #include <Flugzeug/Passes/InstructionSimplification.hpp>
+#include <Flugzeug/Passes/KnownBitsOptimization.hpp>
 #include <Flugzeug/Passes/LocalReordering.hpp>
 #include <Flugzeug/Passes/LoopInvariantOptimization.hpp>
 #include <Flugzeug/Passes/LoopUnrolling.hpp>
@@ -114,7 +115,7 @@ static void optimize_function(Function* f) {
   while (true) {
     bool did_something = false;
 
-    did_something |= CallInlining::run(f, InliningStrategy::InlineEverything);
+    //    did_something |= CallInlining::run(f, InliningStrategy::InlineEverything);
     did_something |= CFGSimplification::run(f);
     did_something |= MemoryToSSA::run(f);
     did_something |= PhiMinimization::run(f);
@@ -123,10 +124,11 @@ static void optimize_function(Function* f) {
     did_something |= InstructionSimplification::run(f);
     did_something |= DeadBlockElimination::run(f);
     did_something |= LocalReordering::run(f);
-    did_something |= LoopUnrolling::run(f);
+    //    did_something |= LoopUnrolling::run(f);
     did_something |= LoopInvariantOptimization::run(f);
     did_something |= BlockInvariantPropagation::run(f);
     did_something |= ConditionalFlattening::run(f);
+    did_something |= KnownBitsOptimization::run(f);
 
     if (!did_something) {
       f->reassign_display_indices();
@@ -152,7 +154,7 @@ int main() {
 
   Context context;
 
-  const auto parsed_source = turboc::Parser::parse_from_file("Tests/main.tc");
+  const auto parsed_source = turboc::Parser::parse_from_file("Tests/test_bits.tc");
   const auto module = turboc::IRGenerator::generate(&context, parsed_source);
 
   for (Function& f : module->local_functions()) {

@@ -1,0 +1,85 @@
+u32 optimize_1(i8 x, i8 y) {
+    i8 r = 0;
+
+    if (x == 0i8) {
+        r = x | 0x80i8;
+    } else {
+        r = y | 0x80i8;
+    }
+
+    i32 zz = r;
+
+    return zz & 0x8000i32;
+}
+
+u32 optimize_2(i32 x, i32 y) {
+    x &= ~0x80000000i32;
+    y &= ~0x80000000i32;
+
+    if (-x < y) {
+        return 22;
+    }
+
+    return 33;
+}
+
+u32 optimize_3(i32 x, i32 y) {
+    x &= ~0xFF000000i32;
+    y &= ~0xFF000000i32;
+
+    x |= 0xF0000000i32;
+    y |= 0xFF000000i32;
+
+    if (x < y) {
+        return 22;
+    }
+
+    return 33;
+}
+
+u32 optimize_4(u32 x, u32 y) {
+    i64 x2 = x;
+    i64 y2 = y;
+
+    x2 ^= (1u64 << 63);
+    y2 |= 77i64;
+
+    if (x2 > y2) {
+        return 123;
+    }
+
+    return y2 & 0b1101i64;
+}
+
+u32 optimize_5(i32 x, i32 y) {
+    x &= ~0xff;
+    x |= 0b1011;
+
+    y &= ~0xff;
+    y |= 0b0101;
+
+    return (x + y) & 0xff;
+}
+
+u32 optimize_6(u32 x, u32 y) {
+    if (x == (3 + 1 * 2)) {
+        if (x == 33u32) {
+            x = x + y;
+        } else {
+            x = 0;
+            x += 1;
+            x += 1;
+            x -= 1;
+        }
+    } else {
+        x &= 0x00u32;
+
+        i64 z = y;
+        if (z > -5) {
+            x ^= 1;
+        }
+    }
+
+
+    return (u8)x + 33u8;
+}
