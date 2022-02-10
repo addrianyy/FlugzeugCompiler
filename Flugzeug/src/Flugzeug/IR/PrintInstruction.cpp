@@ -294,7 +294,7 @@ void Call::print_instruction_compact_internal(
           SpecialItem::ParenOpen);
 
   for (size_t i = 0; i < get_arg_count(); ++i) {
-    print_possibly_inlined_value(get_arg(i), p, inlined_values);
+    print_possibly_inlined_value(get_arg(i), p, inlined_values, false);
     p.print(SpecialItem::Comma);
   }
 
@@ -309,7 +309,7 @@ void Branch::print_instruction_compact_internal(
 void CondBranch::print_instruction_compact_internal(
   IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
   p.print("bcond");
-  print_possibly_inlined_value(get_cond(), p, inlined_values);
+  print_possibly_inlined_value(get_cond(), p, inlined_values, false);
   p.print(SpecialItem::Comma, get_true_target(), SpecialItem::Comma, get_false_target());
 }
 
@@ -330,7 +330,7 @@ void Ret::print_instruction_compact_internal(
     p.print(get_context()->get_void_ty());
   } else {
     p.print(get_val()->get_type());
-    print_possibly_inlined_value(get_val(), p, inlined_values);
+    print_possibly_inlined_value(get_val(), p, inlined_values, false);
   }
 }
 

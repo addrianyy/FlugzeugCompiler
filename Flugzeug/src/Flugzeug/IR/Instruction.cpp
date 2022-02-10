@@ -27,12 +27,16 @@ BlockTargets<TBlock> get_targets_generic(TInstruction* instruction) {
 
 void Instruction::print_possibly_inlined_value(
   const Value* value, IRPrinter::LinePrinter& printer,
-  const std::unordered_set<const Value*>& inlined_values) {
+  const std::unordered_set<const Value*>& inlined_values, bool parens) {
   if (const auto instruction = cast<Instruction>(value)) {
     if (inlined_values.contains(instruction)) {
-      printer.print(IRPrinter::Item::ParenOpenExpr);
+      if (parens) {
+        printer.print(IRPrinter::Item::ParenOpenExpr);
+      }
       instruction->print_instruction_compact_internal(printer, inlined_values);
-      printer.print(IRPrinter::Item::ParenCloseExpr);
+      if (parens) {
+        printer.print(IRPrinter::Item::ParenCloseExpr);
+      }
       return;
     }
   }
