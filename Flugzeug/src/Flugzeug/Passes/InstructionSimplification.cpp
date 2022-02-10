@@ -419,6 +419,28 @@ public:
       return new IntCompare(context, lhs, IntPredicate::Equal, lhs->get_type()->get_constant(0));
     }
 
+    // cmp (x + C1), C2  =>  cmp x, C2 - C1
+    {
+      BinaryInstr* add;
+      Constant* cmp_constant;
+      if (utils::get_commutative_operation_operands(int_compare, add, cmp_constant) &&
+          add->is(BinaryOp::Add)) {
+        Value* other;
+        Constant* added_constant;
+        if (utils::get_commutative_operation_operands(add, other, added_constant)) {
+          const auto new_constant = cmp_constant->get_type()->get_constant(
+            cmp_constant->get_constant_u() - added_constant->get_constant_u());
+
+          int_compare->replace_operands(add, other);
+          int_compare->replace_operands(cmp_constant, new_constant);
+
+          add->destroy_if_unused();
+
+          return OptimizationResult::changed();
+        }
+      }
+    }
+
     return OptimizationResult::unchanged();
   }
 
