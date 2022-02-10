@@ -68,6 +68,12 @@ public:
   const Value* get_val() const { return get_operand(0); }
 
   void set_val(Value* val) { return set_operand(0, val); }
+  void set_op(UnaryOp new_op) { op = new_op; }
+
+  void set_new_operands(UnaryOp new_op, Value* val) {
+    set_op(new_op);
+    set_val(val);
+  }
 
   Instruction* clone() override { return new UnaryInstr(get_context(), get_op(), get_val()); }
 
@@ -102,6 +108,13 @@ public:
 
   void set_lhs(Value* lhs) { return set_operand(0, lhs); }
   void set_rhs(Value* rhs) { return set_operand(1, rhs); }
+  void set_op(BinaryOp new_op) { op = new_op; }
+
+  void set_new_operands(Value* lhs, BinaryOp new_op, Value* rhs) {
+    set_lhs(lhs);
+    set_op(new_op);
+    set_rhs(rhs);
+  }
 
   Instruction* clone() override {
     return new BinaryInstr(get_context(), get_lhs(), get_op(), get_rhs());
@@ -142,6 +155,12 @@ public:
   void set_rhs(Value* rhs) { return set_operand(1, rhs); }
   void set_pred(IntPredicate new_pred) { pred = new_pred; }
 
+  void set_new_operands(Value* lhs, IntPredicate new_pred, Value* rhs) {
+    set_lhs(lhs);
+    set_pred(new_pred);
+    set_rhs(rhs);
+  }
+
   Instruction* clone() override {
     return new IntCompare(get_context(), get_lhs(), get_pred(), get_rhs());
   }
@@ -171,6 +190,8 @@ public:
 
   void set_ptr(Value* ptr) { return set_operand(0, ptr); }
 
+  void set_new_operands(Value* ptr) { set_ptr(ptr); }
+
   Instruction* clone() override { return new Load(get_context(), get_ptr()); }
 
 protected:
@@ -199,6 +220,11 @@ public:
 
   void set_ptr(Value* ptr) { return set_operand(0, ptr); }
   void set_val(Value* val) { return set_operand(1, val); }
+
+  void set_new_operands(Value* ptr, Value* val) {
+    set_ptr(ptr);
+    set_val(val);
+  }
 
   Instruction* clone() override { return new Store(get_context(), get_ptr(), get_val()); }
 
@@ -254,6 +280,8 @@ public:
 
   void set_target(Block* target) { set_operand(0, target); }
 
+  void set_new_operands(Block* target) { set_target(target); }
+
   Instruction* clone() override { return new Branch(get_context(), get_target()); }
 
 protected:
@@ -290,6 +318,12 @@ public:
   void set_cond(Value* cond) { set_operand(0, cond); }
   void set_true_target(Block* true_target) { set_operand(1, true_target); }
   void set_false_target(Block* false_target) { set_operand(2, false_target); }
+
+  void set_new_operands(Value* cond, Block* true_target, Block* false_target) {
+    set_cond(cond);
+    set_true_target(true_target);
+    set_false_target(false_target);
+  }
 
   Instruction* clone() override {
     return new CondBranch(get_context(), get_cond(), get_true_target(), get_false_target());
@@ -347,6 +381,8 @@ public:
     return set_operand(0, val);
   }
 
+  void set_new_operands(Value* val) { set_val(val); }
+
   Instruction* clone() override { return new Ret(get_context(), get_val()); }
 
 protected:
@@ -376,6 +412,11 @@ public:
   void set_base(Value* base) { return set_operand(0, base); }
   void set_index(Value* index) { return set_operand(1, index); }
 
+  void set_new_operands(Value* base, Value* index) {
+    set_base(base);
+    set_index(index);
+  }
+
   Instruction* clone() override { return new Offset(get_context(), get_base(), get_index()); }
 
 protected:
@@ -404,6 +445,7 @@ public:
   const Value* get_val() const { return get_operand(0); }
 
   void set_val(Value* val) { return set_operand(0, val); }
+  void set_cast_kind(CastKind new_cast_kind) { cast_kind = new_cast_kind; }
 
   Instruction* clone() override {
     return new Cast(get_context(), get_val(), get_cast_kind(), get_type());
@@ -443,6 +485,12 @@ public:
   void set_cond(Value* cond) { return set_operand(0, cond); }
   void set_true_val(Value* true_val) { return set_operand(1, true_val); }
   void set_false_val(Value* false_val) { return set_operand(2, false_val); }
+
+  void set_new_operands(Value* cond, Value* true_val, Value* false_val) {
+    set_cond(cond);
+    set_true_val(false_val);
+    set_false_val(false_val);
+  }
 
   Instruction* clone() override {
     return new Select(get_context(), get_cond(), get_true_val(), get_false_val());

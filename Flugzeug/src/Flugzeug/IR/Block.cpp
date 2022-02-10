@@ -266,6 +266,11 @@ void Block::destroy() {
   IntrusiveNode::destroy();
 }
 
+void Block::clear_and_destroy() {
+  clear();
+  destroy();
+}
+
 void Block::replace_incoming_blocks_in_phis(const Block* old_incoming, Block* new_incoming) {
   if (is_entry_block()) {
     return;

@@ -119,6 +119,7 @@ public:
 
   void clear();
   void destroy();
+  void clear_and_destroy();
 
   void replace_incoming_blocks_in_phis(const Block* old_incoming, Block* new_incoming);
 

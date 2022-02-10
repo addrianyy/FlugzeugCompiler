@@ -382,9 +382,7 @@ public:
 
     // Canonicalize `cmp const, non-const` to `cmp non-const, const`.
     if (cast<Constant>(lhs) && !cast<Constant>(rhs)) {
-      int_compare->set_lhs(rhs);
-      int_compare->set_rhs(lhs);
-      int_compare->set_pred(IntCompare::swapped_order_predicate(pred));
+      int_compare->set_new_operands(rhs, IntCompare::swapped_order_predicate(pred), lhs);
 
       return OptimizationResult::changed();
     }
