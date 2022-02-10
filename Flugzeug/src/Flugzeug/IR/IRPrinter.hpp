@@ -10,6 +10,11 @@ namespace flugzeug {
 class Value;
 class Block;
 
+enum class IRPrintingMethod {
+  Standard,
+  Compact,
+};
+
 class IRPrinter {
 public:
   class LinePrinter {
@@ -29,9 +34,19 @@ public:
       ParenClose,
       BracketOpen,
       BracketClose,
+      ParenOpenExpr,
+      ParenCloseExpr,
     };
 
     struct NonKeywordWord {
+      std::string_view text;
+    };
+
+    struct BinaryMathSymbol {
+      std::string_view text;
+    };
+
+    struct UnaryMathSymbol {
       std::string_view text;
     };
 
@@ -46,6 +61,8 @@ public:
     void item(size_t num);
     void item(SpecialItem special);
     void item(NonKeywordWord word);
+    void item(BinaryMathSymbol symbol);
+    void item(UnaryMathSymbol symbol);
 
   public:
     explicit LinePrinter(IRPrinter* printer) : ir_printer(printer) {}
@@ -80,6 +97,8 @@ protected:
 public:
   using Item = LinePrinter::SpecialItem;
   using NonKeywordWord = LinePrinter::NonKeywordWord;
+  using BinaryMathSymbol = LinePrinter::BinaryMathSymbol;
+  using UnaryMathSymbol = LinePrinter::UnaryMathSymbol;
 
   virtual ~IRPrinter() = default;
 

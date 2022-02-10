@@ -27,6 +27,14 @@ constexpr std::string_view box_border = "BBBBBB";
 
 } // namespace colors
 
+static void replace_occurrences(std::string& string, std::string_view from, std::string_view to) {
+  size_t start_pos = 0;
+  while ((start_pos = string.find(from, start_pos)) != std::string::npos) {
+    string.replace(start_pos, from.length(), to);
+    start_pos += to.length();
+  }
+}
+
 class GraphPrinter : public IRPrinter {
   std::stringstream stream;
   bool colors;
@@ -35,10 +43,15 @@ class GraphPrinter : public IRPrinter {
   bool in_bold_block = false;
 
 public:
-  void write_string(std::string_view string) override {
-    if (string == "\n") {
+  void write_string(std::string_view s) override {
+    if (s == "\n") {
       return;
     }
+
+    std::string string = std::string(s);
+    replace_occurrences(string, "&", "&amp;");
+    replace_occurrences(string, "<", "&lt;");
+    replace_occurrences(string, ">", "&gt;");
 
     bool restore_color = false;
 
@@ -96,7 +109,8 @@ public:
   std::string str() const { return stream.str(); }
 };
 
-void Function::generate_dot_graph_source(std::ostream& output, bool colors) const {
+void Function::generate_dot_graph_source(std::ostream& output, bool colors,
+                                         IRPrintingMethod method) const {
   output << "digraph G {\n";
   output << fmt::format("bgcolor=\"#{}\"\n", colors::background);
 
@@ -123,9 +137,21 @@ void Function::generate_dot_graph_source(std::ostream& output, bool colors) cons
       "{} [margin=0.15 shape=box fontname=Consolas color=\"#{}\" label=<{}<br/><br/>",
       block.format(), colors::box_border, block_title);
 
+    std::unordered_set<const Value*> inlined;
+    if (method == IRPrintingMethod::Compact) {
+      inlined = block.get_inlineable_values_created_in_block();
+    }
+
     for (const Instruction& instruction : block) {
       GraphPrinter printer(colors);
-      instruction.print(printer);
+
+      if (method == IRPrintingMethod::Standard) {
+        instruction.print(printer);
+      } else {
+        if (!instruction.print_compact(printer, inlined)) {
+          continue;
+        }
+      }
 
       output << printer.str() << "<br align=\"left\" />";
     }
@@ -152,7 +178,7 @@ void Function::generate_dot_graph_source(std::ostream& output, bool colors) cons
   output << "}\n";
 }
 
-void Function::generate_graph(const std::string& graph_path) const {
+void Function::generate_graph(const std::string& graph_path, IRPrintingMethod method) const {
   std::string format;
   {
     const auto last_dot = graph_path.rfind('.');
@@ -161,7 +187,7 @@ void Function::generate_graph(const std::string& graph_path) const {
   }
 
   std::stringstream stream;
-  generate_dot_graph_source(stream, true);
+  generate_dot_graph_source(stream, true, method);
 
   const std::string command_line = fmt::format(R"(-T{} -o "{}")", format, graph_path);
 

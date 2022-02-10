@@ -84,7 +84,7 @@ ValidationResults Function::validate(ValidationBehaviour behaviour) const {
   return ValidationResults({});
 }
 
-void Function::print(IRPrinter& printer) const {
+void Function::print(IRPrinter& printer, IRPrintingMethod method) const {
   print_prototype(printer, true);
 
   if (!is_extern()) {
@@ -104,7 +104,7 @@ void Function::print(IRPrinter& printer) const {
     }
 
     for (const Block* block : printing_order) {
-      block->print(printer);
+      block->print(printer, method);
 
       if (block != printing_order.back()) {
         printer.newline();
@@ -115,9 +115,9 @@ void Function::print(IRPrinter& printer) const {
   }
 }
 
-void Function::print() const {
+void Function::print(IRPrintingMethod method) const {
   ConsolePrinter printer(ConsolePrinter::Variant::ColorfulIfSupported);
-  print(printer);
+  print(printer, method);
 }
 
 void Function::debug_print() const {

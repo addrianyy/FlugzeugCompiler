@@ -174,21 +174,69 @@ Block::~Block() {
   verify(!get_function(), "Cannot remove block that is attached to the function.");
 }
 
-void Block::print(IRPrinter& printer) const {
+std::unordered_set<const Value*> Block::get_inlineable_values_created_in_block() const {
+  std::unordered_set<const Value*> inlineable;
+
+  for (const Instruction& instruction : *this) {
+    if (instruction.is_void() || instruction.is_volatile() || cast<Load>(instruction) ||
+        cast<Phi>(instruction) || cast<StackAlloc>(instruction)) {
+      continue;
+    }
+
+    if (instruction.get_user_count() == 0 || instruction.get_user_count() > 3) {
+      continue;
+    }
+
+    bool non_inlineable = false;
+
+    for (const Instruction& user : instruction.users<Instruction>()) {
+      if (user.get_block() != this) {
+        non_inlineable = true;
+        break;
+      }
+    }
+
+    if (non_inlineable) {
+      continue;
+    }
+
+    inlineable.insert(&instruction);
+  }
+
+  return inlineable;
+}
+
+void Block::print(IRPrinter& printer, IRPrintingMethod method) const {
   {
     auto p = printer.create_line_printer();
     p.print(this, IRPrinter::Item::Colon);
   }
 
-  for (const Instruction& instruction : instruction_list) {
-    printer.tab();
-    instruction.print(printer);
+  if (method == IRPrintingMethod::Standard) {
+    for (const Instruction& instruction : instruction_list) {
+      printer.tab();
+      instruction.print(printer);
+    }
+  } else {
+    print_compact(printer, get_inlineable_values_created_in_block());
   }
 }
 
-void Block::print() const {
+void Block::print_compact(IRPrinter& printer,
+                          const std::unordered_set<const Value*>& inlined) const {
+  for (const Instruction& instruction : instruction_list) {
+    if (inlined.contains(&instruction)) {
+      continue;
+    }
+
+    printer.tab();
+    instruction.print_compact(printer, inlined);
+  }
+}
+
+void Block::print(IRPrintingMethod method) const {
   ConsolePrinter printer(ConsolePrinter::Variant::ColorfulIfSupported);
-  print(printer);
+  print(printer, method);
 }
 
 void Block::debug_print() const {

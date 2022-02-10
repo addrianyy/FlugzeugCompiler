@@ -50,8 +50,11 @@ class Block : public Value, public IntrusiveNode<Block, Function> {
 public:
   ~Block() override;
 
-  void print(IRPrinter& printer) const;
-  void print() const;
+  std::unordered_set<const Value*> get_inlineable_values_created_in_block() const;
+
+  void print(IRPrinter& printer, IRPrintingMethod method = IRPrintingMethod::Standard) const;
+  void print(IRPrintingMethod method = IRPrintingMethod::Standard) const;
+  void print_compact(IRPrinter& printer, const std::unordered_set<const Value*>& inlined) const;
   void debug_print() const;
 
 #pragma region instruction_list

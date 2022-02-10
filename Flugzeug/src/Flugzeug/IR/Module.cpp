@@ -23,9 +23,9 @@ Module::~Module() {
   context->decrease_refcount();
 }
 
-void Module::print(IRPrinter& printer) const {
+void Module::print(IRPrinter& printer, IRPrintingMethod method) const {
   for (const Function& function : *this) {
-    function.print(printer);
+    function.print(printer, method);
 
     if (function.get_next()) {
       printer.newline();
@@ -33,9 +33,9 @@ void Module::print(IRPrinter& printer) const {
   }
 }
 
-void Module::print() const {
+void Module::print(IRPrintingMethod method) const {
   ConsolePrinter printer(ConsolePrinter::Variant::ColorfulIfSupported);
-  print(printer);
+  print(printer, method);
 }
 
 void Module::destroy() {

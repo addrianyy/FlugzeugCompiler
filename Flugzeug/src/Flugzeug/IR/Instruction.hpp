@@ -4,6 +4,8 @@
 
 #include <Flugzeug/Core/IntrusiveLinkedList.hpp>
 
+#include <unordered_set>
+
 namespace flugzeug {
 
 class Block;
@@ -46,7 +48,13 @@ class Instruction : public User, public IntrusiveNode<Instruction, Block> {
 protected:
   using User::User;
 
+  static void print_possibly_inlined_value(const Value* value, IRPrinter::LinePrinter& printer,
+                                           const std::unordered_set<const Value*>& inlined_values);
+
   virtual void print_instruction_internal(IRPrinter::LinePrinter& printer) const = 0;
+  virtual void print_instruction_compact_internal(
+    IRPrinter::LinePrinter& printer,
+    const std::unordered_set<const Value*>& inlined_values) const = 0;
 
 public:
   using IntrusiveNode::insert_after;
@@ -60,6 +68,9 @@ public:
   using IntrusiveNode::unlink;
 
   virtual Instruction* clone() = 0;
+
+  bool print_compact(IRPrinter& printer,
+                     const std::unordered_set<const Value*>& inlined_values) const;
 
   void print(IRPrinter& printer) const;
   void print() const;

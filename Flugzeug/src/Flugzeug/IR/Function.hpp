@@ -99,7 +99,8 @@ class Function : public Value, public IntrusiveNode<Function, Module> {
   void on_removed_node(Block* block);
 
   void print_prototype(IRPrinter& printer, bool end_line) const;
-  void generate_dot_graph_source(std::ostream& output, bool colors) const;
+  void generate_dot_graph_source(std::ostream& output, bool colors,
+                                 IRPrintingMethod method = IRPrintingMethod::Standard) const;
 
   void insert_block(Block* block);
 
@@ -111,11 +112,12 @@ public:
 
   ValidationResults validate(ValidationBehaviour behaviour) const;
 
-  void print(IRPrinter& printer) const;
-  void print() const;
+  void print(IRPrinter& printer, IRPrintingMethod method = IRPrintingMethod::Standard) const;
+  void print(IRPrintingMethod method = IRPrintingMethod::Standard) const;
   void debug_print() const;
 
-  void generate_graph(const std::string& graph_path) const;
+  void generate_graph(const std::string& graph_path,
+                      IRPrintingMethod method = IRPrintingMethod::Standard) const;
   void debug_graph() const;
 
 #pragma region block_list

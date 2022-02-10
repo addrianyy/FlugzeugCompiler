@@ -73,6 +73,9 @@ public:
 
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
+  void print_instruction_compact_internal(
+    IRPrinter::LinePrinter& printer,
+    const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
 class BinaryInstr : public Instruction {
@@ -108,6 +111,9 @@ public:
 
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
+  void print_instruction_compact_internal(
+    IRPrinter::LinePrinter& printer,
+    const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
 class IntCompare : public Instruction {
@@ -145,6 +151,9 @@ public:
 
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
+  void print_instruction_compact_internal(
+    IRPrinter::LinePrinter& printer,
+    const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
 class Load : public Instruction {
@@ -166,6 +175,9 @@ public:
 
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
+  void print_instruction_compact_internal(
+    IRPrinter::LinePrinter& printer,
+    const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
 class Store : public Instruction {
@@ -192,6 +204,9 @@ public:
 
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
+  void print_instruction_compact_internal(
+    IRPrinter::LinePrinter& printer,
+    const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
 class Call : public Instruction {
@@ -219,6 +234,9 @@ public:
 
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
+  void print_instruction_compact_internal(
+    IRPrinter::LinePrinter& printer,
+    const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
 class Branch : public Instruction {
@@ -240,6 +258,9 @@ public:
 
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
+  void print_instruction_compact_internal(
+    IRPrinter::LinePrinter& printer,
+    const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
 class CondBranch : public Instruction {
@@ -276,6 +297,9 @@ public:
 
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
+  void print_instruction_compact_internal(
+    IRPrinter::LinePrinter& printer,
+    const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
 class StackAlloc : public Instruction {
@@ -296,6 +320,9 @@ public:
 
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
+  void print_instruction_compact_internal(
+    IRPrinter::LinePrinter& printer,
+    const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
 class Ret : public Instruction {
@@ -324,6 +351,9 @@ public:
 
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
+  void print_instruction_compact_internal(
+    IRPrinter::LinePrinter& printer,
+    const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
 class Offset : public Instruction {
@@ -350,6 +380,9 @@ public:
 
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
+  void print_instruction_compact_internal(
+    IRPrinter::LinePrinter& printer,
+    const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
 class Cast : public Instruction {
@@ -378,6 +411,9 @@ public:
 
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
+  void print_instruction_compact_internal(
+    IRPrinter::LinePrinter& printer,
+    const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
 class Select : public Instruction {
@@ -414,6 +450,9 @@ public:
 
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
+  void print_instruction_compact_internal(
+    IRPrinter::LinePrinter& printer,
+    const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
 class Phi : public Instruction {
@@ -535,6 +574,9 @@ public:
 
 protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
+  void print_instruction_compact_internal(
+    IRPrinter::LinePrinter& printer,
+    const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
 } // namespace flugzeug

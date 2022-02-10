@@ -72,8 +72,8 @@ public:
 
   ~Module();
 
-  void print(IRPrinter& printer) const;
-  void print() const;
+  void print(IRPrinter& printer, IRPrintingMethod method = IRPrintingMethod::Standard) const;
+  void print(IRPrintingMethod method = IRPrintingMethod::Standard) const;
 
   void destroy();
 

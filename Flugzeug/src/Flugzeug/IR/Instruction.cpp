@@ -25,9 +25,40 @@ BlockTargets<TBlock> get_targets_generic(TInstruction* instruction) {
   return result;
 }
 
+void Instruction::print_possibly_inlined_value(
+  const Value* value, IRPrinter::LinePrinter& printer,
+  const std::unordered_set<const Value*>& inlined_values) {
+  if (const auto instruction = cast<Instruction>(value)) {
+    if (inlined_values.contains(instruction)) {
+      printer.print(IRPrinter::Item::ParenOpenExpr);
+      instruction->print_instruction_compact_internal(printer, inlined_values);
+      printer.print(IRPrinter::Item::ParenCloseExpr);
+      return;
+    }
+  }
+
+  printer.print(value);
+}
+
 size_t Instruction::get_order_in_block() const {
   get_block()->update_instruction_order();
   return order_in_block;
+}
+
+bool Instruction::print_compact(IRPrinter& printer,
+                                const std::unordered_set<const Value*>& inlined_values) const {
+  if (inlined_values.contains(this)) {
+    return false;
+  }
+
+  auto p = printer.create_line_printer();
+  if (!is_void()) {
+    p.print(this, IRPrinter::Item::Equals);
+  }
+
+  print_instruction_compact_internal(p, inlined_values);
+
+  return true;
 }
 
 void Instruction::print(IRPrinter& printer) const {

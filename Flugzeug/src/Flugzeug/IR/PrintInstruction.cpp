@@ -91,6 +91,77 @@ static std::string_view to_string(CastKind cast) {
   }
 }
 
+static std::string_view to_symbol(UnaryOp op) {
+  switch (op) {
+  case UnaryOp::Neg:
+    return "-";
+  case UnaryOp::Not:
+    return "~";
+  default:
+    unreachable();
+  }
+}
+
+static std::string_view to_symbol(BinaryOp op) {
+  switch (op) {
+  case BinaryOp::Add:
+    return "+";
+  case BinaryOp::Sub:
+    return "-";
+  case BinaryOp::Mul:
+    return "*";
+  case BinaryOp::ModU:
+    return "%u";
+  case BinaryOp::DivU:
+    return "/u";
+  case BinaryOp::ModS:
+    return "%s";
+  case BinaryOp::DivS:
+    return "/s";
+  case BinaryOp::Shr:
+    return ">>";
+  case BinaryOp::Shl:
+    return "<<";
+  case BinaryOp::Sar:
+    return ">>>";
+  case BinaryOp::And:
+    return "&";
+  case BinaryOp::Or:
+    return "|";
+  case BinaryOp::Xor:
+    return "^";
+  default:
+    unreachable();
+  }
+}
+
+static std::string_view to_symbol(IntPredicate predicate) {
+  switch (predicate) {
+  case IntPredicate::Equal:
+    return "==";
+  case IntPredicate::NotEqual:
+    return "!=";
+  case IntPredicate::GtU:
+    return ">u";
+  case IntPredicate::GteU:
+    return ">=u";
+  case IntPredicate::GtS:
+    return ">s";
+  case IntPredicate::GteS:
+    return ">=s";
+  case IntPredicate::LtU:
+    return "<u";
+  case IntPredicate::LteU:
+    return "<=u";
+  case IntPredicate::LtS:
+    return "<s";
+  case IntPredicate::LteS:
+    return "<=s";
+  default:
+    unreachable();
+  }
+}
+
 void UnaryInstr::print_instruction_internal(IRPrinter::LinePrinter& p) const {
   p.print(to_string(get_op()), get_type(), get_val());
 }
@@ -172,6 +243,127 @@ void Phi::print_instruction_internal(IRPrinter::LinePrinter& p) const {
   for (size_t i = 0; i < get_incoming_count(); ++i) {
     const auto incoming = get_incoming(i);
     p.print(incoming.block, SpecialItem::Colon, incoming.value, SpecialItem::Comma);
+  }
+
+  p.print(SpecialItem::BracketClose);
+}
+
+void UnaryInstr::print_instruction_compact_internal(
+  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  const auto symbol = to_symbol(get_op());
+
+  p.print(IRPrinter::UnaryMathSymbol{symbol});
+  print_possibly_inlined_value(get_val(), p, inlined_values);
+}
+
+void BinaryInstr::print_instruction_compact_internal(
+  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  const auto symbol = to_symbol(get_op());
+
+  print_possibly_inlined_value(get_lhs(), p, inlined_values);
+  p.print(IRPrinter::BinaryMathSymbol{symbol});
+  print_possibly_inlined_value(get_rhs(), p, inlined_values);
+}
+
+void IntCompare::print_instruction_compact_internal(
+  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  const auto symbol = to_symbol(get_pred());
+
+  print_possibly_inlined_value(get_lhs(), p, inlined_values);
+  p.print(IRPrinter::BinaryMathSymbol{symbol});
+  print_possibly_inlined_value(get_rhs(), p, inlined_values);
+}
+
+void Load::print_instruction_compact_internal(
+  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  p.print("load", get_type(), IRPrinter::Item::Comma, get_ptr()->get_type());
+  print_possibly_inlined_value(get_ptr(), p, inlined_values);
+}
+
+void Store::print_instruction_compact_internal(
+  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  p.print("store", get_ptr()->get_type());
+  print_possibly_inlined_value(get_ptr(), p, inlined_values);
+  p.print(IRPrinter::Item::Comma, get_val()->get_type());
+  print_possibly_inlined_value(get_val(), p, inlined_values);
+}
+
+void Call::print_instruction_compact_internal(
+  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  p.print("call", get_type(), IRPrinter::NonKeywordWord{get_callee()->get_name()},
+          SpecialItem::ParenOpen);
+
+  for (size_t i = 0; i < get_arg_count(); ++i) {
+    print_possibly_inlined_value(get_arg(i), p, inlined_values);
+    p.print(SpecialItem::Comma);
+  }
+
+  p.print(SpecialItem::ParenClose);
+}
+
+void Branch::print_instruction_compact_internal(
+  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  p.print("branch", get_target());
+}
+
+void CondBranch::print_instruction_compact_internal(
+  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  p.print("bcond");
+  print_possibly_inlined_value(get_cond(), p, inlined_values);
+  p.print(SpecialItem::Comma, get_true_target(), SpecialItem::Comma, get_false_target());
+}
+
+void StackAlloc::print_instruction_compact_internal(
+  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  p.print("stackalloc", get_allocated_type());
+
+  if (size != 1) {
+    p.print(SpecialItem::Comma, size);
+  }
+}
+
+void Ret::print_instruction_compact_internal(
+  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  p.print("ret");
+
+  if (is_ret_void()) {
+    p.print(get_context()->get_void_ty());
+  } else {
+    p.print(get_val()->get_type());
+    print_possibly_inlined_value(get_val(), p, inlined_values);
+  }
+}
+
+void Offset::print_instruction_compact_internal(
+  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  print_possibly_inlined_value(get_base(), p, inlined_values);
+  p.print("offset by");
+  print_possibly_inlined_value(get_index(), p, inlined_values);
+}
+
+void Cast::print_instruction_compact_internal(
+  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  p.print(to_string(get_cast_kind()), get_type());
+  print_possibly_inlined_value(get_val(), p, inlined_values);
+}
+
+void Select::print_instruction_compact_internal(
+  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  print_possibly_inlined_value(get_cond(), p, inlined_values);
+  p.print(IRPrinter::BinaryMathSymbol{"?"});
+  print_possibly_inlined_value(get_true_val(), p, inlined_values);
+  p.print(IRPrinter::BinaryMathSymbol{":"});
+  print_possibly_inlined_value(get_false_val(), p, inlined_values);
+}
+
+void Phi::print_instruction_compact_internal(
+  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  p.print("phi", get_type(), SpecialItem::BracketOpen);
+
+  for (auto incoming : *this) {
+    p.print(incoming.block, SpecialItem::Colon);
+    print_possibly_inlined_value(incoming.value, p, inlined_values);
+    p.print(SpecialItem::Comma);
   }
 
   p.print(SpecialItem::BracketClose);

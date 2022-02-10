@@ -113,6 +113,32 @@ void IRPrinter::LinePrinter::item(IRPrinter::LinePrinter::NonKeywordWord word) {
   end_generic_item();
 }
 
+void IRPrinter::LinePrinter::item(IRPrinter::LinePrinter::BinaryMathSymbol symbol) {
+  space_pending = false;
+
+  begin_generic_item();
+
+  ir_printer->write_string(" ");
+  ir_printer->write_string(symbol.text);
+  ir_printer->write_string(" ");
+
+  end_generic_item();
+
+  space_pending = false;
+}
+
+void IRPrinter::LinePrinter::item(IRPrinter::LinePrinter::UnaryMathSymbol symbol) {
+  space_pending = false;
+
+  begin_generic_item();
+
+  ir_printer->write_string(symbol.text);
+
+  end_generic_item();
+
+  space_pending = false;
+}
+
 void IRPrinter::LinePrinter::item(IRPrinter::LinePrinter::SpecialItem special) {
   comma_pending = false;
 
@@ -155,6 +181,22 @@ void IRPrinter::LinePrinter::item(IRPrinter::LinePrinter::SpecialItem special) {
 
   case SpecialItem::BracketClose:
     ir_printer->write_string("]");
+    space_pending = false;
+    break;
+
+  case SpecialItem::ParenOpenExpr:
+    if (comma_pending) {
+      ir_printer->write_string(", ");
+    } else if (space_pending) {
+      ir_printer->write_string(" ");
+    }
+    ir_printer->write_string("(");
+    space_pending = false;
+    comma_pending = false;
+    break;
+
+  case SpecialItem::ParenCloseExpr:
+    ir_printer->write_string(")");
     space_pending = false;
     break;
   }
