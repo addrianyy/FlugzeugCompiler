@@ -14,9 +14,9 @@ branch_to_select
 const_propagate
 propagate_block_invariants
 minimize_phis
+optimize_known_bits
 
 Done only in Rust compiler:
-optimize_known_bits
 global_reorder
 deduplicate
 remove_dead_stores
