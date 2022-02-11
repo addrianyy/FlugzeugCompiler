@@ -2,9 +2,41 @@
 #include "Block.hpp"
 #include "ConsolePrinter.hpp"
 #include "DebugPrinter.hpp"
+#include "InstructionVisitor.hpp"
 #include "Instructions.hpp"
 
 using namespace flugzeug;
+
+class UniqueIdentifierVisitor : public ConstInstructionVisitor {
+  InstructionUniqueIdentifier& identifier;
+
+public:
+  explicit UniqueIdentifierVisitor(InstructionUniqueIdentifier& identifier)
+      : identifier(identifier) {}
+
+  void visit_unary_instr(Argument<UnaryInstr> unary) {
+    identifier.push_back(uintptr_t(unary->get_op()));
+  }
+  void visit_binary_instr(Argument<BinaryInstr> binary) {
+    identifier.push_back(uintptr_t(binary->get_op()));
+  }
+  void visit_int_compare(Argument<IntCompare> int_compare) {
+    identifier.push_back(uintptr_t(int_compare->get_pred()));
+  }
+  void visit_load(Argument<Load> load) {}
+  void visit_store(Argument<Store> store) {}
+  void visit_call(Argument<Call> call) {}
+  void visit_branch(Argument<Branch> branch) {}
+  void visit_cond_branch(Argument<CondBranch> cond_branch) {}
+  void visit_stackalloc(Argument<StackAlloc> stackalloc) {
+    identifier.push_back(uintptr_t(stackalloc->get_size()));
+  }
+  void visit_ret(Argument<Ret> ret) {}
+  void visit_offset(Argument<Offset> offset) {}
+  void visit_cast(Argument<Cast> cast) { identifier.push_back(uintptr_t(cast->get_cast_kind())); }
+  void visit_select(Argument<Select> select) {}
+  void visit_phi(Argument<Phi> phi) {}
+};
 
 template <typename TBlock, typename TInstruction>
 BlockTargets<TBlock> get_targets_generic(TInstruction* instruction) {
@@ -47,6 +79,20 @@ void Instruction::print_possibly_inlined_value(
 size_t Instruction::get_order_in_block() const {
   get_block()->update_instruction_order();
   return order_in_block;
+}
+
+InstructionUniqueIdentifier Instruction::calculate_unique_identifier() const {
+  InstructionUniqueIdentifier identifier;
+
+  identifier.reserve(get_operand_count());
+  for (const Value& operand : operands()) {
+    identifier.push_back(uintptr_t(&operand));
+  }
+
+  UniqueIdentifierVisitor visitor(identifier);
+  visitor::visit_instruction(this, visitor);
+
+  return identifier;
 }
 
 bool Instruction::print_compact(IRPrinter& printer,

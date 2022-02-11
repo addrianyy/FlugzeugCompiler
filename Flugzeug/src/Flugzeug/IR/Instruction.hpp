@@ -2,6 +2,7 @@
 #include "IRPrinter.hpp"
 #include "User.hpp"
 
+#include <Flugzeug/Core/HashCombine.hpp>
 #include <Flugzeug/Core/IntrusiveLinkedList.hpp>
 
 #include <unordered_set>
@@ -11,6 +12,20 @@ namespace flugzeug {
 class Block;
 class IRPrinter;
 class DominatorTree;
+
+using InstructionUniqueIdentifier = std::vector<uintptr_t>;
+
+struct InstructionUniqueIdentifierHash {
+  size_t operator()(const InstructionUniqueIdentifier& identifier) const {
+    size_t hash = 0;
+
+    for (const auto element : identifier) {
+      hash_combine(hash, element);
+    }
+
+    return hash;
+  }
+};
 
 template <typename TBlock> class BlockTargets {
   constexpr static size_t max_targets = 2;
@@ -69,6 +84,8 @@ public:
   using IntrusiveNode::unlink;
 
   virtual Instruction* clone() = 0;
+
+  InstructionUniqueIdentifier calculate_unique_identifier() const;
 
   bool print_compact(IRPrinter& printer,
                      const std::unordered_set<const Value*>& inlined_values) const;

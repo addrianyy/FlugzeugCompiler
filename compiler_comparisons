@@ -18,9 +18,11 @@ optimize_known_bits
 
 Done only in Rust compiler:
 global_reorder
-deduplicate
 remove_dead_stores
 remove_known_loads
+
+Partially done in C++ compiler:
+deduplicate
 
 Done only in C++ compiler:
 loop unrolling
