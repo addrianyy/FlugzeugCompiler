@@ -176,6 +176,7 @@ Block::~Block() {
 
 std::unordered_set<const Value*> Block::get_inlineable_values_created_in_block() const {
   std::unordered_set<const Value*> inlineable;
+  std::unordered_map<const Value*, uint32_t> values_complexity;
 
   for (const Instruction& instruction : *this) {
     if (instruction.is_void() || instruction.is_volatile() || cast<Load>(instruction) ||
@@ -200,7 +201,20 @@ std::unordered_set<const Value*> Block::get_inlineable_values_created_in_block()
       continue;
     }
 
+    uint32_t complexity = 1;
+    for (const Value& operand : instruction.operands()) {
+      const auto operand_complexity = values_complexity.find(&operand);
+      if (operand_complexity != values_complexity.end()) {
+        complexity += operand_complexity->second;
+      }
+    }
+
+    if (complexity > 4) {
+      continue;
+    }
+
     inlineable.insert(&instruction);
+    values_complexity.insert({&instruction, complexity});
   }
 
   return inlineable;
