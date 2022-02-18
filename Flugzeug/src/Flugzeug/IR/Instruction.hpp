@@ -63,9 +63,9 @@ class Instruction : public User, public IntrusiveNode<Instruction, Block> {
 protected:
   using User::User;
 
-  static void print_possibly_inlined_value(const Value* value, IRPrinter::LinePrinter& printer,
-                                           const std::unordered_set<const Value*>& inlined_values,
-                                           bool parens = true);
+  static void print_value_compact(const Value* value, IRPrinter::LinePrinter& printer,
+                                  const std::unordered_set<const Value*>& inlined_values,
+                                  bool parens = true);
 
   virtual void print_instruction_internal(IRPrinter::LinePrinter& printer) const = 0;
   virtual void print_instruction_compact_internal(

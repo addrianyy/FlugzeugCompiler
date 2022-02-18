@@ -47,7 +47,7 @@ static bool is_instruction_loop_invariant(Instruction* instruction, const Loop* 
   return true;
 }
 
-std::vector<Instruction*> get_loop_invariants(Function* function, const Loop* loop) {
+static std::vector<Instruction*> get_loop_invariants(Function* function, const Loop* loop) {
   std::unordered_set<Instruction*> invariants_set;
   std::vector<Instruction*> invariants;
 

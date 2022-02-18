@@ -57,9 +57,9 @@ BlockTargets<TBlock> get_targets_generic(TInstruction* instruction) {
   return result;
 }
 
-void Instruction::print_possibly_inlined_value(
-  const Value* value, IRPrinter::LinePrinter& printer,
-  const std::unordered_set<const Value*>& inlined_values, bool parens) {
+void Instruction::print_value_compact(const Value* value, IRPrinter::LinePrinter& printer,
+                                      const std::unordered_set<const Value*>& inlined_values,
+                                      bool parens) {
   if (const auto instruction = cast<Instruction>(value)) {
     if (inlined_values.contains(instruction)) {
       if (parens) {

@@ -253,39 +253,39 @@ void UnaryInstr::print_instruction_compact_internal(
   const auto symbol = to_symbol(get_op());
 
   p.print(IRPrinter::UnaryMathSymbol{symbol});
-  print_possibly_inlined_value(get_val(), p, inlined_values);
+  print_value_compact(get_val(), p, inlined_values);
 }
 
 void BinaryInstr::print_instruction_compact_internal(
   IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
   const auto symbol = to_symbol(get_op());
 
-  print_possibly_inlined_value(get_lhs(), p, inlined_values);
+  print_value_compact(get_lhs(), p, inlined_values);
   p.print(IRPrinter::BinaryMathSymbol{symbol});
-  print_possibly_inlined_value(get_rhs(), p, inlined_values);
+  print_value_compact(get_rhs(), p, inlined_values);
 }
 
 void IntCompare::print_instruction_compact_internal(
   IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
   const auto symbol = to_symbol(get_pred());
 
-  print_possibly_inlined_value(get_lhs(), p, inlined_values);
+  print_value_compact(get_lhs(), p, inlined_values);
   p.print(IRPrinter::BinaryMathSymbol{symbol});
-  print_possibly_inlined_value(get_rhs(), p, inlined_values);
+  print_value_compact(get_rhs(), p, inlined_values);
 }
 
 void Load::print_instruction_compact_internal(
   IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
   p.print("load", get_type(), IRPrinter::Item::Comma, get_ptr()->get_type());
-  print_possibly_inlined_value(get_ptr(), p, inlined_values);
+  print_value_compact(get_ptr(), p, inlined_values);
 }
 
 void Store::print_instruction_compact_internal(
   IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
   p.print("store", get_ptr()->get_type());
-  print_possibly_inlined_value(get_ptr(), p, inlined_values);
+  print_value_compact(get_ptr(), p, inlined_values);
   p.print(IRPrinter::Item::Comma, get_val()->get_type());
-  print_possibly_inlined_value(get_val(), p, inlined_values);
+  print_value_compact(get_val(), p, inlined_values);
 }
 
 void Call::print_instruction_compact_internal(
@@ -294,7 +294,7 @@ void Call::print_instruction_compact_internal(
           SpecialItem::ParenOpen);
 
   for (size_t i = 0; i < get_arg_count(); ++i) {
-    print_possibly_inlined_value(get_arg(i), p, inlined_values, false);
+    print_value_compact(get_arg(i), p, inlined_values, false);
     p.print(SpecialItem::Comma);
   }
 
@@ -309,7 +309,7 @@ void Branch::print_instruction_compact_internal(
 void CondBranch::print_instruction_compact_internal(
   IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
   p.print("bcond");
-  print_possibly_inlined_value(get_cond(), p, inlined_values, false);
+  print_value_compact(get_cond(), p, inlined_values, false);
   p.print(SpecialItem::Comma, get_true_target(), SpecialItem::Comma, get_false_target());
 }
 
@@ -330,30 +330,30 @@ void Ret::print_instruction_compact_internal(
     p.print(get_context()->get_void_ty());
   } else {
     p.print(get_val()->get_type());
-    print_possibly_inlined_value(get_val(), p, inlined_values, false);
+    print_value_compact(get_val(), p, inlined_values, false);
   }
 }
 
 void Offset::print_instruction_compact_internal(
   IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
-  print_possibly_inlined_value(get_base(), p, inlined_values);
+  print_value_compact(get_base(), p, inlined_values);
   p.print("offset by");
-  print_possibly_inlined_value(get_index(), p, inlined_values);
+  print_value_compact(get_index(), p, inlined_values);
 }
 
 void Cast::print_instruction_compact_internal(
   IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
   p.print(to_string(get_cast_kind()), get_type());
-  print_possibly_inlined_value(get_val(), p, inlined_values);
+  print_value_compact(get_val(), p, inlined_values);
 }
 
 void Select::print_instruction_compact_internal(
   IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
-  print_possibly_inlined_value(get_cond(), p, inlined_values);
+  print_value_compact(get_cond(), p, inlined_values);
   p.print(IRPrinter::BinaryMathSymbol{"?"});
-  print_possibly_inlined_value(get_true_val(), p, inlined_values);
+  print_value_compact(get_true_val(), p, inlined_values);
   p.print(IRPrinter::BinaryMathSymbol{":"});
-  print_possibly_inlined_value(get_false_val(), p, inlined_values);
+  print_value_compact(get_false_val(), p, inlined_values);
 }
 
 void Phi::print_instruction_compact_internal(
@@ -362,7 +362,7 @@ void Phi::print_instruction_compact_internal(
 
   for (auto incoming : *this) {
     p.print(incoming.block, SpecialItem::Colon);
-    print_possibly_inlined_value(incoming.value, p, inlined_values);
+    print_value_compact(incoming.value, p, inlined_values, false);
     p.print(SpecialItem::Comma);
   }
 
