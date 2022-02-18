@@ -28,11 +28,10 @@ class Loop {
 
   std::vector<std::unique_ptr<Loop>> sub_loops;
 
-  static bool
-  find_loops_in_scc(Function* function, const std::vector<Block*>& scc_vector,
-                    const DominatorTree& dominator_tree,
-                    const std::unordered_map<Block*, std::unordered_set<Block*>>& predecessors,
-                    SccContext<Block*>& scc_context, std::vector<std::unique_ptr<Loop>>& loops);
+  static bool find_loops_in_scc(Function* function, const std::vector<Block*>& scc_vector,
+                                const DominatorTree& dominator_tree,
+                                SccContext<Block*>& scc_context,
+                                std::vector<std::unique_ptr<Loop>>& loops);
 
   void debug_print_internal(const std::string& indentation) const;
 

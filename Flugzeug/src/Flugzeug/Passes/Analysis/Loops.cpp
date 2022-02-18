@@ -28,19 +28,17 @@ static std::vector<std::vector<Block*>> calculate_sccs(SccContext<Block*>& conte
                                       [](Block* block) { return block->successors(); });
 }
 
-static bool
-visit_loop_block(DfsContext& dfs_context, Block* block, Loop& loop,
-                 std::vector<std::pair<Block*, Block*>>& exiting_edges,
-                 std::unordered_set<Block*>& back_edges_from,
-                 std::vector<MaybeSubLoopBackedge>& maybe_subloops_backedges,
-                 const std::unordered_map<Block*, std::unordered_set<Block*>>& predecessors) {
+static bool visit_loop_block(DfsContext& dfs_context, Block* block, Loop& loop,
+                             std::vector<std::pair<Block*, Block*>>& exiting_edges,
+                             std::unordered_set<Block*>& back_edges_from,
+                             std::vector<MaybeSubLoopBackedge>& maybe_subloops_backedges) {
   verify(!dfs_context.block_state.contains(block),
          "Running `visit_loop_block` on already visited block");
 
   if (block != loop.get_header()) {
     // Loop can be only entered via its header. If block other than header has non-loop
     // predecessor then it's an invalid loop.
-    for (Block* predecessor : predecessors.find(block)->second) {
+    for (Block* predecessor : block->predecessors()) {
       if (!loop.contains_block(predecessor)) {
         return false;
       }
@@ -61,7 +59,7 @@ visit_loop_block(DfsContext& dfs_context, Block* block, Loop& loop,
     if (successor_it == dfs_context.block_state.end()) {
       // Visit successor.
       if (!visit_loop_block(dfs_context, successor, loop, exiting_edges, back_edges_from,
-                            maybe_subloops_backedges, predecessors)) {
+                            maybe_subloops_backedges)) {
         return false;
       }
     } else {
@@ -101,10 +99,9 @@ static void verify_subloops_backedges(const Loop& subloop,
 
 /// Returns `true` is loops were flattened (actual loop described by the SCC was invalid but
 /// sub-loops were valid and were added to the loop list as non-child loops).
-bool Loop::find_loops_in_scc(
-  Function* function, const std::vector<Block*>& scc_vector, const DominatorTree& dominator_tree,
-  const std::unordered_map<Block*, std::unordered_set<Block*>>& predecessors,
-  SccContext<Block*>& scc_context, std::vector<std::unique_ptr<Loop>>& loops) {
+bool Loop::find_loops_in_scc(Function* function, const std::vector<Block*>& scc_vector,
+                             const DominatorTree& dominator_tree, SccContext<Block*>& scc_context,
+                             std::vector<std::unique_ptr<Loop>>& loops) {
 
   Loop loop;
   loop.blocks = std::unordered_set<Block*>(scc_vector.begin(), scc_vector.end());
@@ -133,7 +130,7 @@ bool Loop::find_loops_in_scc(
   DfsContext dfs_context{};
   std::vector<MaybeSubLoopBackedge> maybe_subloops_backedges;
   if (!visit_loop_block(dfs_context, loop.header, loop, loop.exiting_edges, loop.back_edges_from,
-                        maybe_subloops_backedges, predecessors)) {
+                        maybe_subloops_backedges)) {
     return false;
   }
 
@@ -155,8 +152,7 @@ bool Loop::find_loops_in_scc(
   // Find sub-loops in the contained SCCs.
   std::vector<std::unique_ptr<Loop>> sub_loops;
   for (const auto& scc : sub_sccs) {
-    flattened |=
-      find_loops_in_scc(function, scc, dominator_tree, predecessors, scc_context, sub_loops);
+    flattened |= find_loops_in_scc(function, scc, dominator_tree, scc_context, sub_loops);
   }
 
   const auto move_sub_loops_to_loops = [&loops, &sub_loops]() {
@@ -223,12 +219,6 @@ flugzeug::analyze_function_loops(Function* function, const DominatorTree& domina
   const auto reachable_blocks =
     function->get_entry_block()->get_reachable_blocks_set(IncludeStart::Yes);
 
-  // Create map (block -> predecessors of block) for faster lookups.
-  std::unordered_map<Block*, std::unordered_set<Block*>> predecessors;
-  for (Block& block : *function) {
-    predecessors.insert({&block, block.predecessors_set()});
-  }
-
   std::vector<std::unique_ptr<Loop>> loops;
   SccContext<Block*> scc_context{};
 
@@ -238,7 +228,7 @@ flugzeug::analyze_function_loops(Function* function, const DominatorTree& domina
 
   // Find loops in the SCCs.
   for (const auto& scc : sccs) {
-    Loop::find_loops_in_scc(function, scc, dominator_tree, predecessors, scc_context, loops);
+    Loop::find_loops_in_scc(function, scc, dominator_tree, scc_context, loops);
   }
 
   return loops;
