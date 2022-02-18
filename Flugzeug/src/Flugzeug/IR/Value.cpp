@@ -17,6 +17,10 @@ void Value::add_use(Use* use) {
   if (use->get_user() != this) {
     user_count_excluding_self++;
   }
+
+  if (const auto block = cast<Block>(this)) {
+    block->on_added_block_user(use->get_user());
+  }
 }
 
 void Value::remove_use(Use* use) {
@@ -24,6 +28,10 @@ void Value::remove_use(Use* use) {
 
   if (use->get_user() != this) {
     user_count_excluding_self--;
+  }
+
+  if (const auto block = cast<Block>(this)) {
+    block->on_removed_block_user(use->get_user());
   }
 }
 

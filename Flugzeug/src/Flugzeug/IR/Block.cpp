@@ -24,39 +24,6 @@ template <typename TBlock> TBlock* get_single_successor_generic(TBlock* block) {
   return nullptr;
 }
 
-template <typename TBlock> TBlock* get_single_predecessor_generic(TBlock* block) {
-  TBlock* predecessor = nullptr;
-
-  for (auto& instruction : block->users<Instruction>()) {
-    if (instruction.is_branching()) {
-      const auto instruction_block = instruction.get_block();
-
-      if (!predecessor) {
-        predecessor = instruction_block;
-      }
-
-      if (predecessor != instruction_block) {
-        return nullptr;
-      }
-    }
-  }
-
-  return predecessor;
-}
-
-template <typename TBlock> std::unordered_set<TBlock*> get_predecessors_generic(TBlock* block) {
-  std::unordered_set<TBlock*> predecessors;
-  predecessors.reserve(block->get_user_count());
-
-  for (auto& instruction : block->users<Instruction>()) {
-    if (instruction.is_branching()) {
-      predecessors.insert(instruction.get_block());
-    }
-  }
-
-  return predecessors;
-}
-
 template <typename TBlock, bool ReturnVector>
 std::conditional_t<ReturnVector, std::vector<TBlock*>, std::unordered_set<TBlock*>>
 traverse_generic(TBlock* start_block, TraversalType traversal) {
@@ -148,15 +115,86 @@ traverse_generic(TBlock* start_block, TraversalType traversal) {
   }
 }
 
+static Block* get_branch_block(User* user) {
+  if (const auto instruction = cast<Instruction>(user)) {
+    if (instruction->is_branching()) {
+      return instruction->get_block();
+    }
+  }
+
+  return nullptr;
+}
+
+static void remove_block_from_vector(std::vector<Block*>& blocks, Block* block) {
+  const auto it = std::find(blocks.begin(), blocks.end(), block);
+  verify(it != blocks.end(), "Failed to find block in the block list");
+
+  const auto index = std::distance(blocks.begin(), it);
+
+  if (blocks.size() > 1) {
+    std::iter_swap(blocks.begin() + index, blocks.end() - 1);
+    blocks.pop_back();
+  } else {
+    blocks.clear();
+  }
+}
+
 void Block::on_added_node(Instruction* instruction) {
   if (get_function() && !instruction->is_void()) {
     instruction->set_display_index(get_function()->allocate_value_index());
   }
 
+  if (instruction->is_branching()) {
+    for (Value& operand : instruction->operands()) {
+      const auto target_block = cast<Block>(operand);
+      if (target_block) {
+        target_block->add_predecessor(this);
+      }
+    }
+  }
+
   invalid_instruction_order = true;
 }
 
-void Block::on_removed_node(Instruction* instruction) { (void)instruction; }
+void Block::on_removed_node(Instruction* instruction) {
+  if (instruction->is_branching()) {
+    for (Value& operand : instruction->operands()) {
+      const auto target_block = cast<Block>(operand);
+      if (target_block) {
+        target_block->remove_predecessor(this);
+      }
+    }
+  }
+}
+
+void Block::on_added_block_user(User* user) {
+  if (const auto block = get_branch_block(user)) {
+    add_predecessor(block);
+  }
+}
+
+void Block::on_removed_block_user(User* user) {
+  if (const auto block = get_branch_block(user)) {
+    remove_predecessor(block);
+  }
+}
+
+void Block::add_predecessor(Block* predecessor) {
+  if (std::find(predecessors_list_unique.begin(), predecessors_list_unique.end(), predecessor) ==
+      predecessors_list_unique.end()) {
+    predecessors_list_unique.push_back(predecessor);
+  }
+  predecessors_list.push_back(predecessor);
+}
+
+void Block::remove_predecessor(Block* predecessor) {
+  remove_block_from_vector(predecessors_list, predecessor);
+
+  if (std::find(predecessors_list.begin(), predecessors_list.end(), predecessor) ==
+      predecessors_list.end()) {
+    remove_block_from_vector(predecessors_list_unique, predecessor);
+  }
+}
 
 void Block::update_instruction_order() const {
   if (invalid_instruction_order) {
@@ -172,6 +210,9 @@ void Block::update_instruction_order() const {
 Block::~Block() {
   verify(instruction_list.is_empty(), "Cannot remove non-empty block.");
   verify(!get_function(), "Cannot remove block that is attached to the function.");
+
+  verify(predecessors_list.empty(), "Predecessors list is not empty.");
+  verify(predecessors_list_unique.empty(), "Unique predecessors list is not empty.");
 }
 
 std::unordered_set<const Value*> Block::get_inlineable_values_created_in_block() const {
@@ -340,13 +381,8 @@ bool Block::has_successor(const Block* successor) const {
 }
 
 bool Block::has_predecessor(const Block* predecessor) const {
-  for (const Instruction& instruction : users<Instruction>()) {
-    if (instruction.is_branching() && instruction.get_block() == predecessor) {
-      return true;
-    }
-  }
-
-  return false;
+  return std::find(predecessors_list_unique.begin(), predecessors_list_unique.end(), predecessor) !=
+         predecessors_list_unique.end();
 }
 
 Block* Block::get_single_successor() { return get_single_successor_generic<Block>(this); }
@@ -355,10 +391,12 @@ const Block* Block::get_single_successor() const {
   return get_single_successor_generic<const Block>(this);
 }
 
-Block* Block::get_single_predecessor() { return get_single_predecessor_generic<Block>(this); }
+Block* Block::get_single_predecessor() {
+  return predecessors_list_unique.size() == 1 ? predecessors_list_unique[0] : nullptr;
+}
 
 const Block* Block::get_single_predecessor() const {
-  return get_single_predecessor_generic<const Block>(this);
+  return predecessors_list_unique.size() == 1 ? predecessors_list_unique[0] : nullptr;
 }
 
 BlockTargets<Block> Block::successors() {
@@ -375,10 +413,28 @@ BlockTargets<const Block> Block::successors() const {
   return {};
 }
 
-std::unordered_set<Block*> Block::predecessors() { return get_predecessors_generic<Block>(this); }
+const std::vector<Block*>& Block::predecessors() const { return predecessors_list_unique; }
 
-std::unordered_set<const Block*> Block::predecessors() const {
-  return get_predecessors_generic<const Block>(this);
+std::unordered_set<Block*> Block::predecessors_set() {
+  std::unordered_set<Block*> set;
+  set.reserve(predecessors().size());
+
+  for (Block* block : predecessors()) {
+    set.insert(block);
+  }
+
+  return set;
+}
+
+std::unordered_set<const Block*> Block::predecessors_set() const {
+  std::unordered_set<const Block*> set;
+  set.reserve(predecessors().size());
+
+  for (Block* block : predecessors()) {
+    set.insert(block);
+  }
+
+  return set;
 }
 
 std::vector<Block*> Block::get_reachable_blocks(TraversalType traversal) {

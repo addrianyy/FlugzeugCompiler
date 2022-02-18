@@ -29,6 +29,7 @@ class Block : public Value, public IntrusiveNode<Block, Function> {
   friend class IntrusiveNode<Instruction, Block>;
   friend class Instruction;
   friend class Function;
+  friend class Value;
 
   using InstructionList = IntrusiveLinkedList<Instruction, Block>;
 
@@ -37,10 +38,19 @@ class Block : public Value, public IntrusiveNode<Block, Function> {
 
   mutable bool invalid_instruction_order = false;
 
+  std::vector<Block*> predecessors_list;
+  std::vector<Block*> predecessors_list_unique;
+
   InstructionList& get_list() { return instruction_list; }
 
   void on_added_node(Instruction* instruction);
   void on_removed_node(Instruction* instruction);
+
+  void on_added_block_user(User* user);
+  void on_removed_block_user(User* user);
+
+  void add_predecessor(Block* predecessor);
+  void remove_predecessor(Block* predecessor);
 
   void update_instruction_order() const;
 
@@ -147,8 +157,10 @@ public:
   BlockTargets<Block> successors();
   BlockTargets<const Block> successors() const;
 
-  std::unordered_set<Block*> predecessors();
-  std::unordered_set<const Block*> predecessors() const;
+  const std::vector<Block*>& predecessors() const;
+
+  std::unordered_set<Block*> predecessors_set();
+  std::unordered_set<const Block*> predecessors_set() const;
 
   std::vector<Block*> get_reachable_blocks(TraversalType traversal);
   std::vector<const Block*> get_reachable_blocks(TraversalType traversal) const;

@@ -226,7 +226,7 @@ flugzeug::analyze_function_loops(Function* function, const DominatorTree& domina
   // Create map (block -> predecessors of block) for faster lookups.
   std::unordered_map<Block*, std::unordered_set<Block*>> predecessors;
   for (Block& block : *function) {
-    predecessors.insert({&block, block.predecessors()});
+    predecessors.insert({&block, block.predecessors_set()});
   }
 
   std::vector<std::unique_ptr<Loop>> loops;

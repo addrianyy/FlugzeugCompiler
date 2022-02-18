@@ -325,7 +325,7 @@ public:
         continue;
       }
 
-      current_block_predecessors = block.predecessors();
+      current_block_predecessors = block.predecessors_set();
       if (block.is_entry_block()) {
         validation_check(current_block_predecessors.empty(), "Entry block has predecessors");
       }
