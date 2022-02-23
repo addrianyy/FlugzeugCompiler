@@ -84,7 +84,7 @@ size_t Instruction::get_order_in_block() const {
 InstructionUniqueIdentifier Instruction::calculate_unique_identifier() const {
   InstructionUniqueIdentifier identifier;
 
-  identifier.reserve(get_operand_count());
+  identifier.reserve(get_operand_count() + 1);
   for (const Value& operand : operands()) {
     identifier.push_back(uintptr_t(&operand));
   }

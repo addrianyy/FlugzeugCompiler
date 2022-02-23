@@ -9,8 +9,7 @@ using namespace flugzeug;
 
 static bool try_to_eliminate(Instruction* instruction, std::vector<Instruction*>& worklist) {
   // Skip instructions which cannot be eliminated.
-  if (instruction->is_void() || instruction->is_volatile() ||
-      instruction->get_user_count_excluding_self() > 0) {
+  if (instruction->is_used() || instruction->is_void() || instruction->is_volatile()) {
     return false;
   }
 
@@ -20,7 +19,7 @@ static bool try_to_eliminate(Instruction* instruction, std::vector<Instruction*>
 
     // Check if by removing instruction operand we have made operand dead too.
     if (const auto operand_instruction = cast<Instruction>(operand)) {
-      if (instruction == operand || operand->get_user_count_excluding_self() > 0) {
+      if (instruction == operand || operand->is_used()) {
         continue;
       }
 

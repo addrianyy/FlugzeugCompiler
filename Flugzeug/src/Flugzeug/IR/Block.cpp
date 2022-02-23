@@ -413,7 +413,12 @@ BlockTargets<const Block> Block::successors() const {
   return {};
 }
 
-const std::vector<Block*>& Block::predecessors() const { return predecessors_list_unique; }
+std::span<Block*> Block::predecessors() { return predecessors_list_unique; }
+
+std::span<const Block*> Block::predecessors() const {
+  const auto const_predecessors = const_cast<const Block**>(predecessors_list_unique.data());
+  return std::span<const Block*>{const_predecessors, predecessors_list_unique.size()};
+}
 
 std::unordered_set<Block*> Block::predecessors_set() {
   std::unordered_set<Block*> set;
@@ -430,7 +435,7 @@ std::unordered_set<const Block*> Block::predecessors_set() const {
   std::unordered_set<const Block*> set;
   set.reserve(predecessors().size());
 
-  for (Block* block : predecessors()) {
+  for (const Block* block : predecessors()) {
     set.insert(block);
   }
 

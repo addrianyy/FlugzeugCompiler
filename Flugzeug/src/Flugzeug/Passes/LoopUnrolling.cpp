@@ -21,6 +21,11 @@ public:
   void add_block(Block* block) { blocks.push_back(block); }
   const std::vector<Block*>& get_blocks() { return blocks; }
 
+  void reserve_mappings(size_t count) {
+    mapping.reserve(count);
+    reverse_mapping.reserve(count);
+  }
+
   void add_mapping(Value* from, Value* to) {
     mapping.insert({from, to});
     reverse_mapping.insert({to, from});
@@ -401,11 +406,20 @@ static void perform_unrolling(Function* function, const Loop* loop, Block* exit_
   }
 
   std::vector<UnrolledIteration> unrolls;
+  unrolls.reserve(unroll_count - 1);
+
+  size_t mappings_count = 0;
 
   // (Step 4) Copy all loop blocks `unroll_count` - 1 times. The first iteration is already
   // there, so we skip it.
   for (size_t unroll = 0; unroll < unroll_count - 1; ++unroll) {
     UnrolledIteration unroll_data;
+
+    if (mappings_count > 0) {
+      unroll_data.reserve_mappings(mappings_count);
+    }
+
+    mappings_count = 0;
 
     // Copy blocks and instructions for this unroll instance and setup mappings.
     for (Block* original_block : loop->get_blocks()) {
@@ -413,11 +427,13 @@ static void perform_unrolling(Function* function, const Loop* loop, Block* exit_
 
       unroll_data.add_mapping(original_block, new_block);
       unroll_data.add_block(new_block);
+      mappings_count++;
 
       for (Instruction& original_instruction : *original_block) {
         Instruction* new_instruction = original_instruction.clone();
 
         unroll_data.add_mapping(&original_instruction, new_instruction);
+        mappings_count++;
 
         new_block->push_instruction_back(new_instruction);
       }

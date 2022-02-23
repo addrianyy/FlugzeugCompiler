@@ -3,6 +3,7 @@
 
 #include <Flugzeug/Core/IntrusiveLinkedList.hpp>
 
+#include <span>
 #include <unordered_set>
 
 namespace flugzeug {
@@ -157,7 +158,8 @@ public:
   BlockTargets<Block> successors();
   BlockTargets<const Block> successors() const;
 
-  const std::vector<Block*>& predecessors() const;
+  std::span<Block*> predecessors();
+  std::span<const Block*> predecessors() const;
 
   std::unordered_set<Block*> predecessors_set();
   std::unordered_set<const Block*> predecessors_set() const;
