@@ -75,6 +75,8 @@ protected:
   explicit Stmt(Kind kind) : kind(kind) {}
 
 public:
+  virtual ~Stmt() = default;
+
   Kind get_kind() const { return kind; }
 
   virtual void print(ASTPrinter& printer) const = 0;
