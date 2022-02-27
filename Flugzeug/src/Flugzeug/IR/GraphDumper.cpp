@@ -5,7 +5,7 @@
 #include <Flugzeug/Core/Environment.hpp>
 #include <Flugzeug/Core/Process.hpp>
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 #include <filesystem>
 #include <fstream>

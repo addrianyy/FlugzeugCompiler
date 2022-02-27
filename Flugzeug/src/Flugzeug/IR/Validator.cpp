@@ -6,7 +6,7 @@
 
 #include <Flugzeug/Core/ConsoleColors.hpp>
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <iostream>
 
 using namespace flugzeug;

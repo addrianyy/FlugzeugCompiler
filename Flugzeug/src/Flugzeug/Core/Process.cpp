@@ -2,7 +2,7 @@
 #include "Error.hpp"
 #include "Platform.hpp"
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 #include <vector>
 
 #ifdef PLATFORM_WINDOWS
