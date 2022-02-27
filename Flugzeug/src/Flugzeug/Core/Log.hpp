@@ -13,9 +13,10 @@ namespace detail::log {
 
 void log(const char* file, int line, LogLevel level, const std::string& message);
 
-template <typename S, typename... Args>
-inline void log_fmt(const char* file, int line, LogLevel level, const S& format, Args&&... args) {
-  log(file, line, level, fmt::format(format, args...));
+template <typename... Args>
+inline void log_fmt(const char* file, int line, LogLevel level, fmt::format_string<Args...> fmt,
+                    Args&&... args) {
+  log(file, line, level, fmt::format(fmt, std::forward<Args>(args)...));
 }
 
 } // namespace detail::log

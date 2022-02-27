@@ -7,16 +7,17 @@ namespace detail::error {
 [[noreturn]] void fatal_error(const char* file, int line, const std::string& message);
 [[noreturn]] void assert_fail(const char* file, int line, const std::string& message);
 
-template <typename S, typename... Args>
-[[noreturn]] inline void fatal_error_fmt(const char* file, int line, const S& format,
-                                         Args&&... args) {
-  fatal_error(file, line, fmt::format(format, args...));
+template <typename... Args>
+[[noreturn]] inline void fatal_error_fmt(const char* file, int line,
+                                         fmt::format_string<Args...> fmt, Args&&... args) {
+  fatal_error(file, line, fmt::format(fmt, std::forward<Args>(args)...));
 }
 
-template <typename S, typename... Args>
-inline void assert_fmt(const char* file, int line, bool value, const S& format, Args&&... args) {
+template <typename... Args>
+inline void assert_fmt(const char* file, int line, bool value, fmt::format_string<Args...> fmt,
+                       Args&&... args) {
   if (!value) {
-    assert_fail(file, line, fmt::format(format, args...));
+    assert_fail(file, line, fmt::format(fmt, std::forward<Args>(args)...));
   }
 }
 

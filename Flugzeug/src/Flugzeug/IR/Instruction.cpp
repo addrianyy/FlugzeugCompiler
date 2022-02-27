@@ -242,6 +242,7 @@ bool Instruction::is_volatile() const {
     return false;
   }
 }
+
 bool Instruction::is_branching() const {
   return get_kind() == Kind::Branch || get_kind() == Kind::CondBranch;
 }

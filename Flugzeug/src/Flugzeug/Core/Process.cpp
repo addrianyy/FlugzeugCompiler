@@ -3,6 +3,7 @@
 #include "Platform.hpp"
 
 #include <fmt/format.h>
+#include <vector>
 
 #ifdef PLATFORM_WINDOWS
 #include <Windows.h>

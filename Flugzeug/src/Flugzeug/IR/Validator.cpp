@@ -34,10 +34,11 @@ class Validator : public ConstInstructionVisitor {
                                               current_instruction, std::move(description)});
   }
 
-  template <typename S, typename... Args>
-  inline bool check_fmt(const char* file, int line, bool value, const S& format, Args&&... args) {
+  template <typename... Args>
+  inline bool check_fmt(const char* file, int line, bool value, fmt::format_string<Args...> fmt,
+                        Args&&... args) {
     if (!value) {
-      add_error(file, line, fmt::format(format, args...));
+      add_error(file, line, fmt::format(fmt, std::forward<Args>(args)...));
     }
     return value;
   }
