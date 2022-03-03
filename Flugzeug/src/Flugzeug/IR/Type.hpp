@@ -70,6 +70,7 @@ public:
   Undef* get_undef() const;
 
   size_t get_bit_size() const;
+  size_t get_byte_size() const;
   uint64_t get_bit_mask() const;
 
   std::string format() const;

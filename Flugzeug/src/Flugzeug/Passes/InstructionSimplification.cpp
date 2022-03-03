@@ -148,6 +148,85 @@ static OptimizationResult simplify_cmp_select_cmp_sequence(IntCompare* cmp) {
   return OptimizationResult::unchanged();
 }
 
+static OptimizationResult bitcasts_to_offset(Cast* cast_instr) {
+  // load i32, i32* (bitcast i32* ((bitcast i64 v0) + 16))
+  //  =>
+  // load i32, i32* (v0 offset by 4)
+
+  // load i32, i32* (bitcast i32* ((bitcast i64 v0) + (v1 * 4)))
+  //  =>
+  // load i32, i32* (v0 offset by v1)
+
+  const auto context = cast_instr->get_context();
+  const auto pointer_type = cast<PointerType>(cast_instr->get_type());
+
+  // Make sure that it's a bitcast to a pointer type.
+  if (!cast_instr->is(CastKind::Bitcast) || !pointer_type) {
+    return OptimizationResult::unchanged();
+  }
+
+  const auto pointee_size = pointer_type->get_pointee()->get_byte_size();
+
+  // Get add instruction which offsets the pointer. It must be operating on machine word sized
+  // values.
+  const auto add = cast<BinaryInstr>(cast_instr->get_val());
+  if (!add || !add->is(BinaryOp::Add) || !add->get_type()->is_i64()) {
+    return OptimizationResult::unchanged();
+  }
+
+  // Get possible offset amount and parent bitcast of the source pointer.
+  Value* added_amount;
+  Cast* parent_bitcast;
+  if (!utils::get_commutative_operation_operands(add, added_amount, parent_bitcast)) {
+    return OptimizationResult::unchanged();
+  }
+
+  // Get actual source pointer and verify its type.
+  const auto parent_pointer = parent_bitcast->get_val();
+  if (parent_pointer->get_type() != pointer_type) {
+    return OptimizationResult::unchanged();
+  }
+
+  Value* offset_by = nullptr;
+  if (const auto added_constant = cast<Constant>(added_amount)) {
+    // (ptr + X) offsets ptr by (X / pointee_size) if X is divisible by it
+    const auto v = added_constant->get_constant_u();
+    if ((v % pointee_size) == 0) {
+      offset_by = context->get_i64_ty()->get_constant(v / pointee_size);
+    }
+  } else if (const auto binary = cast<BinaryInstr>(added_amount)) {
+    if (binary->is(BinaryOp::Mul)) {
+      // (ptr + X * pointee_size) offsets ptr by X
+      Value* other_value;
+      Constant* multiplied_by;
+      if (utils::get_commutative_operation_operands(binary, other_value, multiplied_by) &&
+          multiplied_by->get_constant_u() == pointee_size) {
+        offset_by = other_value;
+      }
+    } else if (binary->is(BinaryOp::Shl)) {
+      // (ptr + X << log2(pointee_size)) offsets ptr by X
+      const auto other_value = binary->get_lhs();
+      const auto shifted_by = cast<Constant>(binary->get_rhs());
+      if (shifted_by && (1 << shifted_by->get_constant_u()) == pointee_size) {
+        offset_by = other_value;
+      }
+    }
+  }
+
+  if (!offset_by) {
+    return OptimizationResult::unchanged();
+  }
+
+  cast_instr->replace_with_instruction_and_destroy(new Offset(context, parent_pointer, offset_by));
+
+  if (const auto instruction = cast<Instruction>(added_amount)) {
+    instruction->destroy_if_unused();
+  }
+  parent_bitcast->destroy_if_unused();
+
+  return OptimizationResult::changed();
+}
+
 class Simplifier : public InstructionVisitor {
   Context* context;
 
@@ -444,6 +523,7 @@ public:
 
   OptimizationResult visit_cast(Argument<Cast> cast_instr) {
     PROPAGATE_RESULT(make_undef_if_uses_undef(cast_instr));
+    PROPAGATE_RESULT(bitcasts_to_offset(cast_instr));
 
     const auto kind = cast_instr->get_cast_kind();
 

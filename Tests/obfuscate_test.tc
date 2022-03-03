@@ -1,11 +1,7 @@
-extern i64 get_unknown_value();
-
-i64 obfuscate_value(i64 x) {
-    i64 value = 14;
-
-    return (x & value) | (x & ~value);
+i32 www(i32* y) {
+    return *(i32*)((i64)y + 16);
 }
 
-i32 add(i32 x, i32 y) {
-    return x + y;
+i32 zzz(i32* y, i64 offset) {
+    return *(i32*)((i64)y + offset * 4);
 }

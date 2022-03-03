@@ -49,6 +49,12 @@ size_t Type::get_bit_size() const {
   }
 }
 
+size_t Type::get_byte_size() const {
+  const auto bit_size = get_bit_size();
+  verify(bit_size % 8 == 0, "Bit size is not divisible by 8");
+  return bit_size / 8;
+}
+
 uint64_t Type::get_bit_mask() const {
   switch (get_bit_size()) {
   case 1:
