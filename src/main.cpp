@@ -140,7 +140,7 @@ static void optimize_function(Function* f) {
 }
 
 static void debug_print_loops(Function* f) {
-  const auto loops = analyze_function_loops(f);
+  const auto loops = analysis::analyze_function_loops(f);
 
   log_debug("{}:", f->get_name());
   for (const auto& loop : loops) {

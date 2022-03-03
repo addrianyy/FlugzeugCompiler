@@ -71,7 +71,8 @@ struct LoopPhi {
 static bool get_loop_count_related_instructions(Instruction* instruction,
                                                 std::unordered_set<Instruction*>& instructions,
                                                 std::unordered_map<Phi*, LoopPhi>& loop_phis,
-                                                const Loop* loop, const Block* back_edge_from,
+                                                const analysis::Loop* loop,
+                                                const Block* back_edge_from,
                                                 const DominatorTree& dominator_tree) {
   // Return if we have already seen this instruction.
   if (instructions.contains(instruction)) {
@@ -168,7 +169,7 @@ static bool get_loop_count_related_instructions(Instruction* instruction,
 }
 
 static std::vector<Instruction*>
-order_loop_count_related_instructions(const Loop* loop,
+order_loop_count_related_instructions(const analysis::Loop* loop,
                                       const std::unordered_set<Instruction*>& instruction_set) {
   std::vector<Instruction*> instructions;
 
@@ -324,7 +325,7 @@ static void replace_branch(Instruction* instruction, Block* old_target, Block* n
   }
 }
 
-static void perform_unrolling(Function* function, const Loop* loop, Block* exit_from,
+static void perform_unrolling(Function* function, const analysis::Loop* loop, Block* exit_from,
                               Block* exit_to, Block* back_edge_from, size_t unroll_count) {
   // At this point we know that this loop is unrollable and we know how many times it should be
   // unrolled. Unrolling process itself looks like that:
@@ -564,7 +565,8 @@ static void perform_unrolling(Function* function, const Loop* loop, Block* exit_
   }
 }
 
-static bool unroll_loop(Function* function, const Loop* loop, const DominatorTree& dominator_tree) {
+static bool unroll_loop(Function* function, const analysis::Loop* loop,
+                        const DominatorTree& dominator_tree) {
   // This function will try to unroll the loop using following process:
   //   1. Check if the loop fulfils all conditions required for unrolling (ex. single back edge,
   //      single exiting edge).
@@ -639,7 +641,7 @@ static bool unroll_loop(Function* function, const Loop* loop, const DominatorTre
   return false;
 }
 
-static bool unroll_loop_or_sub_loops(Function* function, const Loop* loop,
+static bool unroll_loop_or_sub_loops(Function* function, const analysis::Loop* loop,
                                      const DominatorTree& dominator_tree) {
   // Try unrolling this loop.
   if (unroll_loop(function, loop, dominator_tree)) {
@@ -659,7 +661,7 @@ static bool unroll_loop_or_sub_loops(Function* function, const Loop* loop,
 bool LoopUnrolling::run(Function* function) {
   DominatorTree dominator_tree(function);
 
-  const auto loops = analyze_function_loops(function, dominator_tree);
+  const auto loops = analysis::analyze_function_loops(function, dominator_tree);
 
   bool did_something = false;
 

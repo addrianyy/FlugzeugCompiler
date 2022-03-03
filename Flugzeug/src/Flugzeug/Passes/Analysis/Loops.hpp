@@ -8,6 +8,9 @@
 namespace flugzeug {
 
 class DominatorTree;
+
+namespace analysis {
+
 template <typename T> struct SccContext;
 
 /// Properties of the loop:
@@ -58,5 +61,7 @@ public:
 std::vector<std::unique_ptr<Loop>> analyze_function_loops(Function* function,
                                                           const DominatorTree& dominator_tree);
 std::vector<std::unique_ptr<Loop>> analyze_function_loops(Function* function);
+
+} // namespace analysis
 
 } // namespace flugzeug

@@ -7,6 +7,7 @@
 #include <Flugzeug/Core/Log.hpp>
 
 using namespace flugzeug;
+using namespace flugzeug::analysis;
 
 struct DfsContext {
   enum State {
@@ -214,7 +215,8 @@ bool Loop::find_loops_in_scc(Function* function, const std::vector<Block*>& scc_
 }
 
 std::vector<std::unique_ptr<Loop>>
-flugzeug::analyze_function_loops(Function* function, const DominatorTree& dominator_tree) {
+flugzeug::analysis::analyze_function_loops(Function* function,
+                                           const DominatorTree& dominator_tree) {
   // Loops are defined only for reachable blocks.
   const auto reachable_blocks =
     function->get_entry_block()->get_reachable_blocks_set(IncludeStart::Yes);
@@ -234,7 +236,7 @@ flugzeug::analyze_function_loops(Function* function, const DominatorTree& domina
   return loops;
 }
 
-std::vector<std::unique_ptr<Loop>> flugzeug::analyze_function_loops(Function* function) {
+std::vector<std::unique_ptr<Loop>> flugzeug::analysis::analyze_function_loops(Function* function) {
   DominatorTree dominator_tree(function);
   return analyze_function_loops(function, dominator_tree);
 }

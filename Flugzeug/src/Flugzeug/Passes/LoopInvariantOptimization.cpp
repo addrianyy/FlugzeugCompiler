@@ -9,7 +9,7 @@
 
 using namespace flugzeug;
 
-static bool is_instruction_loop_invariant(Instruction* instruction, const Loop* loop,
+static bool is_instruction_loop_invariant(Instruction* instruction, const analysis::Loop* loop,
                                           std::unordered_set<Instruction*>& invariants) {
   // Volatile instructions cannot be loop invariants.
   if (instruction->is_volatile()) {
@@ -47,7 +47,8 @@ static bool is_instruction_loop_invariant(Instruction* instruction, const Loop* 
   return true;
 }
 
-static std::vector<Instruction*> get_loop_invariants(Function* function, const Loop* loop) {
+static std::vector<Instruction*> get_loop_invariants(Function* function,
+                                                     const analysis::Loop* loop) {
   std::unordered_set<Instruction*> invariants_set;
   std::vector<Instruction*> invariants;
 
@@ -82,7 +83,7 @@ static std::vector<Instruction*> get_loop_invariants(Function* function, const L
   return invariants;
 }
 
-static std::unordered_set<Block*> get_entering_blocks(const Loop* loop) {
+static std::unordered_set<Block*> get_entering_blocks(const analysis::Loop* loop) {
   std::unordered_set<Block*> entering_blocks;
 
   for (auto& instruction : loop->get_header()->users<Instruction>()) {
@@ -96,7 +97,7 @@ static std::unordered_set<Block*> get_entering_blocks(const Loop* loop) {
   return entering_blocks;
 }
 
-static Block* get_or_create_loop_preheader(Function* function, const Loop* loop) {
+static Block* get_or_create_loop_preheader(Function* function, const analysis::Loop* loop) {
   const auto entering_blocks = get_entering_blocks(loop);
 
   if (entering_blocks.size() == 1) {
@@ -144,7 +145,7 @@ static Block* get_or_create_loop_preheader(Function* function, const Loop* loop)
   }
 }
 
-static bool optimize_invariants(Function* function, const Loop* loop) {
+static bool optimize_invariants(Function* function, const analysis::Loop* loop) {
   const auto invariants = get_loop_invariants(function, loop);
   if (invariants.empty()) {
     return false;
@@ -166,7 +167,8 @@ static bool optimize_invariants(Function* function, const Loop* loop) {
   return true;
 }
 
-static bool optimize_invariants_in_loop_or_sub_loops(Function* function, const Loop* loop) {
+static bool optimize_invariants_in_loop_or_sub_loops(Function* function,
+                                                     const analysis::Loop* loop) {
   // Try optimizing this loop.
   if (optimize_invariants(function, loop)) {
     return true;
@@ -183,7 +185,7 @@ static bool optimize_invariants_in_loop_or_sub_loops(Function* function, const L
 }
 
 bool LoopInvariantOptimization::run(Function* function) {
-  const auto loops = analyze_function_loops(function);
+  const auto loops = analysis::analyze_function_loops(function);
 
   bool did_something = false;
 

@@ -63,10 +63,9 @@ static bool process_scc(const std::vector<Phi*>& scc,
 
 bool minimize_phis(const std::unordered_set<Phi*>& phis,
                    const std::unordered_map<Phi*, std::vector<Value*>>& phi_graph) {
-  const auto sccs =
-    calculate_sccs<Phi*, false>(phis, [&phi_graph](Phi* phi) -> const std::vector<Value*>& {
-      return phi_graph.find(phi)->second;
-    });
+  const auto sccs = analysis::calculate_sccs<Phi*, false>(
+    phis,
+    [&phi_graph](Phi* phi) -> const std::vector<Value*>& { return phi_graph.find(phi)->second; });
 
   bool minimized = false;
 

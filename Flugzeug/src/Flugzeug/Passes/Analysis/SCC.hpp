@@ -6,7 +6,7 @@
 
 #include <Flugzeug/Core/Error.hpp>
 
-namespace flugzeug {
+namespace flugzeug::analysis {
 
 template <typename T> struct SccContext {
   struct VertexData {
@@ -146,4 +146,4 @@ std::vector<std::vector<T>> calculate_sccs(const std::unordered_set<T>& values,
   return calculate_sccs<T, SkipTrivialNonLoopingSCCs, Fn>(context, values, get_neighbours);
 }
 
-} // namespace flugzeug
+} // namespace flugzeug::analysis
