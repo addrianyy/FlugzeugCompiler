@@ -1,0 +1,11 @@
+extern i64 get_unknown_value();
+
+i64 obfuscate_value(i64 x) {
+    i64 value = 14;
+
+    return (x & value) | (x & ~value);
+}
+
+i32 add(i32 x, i32 y) {
+    return x + y;
+}

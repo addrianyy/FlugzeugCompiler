@@ -5,8 +5,25 @@ namespace flugzeug {
 
 class Instruction;
 
+enum InsertDestination {
+  Front,
+  Back,
+};
+
 class InstructionInserter {
-  Block* block = nullptr;
+  enum class InsertType {
+    BlockFront,
+    BlockBack,
+    BeforeInstruction,
+    AfterInstruction,
+  };
+
+  InsertType insert_type = InsertType::BlockBack;
+
+  Block* insertion_block = nullptr;
+  Instruction* insertion_instruction = nullptr;
+  bool follow_instruction = false;
+
   Context* context = nullptr;
 
   void insert_internal(Instruction* instruction);
@@ -17,10 +34,26 @@ class InstructionInserter {
   }
 
 public:
-  explicit InstructionInserter(Block* block = nullptr) { set_insertion_block(block); }
+  InstructionInserter() = default;
 
-  void set_insertion_block(Block* insertion_block);
-  Block* get_insertion_block() { return block; }
+  explicit InstructionInserter(Block* insertion_block,
+                               InsertDestination destination = InsertDestination::Back) {
+    set_insertion_block(insertion_block, destination);
+  }
+
+  explicit InstructionInserter(Instruction* insertion_instruction,
+                               InsertDestination destination = InsertDestination::Back,
+                               bool follow_instruction_ = true) {
+    set_insertion_instruction(insertion_instruction, destination, follow_instruction_);
+  }
+
+  void set_insertion_block(Block* insertion_block,
+                           InsertDestination destination = InsertDestination::Back);
+  void set_insertion_instruction(Instruction* insertion_instruction,
+                                 InsertDestination destination = InsertDestination::Back,
+                                 bool follow_instruction = true);
+
+  Block* get_insertion_block();
 
   UnaryInstr* unary_instr(UnaryOp op, Value* val);
   BinaryInstr* binary_instr(Value* lhs, BinaryOp op, Value* rhs);

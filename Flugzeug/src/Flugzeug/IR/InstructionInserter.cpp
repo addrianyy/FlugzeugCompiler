@@ -3,12 +3,62 @@
 using namespace flugzeug;
 
 void InstructionInserter::insert_internal(Instruction* instruction) {
-  block->push_instruction_back(instruction);
+  switch (insert_type) {
+
+  case InsertType::BlockFront:
+    insertion_block->push_instruction_front(instruction);
+    break;
+
+  case InsertType::BlockBack:
+    insertion_block->push_instruction_back(instruction);
+    break;
+
+  case InsertType::BeforeInstruction:
+    instruction->insert_before(insertion_instruction);
+    if (follow_instruction) {
+      insertion_instruction = instruction;
+    }
+    break;
+
+  case InsertType::AfterInstruction:
+    instruction->insert_after(insertion_instruction);
+    if (follow_instruction) {
+      insertion_instruction = instruction;
+    }
+    break;
+  }
 }
 
-void InstructionInserter::set_insertion_block(Block* insertion_block) {
-  block = insertion_block;
+void InstructionInserter::set_insertion_block(Block* block, InsertDestination destination) {
+  insert_type =
+    destination == InsertDestination::Back ? InsertType::BlockBack : InsertType::BlockFront;
+  follow_instruction = false;
+  insertion_instruction = nullptr;
+  insertion_block = block;
   context = block ? block->get_context() : nullptr;
+}
+
+void InstructionInserter::set_insertion_instruction(Instruction* instruction,
+                                                    InsertDestination destination,
+                                                    bool follow_instruction_) {
+  insert_type = destination == InsertDestination::Back ? InsertType::AfterInstruction
+                                                       : InsertType::BeforeInstruction;
+  follow_instruction = follow_instruction_;
+  insertion_instruction = instruction;
+  insertion_block = nullptr;
+  context = instruction ? instruction->get_context() : nullptr;
+}
+
+Block* InstructionInserter::get_insertion_block() {
+  if (insertion_block) {
+    return insertion_block;
+  }
+
+  if (insertion_instruction) {
+    return insertion_instruction->get_block();
+  }
+
+  return nullptr;
 }
 
 UnaryInstr* InstructionInserter::unary_instr(UnaryOp op, Value* val) {
