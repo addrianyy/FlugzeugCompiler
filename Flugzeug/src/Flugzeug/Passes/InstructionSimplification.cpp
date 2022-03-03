@@ -207,7 +207,7 @@ static OptimizationResult bitcasts_to_offset(Cast* cast_instr) {
       // (ptr + X << log2(pointee_size)) offsets ptr by X
       const auto other_value = binary->get_lhs();
       const auto shifted_by = cast<Constant>(binary->get_rhs());
-      if (shifted_by && (1 << shifted_by->get_constant_u()) == pointee_size) {
+      if (shifted_by && (uint64_t(1) << shifted_by->get_constant_u()) == pointee_size) {
         offset_by = other_value;
       }
     }
