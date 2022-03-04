@@ -8,6 +8,8 @@
 #include <Flugzeug/IR/InstructionVisitor.hpp>
 #include <Flugzeug/Passes/Utils/SimplifyPhi.hpp>
 
+#include <Flugzeug/IR/Patterns.hpp>
+
 using namespace flugzeug;
 
 #define PROPAGATE_RESULT(call_expression)                                                          \
@@ -40,31 +42,22 @@ static OptimizationResult make_undef_if_uses_undef(Instruction* instruction) {
 }
 
 static OptimizationResult chain_commutative_expressions(BinaryInstr* binary) {
-  // Evaluate chain of (C1 op (a op C2)) to (a op C).
+  // Evaluate chain of (C1 op (X op C2)) to (a op C).
 
   const auto op = binary->get_op();
-  if (!BinaryInstr::is_binary_op_commutative(op)) {
-    return OptimizationResult::unchanged();
-  }
 
-  BinaryInstr* parent_binary;
-  Constant* constant;
-  if (!utils::get_commutative_operation_operands(binary, parent_binary, constant)) {
-    return OptimizationResult::unchanged();
-  }
-
-  if (op != parent_binary->get_op()) {
-    return OptimizationResult::unchanged();
-  }
-
+  uint64_t c1, c2;
   Value* operand;
-  Constant* constant_2;
-  if (!utils::get_commutative_operation_operands(parent_binary, operand, constant_2)) {
+  BinaryInstr* parent_binary;
+
+  if (!match_pattern(
+        binary, pat::binary_commutative(pat::constant_u(c1),
+                                        pat::binary_specific(parent_binary, pat::value(operand), op,
+                                                             pat::constant_u(c2))))) {
     return OptimizationResult::unchanged();
   }
 
-  const auto evaluated = utils::evaluate_binary_instr(
-    binary->get_type(), constant->get_constant_u(), op, constant_2->get_constant_u());
+  const auto evaluated = utils::evaluate_binary_instr(binary->get_type(), c1, op, c2);
 
   const auto evaluated_constant = binary->get_type()->get_constant(evaluated);
   const auto new_instruction =
@@ -89,15 +82,12 @@ static OptimizationResult simplify_cmp_select_cmp_sequence(IntCompare* cmp) {
 
   // In sequence of `cmp`, `select`, `cmp` we are matching on last compare.
 
-  const IntPredicate pred = cmp->get_pred();
-  if (pred != IntPredicate::Equal && pred != IntPredicate::NotEqual) {
-    return OptimizationResult::unchanged();
-  }
-
-  // Order doesn't matter because we care only about EQ na NE predicates.
   Select* select;
   Constant* compared_to;
-  if (!utils::get_commutative_operation_operands(cmp, select, compared_to)) {
+  IntPredicate pred;
+
+  if (!match_pattern(cmp,
+                     pat::compare_eq_or_ne(pat::value(select), pred, pat::constant(compared_to)))) {
     return OptimizationResult::unchanged();
   }
 
@@ -149,13 +139,13 @@ static OptimizationResult simplify_cmp_select_cmp_sequence(IntCompare* cmp) {
 }
 
 static OptimizationResult bitcasts_to_offset(Cast* cast_instr) {
-  // load i32, i32* (bitcast i32* ((bitcast i64 v0) + 16))
+  // bitcast i32* ((bitcast i64 v0) + 16)
   //  =>
-  // load i32, i32* (v0 offset by 4)
+  // v0 offset by 4
 
-  // load i32, i32* (bitcast i32* ((bitcast i64 v0) + (v1 * 4)))
+  // bitcast i32* ((bitcast i64 v0) + (v1 * 4))
   //  =>
-  // load i32, i32* (v0 offset by v1)
+  // v0 offset by v1
 
   const auto context = cast_instr->get_context();
   const auto pointer_type = cast<PointerType>(cast_instr->get_type());
