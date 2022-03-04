@@ -69,14 +69,20 @@ public:
 
 } // namespace detail
 
-inline auto value() { return detail::ClassFilteringPattern<Value>(nullptr); }
-template <typename T> inline auto value(T*& v) { return detail::ClassFilteringPattern<T>(&v); }
+template <typename T = Value> auto value() { return detail::ClassFilteringPattern<Value>(nullptr); }
+template <typename T = Value> auto value(T*& v) { return detail::ClassFilteringPattern<T>(&v); }
 
 inline auto constant() { return detail::ClassFilteringPattern<Constant>(nullptr); }
 inline auto constant(Constant*& v) { return detail::ClassFilteringPattern<Constant>(&v); }
 
 inline auto undef() { return detail::ClassFilteringPattern<Undef>(nullptr); }
 inline auto undef(Undef*& v) { return detail::ClassFilteringPattern<Undef>(&v); }
+
+inline auto block() { return detail::ClassFilteringPattern<Block>(nullptr); }
+inline auto block(Block*& v) { return detail::ClassFilteringPattern<Block>(&v); }
+
+inline auto function() { return detail::ClassFilteringPattern<Function>(nullptr); }
+inline auto function(Function*& v) { return detail::ClassFilteringPattern<Function>(&v); }
 
 inline auto constant_u(uint64_t& constant) {
   return detail::ConstantExtractionPattern<true>(constant);
@@ -85,7 +91,7 @@ inline auto constant_i(int64_t& constant) {
   return detail::ConstantExtractionPattern<false>(constant);
 }
 
-template <typename Pattern> inline auto typed(Type* type, Pattern pattern) {
+template <typename Pattern> auto typed(Type* type, Pattern pattern) {
   return detail::TypedPattern<Pattern>(type, pattern);
 }
 

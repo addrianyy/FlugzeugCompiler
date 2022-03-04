@@ -5,6 +5,7 @@
 #include "Patterns/Cast.hpp"
 #include "Patterns/General.hpp"
 #include "Patterns/IntCompare.hpp"
+#include "Patterns/OtherInstructions.hpp"
 #include "Patterns/UnaryInstr.hpp"
 
 namespace flugzeug {

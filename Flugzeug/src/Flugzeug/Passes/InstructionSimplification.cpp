@@ -78,18 +78,22 @@ static OptimizationResult simplify_cmp_select_cmp_sequence(IntCompare* cmp) {
 
   // In sequence of `cmp`, `select`, `cmp` we are matching on last compare.
 
+  IntPredicate pred;
   Select* select;
   Constant* compared_to;
-  IntPredicate pred;
 
-  if (!match_pattern(cmp,
-                     pat::compare_eq_or_ne(pat::value(select), pred, pat::constant(compared_to)))) {
+  Value* select_cond;
+  Constant* select_true;
+  Constant* select_false;
+
+  if (!match_pattern(cmp, pat::compare_eq_or_ne(pat::select(select, pat::value(select_cond),
+                                                            pat::constant(select_true),
+                                                            pat::constant(select_false)),
+                                                pred, pat::constant(compared_to)))) {
     return OptimizationResult::unchanged();
   }
 
-  const auto select_true = cast<Constant>(select->get_true_val());
-  const auto select_false = cast<Constant>(select->get_false_val());
-  if (!select_true || !select_false || select_true == select_false) {
+  if (select_true == select_false) {
     return OptimizationResult::unchanged();
   }
 
@@ -114,12 +118,12 @@ static OptimizationResult simplify_cmp_select_cmp_sequence(IntCompare* cmp) {
 
   // We know that both `cmps` are corelated with each other.
   if (!inverted) {
-    cmp->replace_uses_with_and_destroy(select->get_cond());
+    cmp->replace_uses_with_and_destroy(select_cond);
 
     select->destroy_if_unused();
 
     return OptimizationResult::changed();
-  } else if (const auto parent_cmp = cast<IntCompare>(select->get_cond())) {
+  } else if (const auto parent_cmp = cast<IntCompare>(select_cond)) {
     const auto new_cmp =
       new IntCompare(cmp->get_context(), parent_cmp->get_lhs(),
                      IntCompare::inverted_predicate(parent_cmp->get_pred()), parent_cmp->get_rhs());
