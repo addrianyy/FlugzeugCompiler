@@ -12,7 +12,7 @@ public:
   explicit ClassFilteringPattern(Class** bind_value) : bind_value(bind_value) {}
 
   template <typename T> bool match(T* m_value) {
-    const auto value = cast<Class>(m_value);
+    const auto value = ::cast<Class>(m_value);
     if (!value) {
       return false;
     }
@@ -36,7 +36,7 @@ public:
   explicit ConstantExtractionPattern(Type& bind_value) : bind_value(bind_value) {}
 
   template <typename T> bool match(T* m_value) {
-    const auto constant = cast<Constant>(m_value);
+    const auto constant = ::cast<Constant>(m_value);
     if (!constant) {
       return false;
     }
@@ -48,6 +48,22 @@ public:
     }
 
     return true;
+  }
+};
+
+template <typename Pattern> class TypedPattern {
+  Type* type;
+  Pattern sub_pattern;
+
+public:
+  explicit TypedPattern(Type* type, Pattern sub_pattern) : type(type), sub_pattern(sub_pattern) {}
+
+  template <typename T> bool match(T* m_value) {
+    if (m_value->get_type() == type) {
+      return sub_pattern.match(m_value);
+    }
+
+    return false;
   }
 };
 
@@ -67,6 +83,10 @@ inline auto constant_u(uint64_t& constant) {
 }
 inline auto constant_i(int64_t& constant) {
   return detail::ConstantExtractionPattern<false>(constant);
+}
+
+template <typename Pattern> inline auto typed(Type* type, Pattern pattern) {
+  return detail::TypedPattern<Pattern>(type, pattern);
 }
 
 } // namespace flugzeug::pat

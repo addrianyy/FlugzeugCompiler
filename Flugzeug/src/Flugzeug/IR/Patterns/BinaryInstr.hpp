@@ -21,7 +21,7 @@ public:
         specific_op(specific_op) {}
 
   template <typename T> bool match(T* m_value) {
-    const auto binary = cast<BinaryInstr>(m_value);
+    const auto binary = ::cast<BinaryInstr>(m_value);
     if (!binary) {
       return false;
     }

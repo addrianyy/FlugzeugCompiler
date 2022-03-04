@@ -2,6 +2,7 @@
 #include "Instructions.hpp"
 
 #include "Patterns/BinaryInstr.hpp"
+#include "Patterns/Cast.hpp"
 #include "Patterns/General.hpp"
 #include "Patterns/IntCompare.hpp"
 #include "Patterns/UnaryInstr.hpp"
