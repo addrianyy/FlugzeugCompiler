@@ -11,3 +11,7 @@ i32 factorial(i32 n) {
 i32 test_factorial() {
 	return factorial(7);
 }
+
+i32 test_compare(i32 x) {
+    return x - 5 > 3;
+}

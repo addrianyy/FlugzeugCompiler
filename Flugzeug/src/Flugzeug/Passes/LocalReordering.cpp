@@ -3,6 +3,7 @@
 #include <Flugzeug/IR/Block.hpp>
 #include <Flugzeug/IR/Function.hpp>
 #include <Flugzeug/IR/InstructionVisitor.hpp>
+#include <Flugzeug/IR/Patterns.hpp>
 
 using namespace flugzeug;
 
@@ -31,16 +32,11 @@ public:
 
     for (Instruction& instruction :
          make_instruction_range(binary->get_block()->get_first_instruction(), previous)) {
-      const auto other_binary = cast<BinaryInstr>(instruction);
-      if (!other_binary) {
-        continue;
-      }
-
-      if (other_binary->get_lhs() == binary->get_lhs() &&
-          other_binary->get_op() == corresponding_op &&
-          other_binary->get_rhs() == binary->get_rhs()) {
+      if (match_pattern(&instruction, pat::binary_specific(
+                                        pat::specific_value(binary->get_lhs()), *corresponding_op,
+                                        pat::specific_value(binary->get_rhs())))) {
         // Move this instruction just after corresponding `div`/`mod`.
-        binary->move_after(other_binary);
+        binary->move_after(&instruction);
 
         did_something = true;
 

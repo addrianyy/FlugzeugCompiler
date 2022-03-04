@@ -86,11 +86,13 @@ static OptimizationResult simplify_cmp_select_cmp_sequence(IntCompare* cmp) {
   Constant* select_true;
   Constant* select_false;
 
-  if (!match_pattern(cmp, pat::compare_eq_or_ne(pat::select(select, pat::value(select_cond),
-                                                            pat::constant(select_true),
-                                                            pat::constant(select_false)),
-                                                pred, pat::constant(compared_to)))) {
-    return OptimizationResult::unchanged();
+  {
+    const auto select_pat = pat::select(select, pat::value(select_cond), pat::constant(select_true),
+                                        pat::constant(select_false));
+
+    if (!match_pattern(cmp, pat::compare_eq_or_ne(select_pat, pred, pat::constant(compared_to)))) {
+      return OptimizationResult::unchanged();
+    }
   }
 
   if (select_true == select_false) {
@@ -485,23 +487,25 @@ public:
 
     // cmp (x + C1), C2  =>  cmp x, C2 - C1
     {
+      Value* add_unknown;
+      Constant* add_const;
+      Constant* compared_to;
       BinaryInstr* add;
-      Constant* cmp_constant;
-      if (utils::get_commutative_operation_operands(int_compare, add, cmp_constant) &&
-          add->is(BinaryOp::Add)) {
-        Value* other;
-        Constant* added_constant;
-        if (utils::get_commutative_operation_operands(add, other, added_constant)) {
-          const auto new_constant = cmp_constant->get_type()->get_constant(
-            cmp_constant->get_constant_u() - added_constant->get_constant_u());
 
-          int_compare->replace_operands(add, other);
-          int_compare->replace_operands(cmp_constant, new_constant);
+      const auto pat1 = pat::add(add, pat::constant(add_const), pat::value(add_unknown));
+      const auto pat2 = pat::constant(compared_to);
 
-          add->destroy_if_unused();
+      if (match_pattern(int_compare, pat::compare(pat1, pat2)) ||
+          match_pattern(int_compare, pat::compare(pat2, pat1))) {
+        const auto new_constant = compared_to->get_type()->get_constant(
+          compared_to->get_constant_u() - add_const->get_constant_u());
 
-          return OptimizationResult::changed();
-        }
+        int_compare->replace_operands(add, add_unknown);
+        int_compare->replace_operands(compared_to, new_constant);
+
+        add->destroy_if_unused();
+
+        return OptimizationResult::changed();
       }
     }
 
