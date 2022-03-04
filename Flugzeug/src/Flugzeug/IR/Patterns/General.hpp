@@ -67,6 +67,46 @@ public:
   }
 };
 
+template <typename TValue> class SpecificValuePattern {
+  TValue* specific_value;
+
+public:
+  explicit SpecificValuePattern(TValue* specific_value) : specific_value(specific_value) {}
+
+  template <typename T> bool match(T* m_value) {
+    const auto value = ::cast<TValue>(m_value);
+    if (!value) {
+      return false;
+    }
+
+    return value == specific_value;
+  }
+};
+
+template <bool Unsigned> class SpecificConstantPattern {
+public:
+  using Type = std::conditional_t<Unsigned, uint64_t, int64_t>;
+
+private:
+  Type specific_value;
+
+public:
+  explicit SpecificConstantPattern(Type specific_value) : specific_value(specific_value) {}
+
+  template <typename T> bool match(T* m_value) {
+    const auto constant = ::cast<Constant>(m_value);
+    if (!constant) {
+      return false;
+    }
+
+    if constexpr (Unsigned) {
+      return constant->get_constant_u() == specific_value;
+    } else {
+      return constant->get_constant_i() == specific_value;
+    }
+  }
+};
+
 } // namespace detail
 
 template <typename T = Value> auto value() { return detail::ClassFilteringPattern<Value>(nullptr); }
@@ -90,6 +130,27 @@ inline auto constant_u(uint64_t& constant) {
 inline auto constant_i(int64_t& constant) {
   return detail::ConstantExtractionPattern<false>(constant);
 }
+
+template <typename T> auto specific_value(T* value) {
+  return detail::SpecificValuePattern<T>(value);
+}
+
+inline auto specific_block(Block* block) { return detail::SpecificValuePattern<Block>(block); }
+
+inline auto specific_function(Function* function) {
+  return detail::SpecificValuePattern<Function>(function);
+}
+
+inline auto specific_constant(uint64_t value) {
+  return detail::SpecificConstantPattern<true>(value);
+}
+inline auto specific_constant(int64_t value) {
+  return detail::SpecificConstantPattern<false>(value);
+}
+
+inline auto zero() { return detail::SpecificConstantPattern<true>(0); }
+inline auto one() { return detail::SpecificConstantPattern<true>(1); }
+inline auto negative_one() { return detail::SpecificConstantPattern<false>(-1); }
 
 template <typename Pattern> auto typed(Type* type, Pattern pattern) {
   return detail::TypedPattern<Pattern>(type, pattern);
