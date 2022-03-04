@@ -28,9 +28,7 @@ public:
       return OptimizationResult::unchanged();
     }
 
-    const auto propagated = utils::evaluate_unary_instr(type, unary->get_op(), val);
-
-    return type->get_constant(propagated);
+    return utils::evaluate_unary_instr_to_value(type, unary->get_op(), val);
   }
 
   OptimizationResult visit_binary_instr(Argument<BinaryInstr> binary) {
@@ -39,9 +37,7 @@ public:
       return OptimizationResult::unchanged();
     }
 
-    const auto propagated = utils::evaluate_binary_instr(type, lhs, binary->get_op(), rhs);
-
-    return type->get_constant(propagated);
+    return utils::evaluate_binary_instr_to_value(type, lhs, binary->get_op(), rhs);
   }
 
   OptimizationResult visit_int_compare(Argument<IntCompare> int_compare) {
@@ -50,10 +46,8 @@ public:
       return OptimizationResult::unchanged();
     }
 
-    const auto propagated = utils::evaluate_int_compare(int_compare->get_lhs()->get_type(), lhs,
-                                                        int_compare->get_pred(), rhs);
-
-    return type->get_constant(propagated);
+    return utils::evaluate_int_compare_to_value(int_compare->get_lhs()->get_type(), lhs,
+                                                int_compare->get_pred(), rhs);
   }
 
   OptimizationResult visit_cast(Argument<Cast> cast) {
@@ -62,10 +56,8 @@ public:
       return OptimizationResult::unchanged();
     }
 
-    const uint64_t propagated =
-      utils::evaluate_cast(val, cast->get_val()->get_type(), type, cast->get_cast_kind());
-
-    return type->get_constant(propagated);
+    return utils::evaluate_cast_to_value(val, cast->get_val()->get_type(), type,
+                                         cast->get_cast_kind());
   }
 
   OptimizationResult visit_cond_branch(Argument<CondBranch> cond_branch) {

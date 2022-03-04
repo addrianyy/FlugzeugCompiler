@@ -42,7 +42,7 @@ static OptimizationResult make_undef_if_uses_undef(Instruction* instruction) {
 }
 
 static OptimizationResult chain_commutative_expressions(BinaryInstr* binary) {
-  // Evaluate chain of (C1 op (X op C2)) to (a op C).
+  // Optimize chain of (C1 op (X op C2)) to (a op C).
 
   const auto op = binary->get_op();
 
@@ -57,13 +57,9 @@ static OptimizationResult chain_commutative_expressions(BinaryInstr* binary) {
     return OptimizationResult::unchanged();
   }
 
-  const auto evaluated = utils::evaluate_binary_instr(binary->get_type(), c1, op, c2);
+  const auto evaluated = utils::evaluate_binary_instr_to_value(binary->get_type(), c1, op, c2);
 
-  const auto evaluated_constant = binary->get_type()->get_constant(evaluated);
-  const auto new_instruction =
-    new BinaryInstr(binary->get_context(), operand, op, evaluated_constant);
-
-  binary->replace_with_instruction_and_destroy(new_instruction);
+  binary->set_new_operands(operand, op, evaluated);
   parent_binary->destroy_if_unused();
 
   return OptimizationResult::changed();
