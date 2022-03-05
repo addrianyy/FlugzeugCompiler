@@ -84,8 +84,7 @@ public:
   Context* get_context() { return context; }
   const Context* get_context() const { return context; }
 
-  Type* get_type() { return type; }
-  const Type* get_type() const { return type; }
+  Type* get_type() const { return type; }
 
   size_t get_display_index() const { return display_index; }
   void set_display_index(size_t index);
@@ -175,6 +174,9 @@ class Constant : public Value {
   Constant(Context* context, Type* type, uint64_t constant);
 
 public:
+  static uint64_t constrain_u(Type* type, uint64_t value);
+  static int64_t constrain_i(Type* type, int64_t value);
+
   uint64_t get_constant_u() const { return constant_u; }
   int64_t get_constant_i() const { return constant_i; }
 

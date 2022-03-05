@@ -199,6 +199,18 @@ Constant::Constant(Context* context, Type* type, uint64_t constant)
   constrain_constant(type, constant, &constant_u, &constant_i);
 }
 
+uint64_t Constant::constrain_u(Type* type, uint64_t value) {
+  uint64_t result;
+  constrain_constant(type, value, &result, nullptr);
+  return result;
+}
+
+int64_t Constant::constrain_i(Type* type, int64_t value) {
+  int64_t result;
+  constrain_constant(type, uint64_t(value), nullptr, &result);
+  return result;
+}
+
 std::string Value::format() const { return "v" + std::to_string(display_index); }
 
 std::string Constant::format() const {

@@ -5,17 +5,17 @@ namespace flugzeug::pat {
 
 namespace detail {
 
-template <typename LHSPattern, typename RHSPattern, bool MustBeCommutative,
+template <typename TInstruction, typename LHSPattern, typename RHSPattern, bool MustBeCommutative,
           bool MatchSpecificOp = false>
 class BinaryPattern {
-  BinaryInstr** bind_instruction;
+  TInstruction** bind_instruction;
   LHSPattern lhs_pattern;
   BinaryOp* bind_op;
   RHSPattern rhs_pattern;
   BinaryOp specific_op;
 
 public:
-  BinaryPattern(BinaryInstr** bind_instruction, LHSPattern lhs, BinaryOp* bind_op, RHSPattern rhs,
+  BinaryPattern(TInstruction** bind_instruction, LHSPattern lhs, BinaryOp* bind_op, RHSPattern rhs,
                 BinaryOp specific_op = BinaryOp::Add)
       : bind_instruction(bind_instruction), lhs_pattern(lhs), bind_op(bind_op), rhs_pattern(rhs),
         specific_op(specific_op) {}
@@ -59,30 +59,32 @@ public:
 } // namespace detail
 
 #define IMPLEMENT_BINARY_PATTERN(name, commutative)                                                \
-  template <typename LHSPattern, typename RHSPattern>                                              \
-  auto name(BinaryInstr*& instruction, LHSPattern lhs, BinaryOp& op, RHSPattern rhs) {             \
-    return detail::BinaryPattern<LHSPattern, RHSPattern, commutative>(&instruction, lhs, &op,      \
-                                                                      rhs);                        \
+  template <typename TInstruction, typename LHSPattern, typename RHSPattern>                       \
+  auto name(TInstruction*& instruction, LHSPattern lhs, BinaryOp& op, RHSPattern rhs) {            \
+    return detail::BinaryPattern<TInstruction, LHSPattern, RHSPattern, commutative>(               \
+      &instruction, lhs, &op, rhs);                                                                \
   }                                                                                                \
                                                                                                    \
   template <typename LHSPattern, typename RHSPattern>                                              \
   auto name(LHSPattern lhs, BinaryOp& op, RHSPattern rhs) {                                        \
-    return detail::BinaryPattern<LHSPattern, RHSPattern, commutative>(nullptr, lhs, &op, rhs);     \
+    return detail::BinaryPattern<const BinaryInstr, LHSPattern, RHSPattern, commutative>(          \
+      nullptr, lhs, &op, rhs);                                                                     \
   }                                                                                                \
                                                                                                    \
-  template <typename LHSPattern, typename RHSPattern>                                              \
-  auto name(BinaryInstr*& instruction, LHSPattern lhs, RHSPattern rhs) {                           \
-    return detail::BinaryPattern<LHSPattern, RHSPattern, commutative>(&instruction, lhs, nullptr,  \
-                                                                      rhs);                        \
+  template <typename TInstruction, typename LHSPattern, typename RHSPattern>                       \
+  auto name(TInstruction*& instruction, LHSPattern lhs, RHSPattern rhs) {                          \
+    return detail::BinaryPattern<TInstruction, LHSPattern, RHSPattern, commutative>(               \
+      &instruction, lhs, nullptr, rhs);                                                            \
   }                                                                                                \
                                                                                                    \
   template <typename LHSPattern, typename RHSPattern> auto name(LHSPattern lhs, RHSPattern rhs) {  \
-    return detail::BinaryPattern<LHSPattern, RHSPattern, commutative>(nullptr, lhs, nullptr, rhs); \
+    return detail::BinaryPattern<const BinaryInstr, LHSPattern, RHSPattern, commutative>(          \
+      nullptr, lhs, nullptr, rhs);                                                                 \
   }
 
 #define IMPLEMENT_SPECIFIC_BINARY_PATTERN(name, op)                                                \
-  template <typename LHSPattern, typename RHSPattern>                                              \
-  auto name(BinaryInstr*& instruction, LHSPattern lhs, RHSPattern rhs) {                           \
+  template <typename TInstruction, typename LHSPattern, typename RHSPattern>                       \
+  auto name(TInstruction*& instruction, LHSPattern lhs, RHSPattern rhs) {                          \
     return binary_specific(instruction, lhs, op, rhs);                                             \
   }                                                                                                \
                                                                                                    \
@@ -90,17 +92,17 @@ public:
     return binary_specific(lhs, op, rhs);                                                          \
   }
 
-template <typename LHSPattern, typename RHSPattern>
-auto binary_specific(BinaryInstr*& instruction, LHSPattern lhs, BinaryOp specific_op,
+template <typename TInstruction, typename LHSPattern, typename RHSPattern>
+auto binary_specific(TInstruction*& instruction, LHSPattern lhs, BinaryOp specific_op,
                      RHSPattern rhs) {
-  return detail::BinaryPattern<LHSPattern, RHSPattern, false, true>(&instruction, lhs, nullptr, rhs,
-                                                                    specific_op);
+  return detail::BinaryPattern<TInstruction, LHSPattern, RHSPattern, false, true>(
+    &instruction, lhs, nullptr, rhs, specific_op);
 }
 
 template <typename LHSPattern, typename RHSPattern>
 auto binary_specific(LHSPattern lhs, BinaryOp specific_op, RHSPattern rhs) {
-  return detail::BinaryPattern<LHSPattern, RHSPattern, false, true>(nullptr, lhs, nullptr, rhs,
-                                                                    specific_op);
+  return detail::BinaryPattern<const BinaryInstr, LHSPattern, RHSPattern, false, true>(
+    nullptr, lhs, nullptr, rhs, specific_op);
 }
 
 IMPLEMENT_BINARY_PATTERN(binary, false)

@@ -68,10 +68,10 @@ public:
 };
 
 template <typename TValue> class SpecificValuePattern {
-  TValue* specific_value;
+  const TValue* specific_value;
 
 public:
-  explicit SpecificValuePattern(TValue* specific_value) : specific_value(specific_value) {}
+  explicit SpecificValuePattern(const TValue* specific_value) : specific_value(specific_value) {}
 
   template <typename T> bool match(T* m_value) {
     const auto value = ::cast<TValue>(m_value);
@@ -111,18 +111,29 @@ public:
 
 template <typename T = Value> auto value() { return detail::ClassFilteringPattern<Value>(nullptr); }
 template <typename T = Value> auto value(T*& v) { return detail::ClassFilteringPattern<T>(&v); }
+template <typename T = Value> auto value(const T*& v) {
+  return detail::ClassFilteringPattern<const T>(&v);
+}
 
-inline auto constant() { return detail::ClassFilteringPattern<Constant>(nullptr); }
+inline auto constant() { return detail::ClassFilteringPattern<const Constant>(nullptr); }
 inline auto constant(Constant*& v) { return detail::ClassFilteringPattern<Constant>(&v); }
+inline auto constant(const Constant*& v) {
+  return detail::ClassFilteringPattern<const Constant>(&v);
+}
 
 inline auto undef() { return detail::ClassFilteringPattern<Undef>(nullptr); }
 inline auto undef(Undef*& v) { return detail::ClassFilteringPattern<Undef>(&v); }
+inline auto undef(const Undef*& v) { return detail::ClassFilteringPattern<const Undef>(&v); }
 
 inline auto block() { return detail::ClassFilteringPattern<Block>(nullptr); }
 inline auto block(Block*& v) { return detail::ClassFilteringPattern<Block>(&v); }
+inline auto block(const Block*& v) { return detail::ClassFilteringPattern<const Block>(&v); }
 
 inline auto function() { return detail::ClassFilteringPattern<Function>(nullptr); }
 inline auto function(Function*& v) { return detail::ClassFilteringPattern<Function>(&v); }
+inline auto function(const Function*& v) {
+  return detail::ClassFilteringPattern<const Function>(&v);
+}
 
 inline auto constant_u(uint64_t& constant) {
   return detail::ConstantExtractionPattern<true>(constant);
@@ -131,13 +142,15 @@ inline auto constant_i(int64_t& constant) {
   return detail::ConstantExtractionPattern<false>(constant);
 }
 
-template <typename T> auto specific_value(T* value) {
+template <typename T> auto specific_value(const T* value) {
   return detail::SpecificValuePattern<T>(value);
 }
 
-inline auto specific_block(Block* block) { return detail::SpecificValuePattern<Block>(block); }
+inline auto specific_block(const Block* block) {
+  return detail::SpecificValuePattern<Block>(block);
+}
 
-inline auto specific_function(Function* function) {
+inline auto specific_function(const Function* function) {
   return detail::SpecificValuePattern<Function>(function);
 }
 
