@@ -17,9 +17,9 @@ void main() {
 
 void test(i32* y, i64 c) {
     y[c] = 1;
-    c+=1;
+    c += 1;
     y[c] = 2;
-    c+= 1;
+    c += 1;
     y[c] = 3;
 
 }

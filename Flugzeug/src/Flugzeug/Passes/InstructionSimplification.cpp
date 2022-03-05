@@ -65,6 +65,31 @@ static OptimizationResult chain_commutative_expressions(BinaryInstr* binary) {
   return OptimizationResult::changed();
 }
 
+static OptimizationResult simplify_bit_operations(BinaryInstr* binary) {
+  {
+    Value* x;
+    Value* y;
+
+    // ((x & y) | (x & ~y)) => x
+    if (match_pattern(binary,
+                      pat::or_(pat::and_(pat::value(x), pat::value(y)),
+                               pat::and_(pat::specific_ref(x), pat::not_(pat::specific_ref(y)))))) {
+      return x;
+    }
+  }
+
+  {
+    Value* x;
+
+    // x & ~x => 0
+    if (match_pattern(binary, pat::and_(pat::value(x), pat::not_(pat::specific_ref(x))))) {
+      return binary->get_type()->get_zero();
+    }
+  }
+
+  return OptimizationResult::unchanged();
+}
+
 static OptimizationResult simplify_cmp_select_cmp_sequence(IntCompare* cmp) {
   // optimize this:
   //  v2 = cmp slt i1 v0, v1
@@ -243,6 +268,7 @@ public:
   OptimizationResult visit_binary_instr(Argument<BinaryInstr> binary) {
     PROPAGATE_RESULT(make_undef_if_uses_undef(binary));
     PROPAGATE_RESULT(chain_commutative_expressions(binary));
+    PROPAGATE_RESULT(simplify_bit_operations(binary));
 
     const auto type = binary->get_type();
     const auto lhs = binary->get_lhs();

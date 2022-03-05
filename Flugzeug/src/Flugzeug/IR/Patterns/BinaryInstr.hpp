@@ -61,6 +61,8 @@ public:
 #define IMPLEMENT_BINARY_PATTERN(name, commutative)                                                \
   template <typename TInstruction, typename LHSPattern, typename RHSPattern>                       \
   auto name(TInstruction*& instruction, LHSPattern lhs, BinaryOp& op, RHSPattern rhs) {            \
+    static_assert(std::is_same_v<BinaryInstr, std::remove_cv_t<TInstruction>>,                     \
+                  "Expected BinaryInstr instruction in this pattern");                             \
     return detail::BinaryPattern<TInstruction, LHSPattern, RHSPattern, commutative>(               \
       &instruction, lhs, &op, rhs);                                                                \
   }                                                                                                \
@@ -73,6 +75,8 @@ public:
                                                                                                    \
   template <typename TInstruction, typename LHSPattern, typename RHSPattern>                       \
   auto name(TInstruction*& instruction, LHSPattern lhs, RHSPattern rhs) {                          \
+    static_assert(std::is_same_v<BinaryInstr, std::remove_cv_t<TInstruction>>,                     \
+                  "Expected BinaryInstr instruction in this pattern");                             \
     return detail::BinaryPattern<TInstruction, LHSPattern, RHSPattern, commutative>(               \
       &instruction, lhs, nullptr, rhs);                                                            \
   }                                                                                                \
@@ -95,6 +99,8 @@ public:
 template <typename TInstruction, typename LHSPattern, typename RHSPattern>
 auto binary_specific(TInstruction*& instruction, LHSPattern lhs, BinaryOp specific_op,
                      RHSPattern rhs) {
+  static_assert(std::is_same_v<BinaryInstr, std::remove_cv_t<TInstruction>>,
+                "Expected BinaryInstr instruction in this pattern");
   return detail::BinaryPattern<TInstruction, LHSPattern, RHSPattern, false, true>(
     &instruction, lhs, nullptr, rhs, specific_op);
 }

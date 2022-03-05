@@ -18,4 +18,12 @@ template <typename T, typename Pattern> bool match_pattern(T* value, Pattern pat
   return pattern.match(value);
 }
 
+template <typename T, typename Pattern> bool match_pattern(const T& value, Pattern pattern) {
+  return pattern.match(&value);
+}
+
+template <typename T, typename Pattern> bool match_pattern(T& value, Pattern pattern) {
+  return pattern.match(&value);
+}
+
 } // namespace flugzeug

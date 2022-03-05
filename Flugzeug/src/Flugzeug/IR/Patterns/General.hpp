@@ -83,6 +83,22 @@ public:
   }
 };
 
+template <typename TValue> class SpecificValueRefPattern {
+  TValue*& specific_value;
+
+public:
+  explicit SpecificValueRefPattern(TValue*& specific_value) : specific_value(specific_value) {}
+
+  template <typename T> bool match(T* m_value) {
+    const auto value = ::cast<TValue>(m_value);
+    if (!value) {
+      return false;
+    }
+
+    return value == specific_value;
+  }
+};
+
 template <bool Unsigned> class SpecificConstantPattern {
 public:
   using Type = std::conditional_t<Unsigned, uint64_t, int64_t>;
@@ -109,11 +125,11 @@ public:
 
 } // namespace detail
 
-template <typename T = Value> auto value() { return detail::ClassFilteringPattern<Value>(nullptr); }
-template <typename T = Value> auto value(T*& v) { return detail::ClassFilteringPattern<T>(&v); }
-template <typename T = Value> auto value(const T*& v) {
-  return detail::ClassFilteringPattern<const T>(&v);
+template <typename T = const Value> auto value() {
+  return detail::ClassFilteringPattern<T>(nullptr);
 }
+template <typename T> auto value(T*& v) { return detail::ClassFilteringPattern<T>(&v); }
+template <typename T> auto value(const T*& v) { return detail::ClassFilteringPattern<const T>(&v); }
 
 inline auto constant() { return detail::ClassFilteringPattern<const Constant>(nullptr); }
 inline auto constant(Constant*& v) { return detail::ClassFilteringPattern<Constant>(&v); }
@@ -142,16 +158,14 @@ inline auto constant_i(int64_t& constant) {
   return detail::ConstantExtractionPattern<false>(constant);
 }
 
-template <typename T> auto specific_value(const T* value) {
+template <typename T> auto specific(const T* value) {
   return detail::SpecificValuePattern<T>(value);
 }
-
-inline auto specific_block(const Block* block) {
-  return detail::SpecificValuePattern<Block>(block);
+template <typename T> auto specific_ref(T*& value) {
+  return detail::SpecificValueRefPattern<T>(value);
 }
-
-inline auto specific_function(const Function* function) {
-  return detail::SpecificValuePattern<Function>(function);
+template <typename T> auto specific_ref(const T*& value) {
+  return detail::SpecificValueRefPattern<const T>(value);
 }
 
 inline auto specific_constant(uint64_t value) {

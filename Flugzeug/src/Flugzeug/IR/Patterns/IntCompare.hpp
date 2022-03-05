@@ -5,17 +5,17 @@ namespace flugzeug::pat {
 
 namespace detail {
 
-template <typename LHSPattern, typename RHSPattern, bool MustBeEqOrNe,
+template <typename TInstruction, typename LHSPattern, typename RHSPattern, bool MustBeEqOrNe,
           bool MatchSpecificPred = false>
 class IntComparePattern {
-  IntCompare** bind_instruction;
+  TInstruction** bind_instruction;
   LHSPattern lhs_pattern;
   IntPredicate* bind_pred;
   RHSPattern rhs_pattern;
   IntPredicate specific_pred;
 
 public:
-  IntComparePattern(IntCompare** bind_instruction, LHSPattern lhs, IntPredicate* bind_pred,
+  IntComparePattern(TInstruction** bind_instruction, LHSPattern lhs, IntPredicate* bind_pred,
                     RHSPattern rhs, IntPredicate specific_pred = IntPredicate::Equal)
       : bind_instruction(bind_instruction), lhs_pattern(lhs), bind_pred(bind_pred),
         rhs_pattern(rhs), specific_pred(specific_pred) {}
@@ -58,31 +58,38 @@ public:
 } // namespace detail
 
 #define IMPLEMENT_INT_COMPARE_PATTERN(name, eq_or_ne)                                              \
-  template <typename LHSPattern, typename RHSPattern>                                              \
-  auto name(IntCompare*& instruction, LHSPattern lhs, IntPredicate& pred, RHSPattern rhs) {        \
-    return detail::IntComparePattern<LHSPattern, RHSPattern, eq_or_ne>(&instruction, lhs, &pred,   \
-                                                                       rhs);                       \
+  template <typename TInstruction, typename LHSPattern, typename RHSPattern>                       \
+  auto name(TInstruction*& instruction, LHSPattern lhs, IntPredicate& pred, RHSPattern rhs) {      \
+    static_assert(std::is_same_v<IntCompare, std::remove_cv_t<TInstruction>>,                      \
+                  "Expected IntCompare instruction in this pattern");                              \
+    return detail::IntComparePattern<TInstruction, LHSPattern, RHSPattern, eq_or_ne>(              \
+      &instruction, lhs, &pred, rhs);                                                              \
   }                                                                                                \
                                                                                                    \
   template <typename LHSPattern, typename RHSPattern>                                              \
   auto name(LHSPattern lhs, IntPredicate& pred, RHSPattern rhs) {                                  \
-    return detail::IntComparePattern<LHSPattern, RHSPattern, eq_or_ne>(nullptr, lhs, &pred, rhs);  \
+    return detail::IntComparePattern<const IntCompare, LHSPattern, RHSPattern, eq_or_ne>(          \
+      nullptr, lhs, &pred, rhs);                                                                   \
   }                                                                                                \
                                                                                                    \
-  template <typename LHSPattern, typename RHSPattern>                                              \
-  auto name(IntCompare*& instruction, LHSPattern lhs, RHSPattern rhs) {                            \
-    return detail::IntComparePattern<LHSPattern, RHSPattern, eq_or_ne>(&instruction, lhs, nullptr, \
-                                                                       rhs);                       \
+  template <typename TInstruction, typename LHSPattern, typename RHSPattern>                       \
+  auto name(TInstruction*& instruction, LHSPattern lhs, RHSPattern rhs) {                          \
+    static_assert(std::is_same_v<IntCompare, std::remove_cv_t<TInstruction>>,                      \
+                  "Expected IntCompare instruction in this pattern");                              \
+    return detail::IntComparePattern<TInstruction, LHSPattern, RHSPattern, eq_or_ne>(              \
+      &instruction, lhs, nullptr, rhs);                                                            \
   }                                                                                                \
                                                                                                    \
   template <typename LHSPattern, typename RHSPattern> auto name(LHSPattern lhs, RHSPattern rhs) {  \
-    return detail::IntComparePattern<LHSPattern, RHSPattern, eq_or_ne>(nullptr, lhs, nullptr,      \
-                                                                       rhs);                       \
+    return detail::IntComparePattern<const IntCompare, LHSPattern, RHSPattern, eq_or_ne>(          \
+      nullptr, lhs, nullptr, rhs);                                                                 \
   }
 
 #define IMPLEMENT_SPECIFIC_INT_COMPARE_PATTERN(name, pred)                                         \
-  template <typename LHSPattern, typename RHSPattern>                                              \
-  auto name(IntCompare*& instruction, LHSPattern lhs, RHSPattern rhs) {                            \
+  template <typename TInstruction, typename LHSPattern, typename RHSPattern>                       \
+  auto name(TInstruction*& instruction, LHSPattern lhs, RHSPattern rhs) {                          \
+    static_assert(std::is_same_v<IntCompare, std::remove_cv_t<TInstruction>>,                      \
+                  "Expected IntCompare instruction in this pattern");                              \
     return compare_specific(instruction, lhs, pred, rhs);                                          \
   }                                                                                                \
                                                                                                    \
@@ -90,17 +97,19 @@ public:
     return compare_specific(lhs, pred, rhs);                                                       \
   }
 
-template <typename LHSPattern, typename RHSPattern>
-auto compare_specific(IntCompare*& instruction, LHSPattern lhs, IntPredicate specific_pred,
+template <typename TInstruction, typename LHSPattern, typename RHSPattern>
+auto compare_specific(TInstruction*& instruction, LHSPattern lhs, IntPredicate specific_pred,
                       RHSPattern rhs) {
-  return detail::IntComparePattern<LHSPattern, RHSPattern, false, true>(&instruction, lhs, nullptr,
-                                                                        rhs, specific_pred);
+  static_assert(std::is_same_v<IntCompare, std::remove_cv_t<TInstruction>>,
+                "Expected IntCompare instruction in this pattern");
+  return detail::IntComparePattern<TInstruction, LHSPattern, RHSPattern, false, true>(
+    &instruction, lhs, nullptr, rhs, specific_pred);
 }
 
 template <typename LHSPattern, typename RHSPattern>
 auto compare_specific(LHSPattern lhs, IntPredicate specific_pred, RHSPattern rhs) {
-  return detail::IntComparePattern<LHSPattern, RHSPattern, false, true>(nullptr, lhs, nullptr, rhs,
-                                                                        specific_pred);
+  return detail::IntComparePattern<const IntCompare, LHSPattern, RHSPattern, false, true>(
+    nullptr, lhs, nullptr, rhs, specific_pred);
 }
 
 IMPLEMENT_INT_COMPARE_PATTERN(compare, false)

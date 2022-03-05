@@ -112,8 +112,6 @@ static void test_minimization(Context& context) {
   m->destroy();
 }
 
-#include <Flugzeug/Passes/Analysis/PointerAliasing.hpp>
-
 static void optimize_function(Function* f) {
   while (true) {
     bool did_something = false;
@@ -137,12 +135,12 @@ static void optimize_function(Function* f) {
     if (!did_something) {
       f->reassign_display_indices();
 
-      {
-        log_debug("{}", f->get_name());
-        analysis::PointerAliasing aliasing(f);
-        aliasing.debug_dump();
-        log_debug("");
-      }
+      //      {
+      //        log_debug("{}", f->get_name());
+      //        analysis::PointerAliasing aliasing(f);
+      //        aliasing.debug_dump();
+      //        log_debug("");
+      //      }
 
       break;
     }
@@ -168,7 +166,7 @@ int main() {
 
   const auto printing_method = IRPrintingMethod::Standard;
 
-  const auto parsed_source = turboc::Parser::parse_from_file("Tests/memory.tc");
+  const auto parsed_source = turboc::Parser::parse_from_file("Tests/test.tc");
   const auto module = turboc::IRGenerator::generate(&context, parsed_source);
 
   for (Function& f : module->local_functions()) {
