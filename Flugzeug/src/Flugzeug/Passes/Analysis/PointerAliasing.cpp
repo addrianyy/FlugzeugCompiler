@@ -12,11 +12,26 @@ using namespace flugzeug::analysis;
 
 using analysis::detail::PointerOriginMap;
 
+template <typename T> struct ValuePair {
+  T v1, v2;
+
+  ValuePair(T v_1, T v_2) : v1(v_1), v2(v_2) {}
+
+  bool operator==(const ValuePair& other) const { return v1 == other.v1 && v2 == other.v2; }
+};
+
+template <typename T> struct ValuePairHash {
+  size_t operator()(const ValuePair<T>& p) const { return hash_combine(p.v1, p.v2); }
+};
+
+using BaseIndexToOffset =
+  std::unordered_map<ValuePair<const Value*>, const Offset*, ValuePairHash<const Value*>>;
+
 template <typename K, typename V>
-std::optional<V> get_value_from_map(const std::unordered_map<K, V>& map, K key) {
+std::optional<V> lookup_map(const std::unordered_map<K, V>& map, K key) {
   const auto it = map.find(key);
   if (it == map.end()) {
-    return {};
+    return std::nullopt;
   }
 
   return it->second;
@@ -121,8 +136,8 @@ public:
   bool visit_int_compare(Argument<IntCompare> int_compare) { return true; }
 
   bool visit_offset(Argument<Offset> offset) {
-    // Offset returns memory which belongs to the source pointer. Make sure
-    // that offset return value is safely used.
+    // Offset returns memory which belongs to the source pointer. Make sure that offset return value
+    // is safely used.
     return offset->get_base() == pointer && safe_pointers.contains(offset);
   }
 
@@ -140,22 +155,6 @@ public:
   bool visit_branch(Argument<Branch> branch) { return false; }
   bool visit_cond_branch(Argument<CondBranch> cond_branch) { return false; }
 };
-
-template <typename T> struct ValuePair {
-  T v1;
-  T v2;
-
-  ValuePair(T v_1, T v_2) : v1(v_1), v2(v_2) {}
-
-  bool operator==(const ValuePair& other) const { return v1 == other.v1 && v2 == other.v2; }
-};
-
-template <typename T> struct ValuePairHash {
-  size_t operator()(const ValuePair<T>& p) const { return hash_combine(p.v1, p.v2); }
-};
-
-using BaseIndexToOffset =
-  std::unordered_map<ValuePair<const Value*>, const Offset*, ValuePairHash<const Value*>>;
 
 static void process_offset_instruction(
   const Offset* offset,
@@ -184,7 +183,7 @@ static void process_offset_instruction(
   if (match_pattern(index, pat::add(pat::value(index_base), pat::constant_i(index_add)))) {
     const Offset* other_offset;
     {
-      const auto& it = base_index_to_offset.find(ValuePair<const Value*>{base, index_base});
+      const auto it = base_index_to_offset.find(ValuePair{base, index_base});
       if (it == base_index_to_offset.end()) {
         return;
       }
@@ -267,6 +266,7 @@ PointerAliasing::PointerAliasing(const Function* function) {
           stackalloc_safety.insert({stackalloc, safe});
         }
 
+        // Get information about constant pointer offsets.
         if (const auto offset = cast<Offset>(&instruction)) {
           process_offset_instruction(offset, constant_offset_db, base_index_to_offset);
         }
@@ -275,9 +275,13 @@ PointerAliasing::PointerAliasing(const Function* function) {
   }
 }
 
-bool PointerAliasing::can_alias(const Value* v1, const Value* v2) const {
+bool PointerAliasing::can_alias(const Instruction* instruction, const Value* v1,
+                                const Value* v2) const {
   verify(v1->get_type()->is_pointer() && v2->get_type()->is_pointer(),
          "Provided values aren't pointers");
+
+  // More advanced alias analysis would make use of this instruction.
+  (void)instruction;
 
   // Undefined pointers don't alias anything.
   if (v1->is_undef() || v2->is_undef()) {
@@ -290,8 +294,8 @@ bool PointerAliasing::can_alias(const Value* v1, const Value* v2) const {
   }
 
   {
-    const auto offset_1 = get_value_from_map(constant_offset_db, v1);
-    const auto offset_2 = get_value_from_map(constant_offset_db, v2);
+    const auto offset_1 = lookup_map(constant_offset_db, v1);
+    const auto offset_2 = lookup_map(constant_offset_db, v2);
 
     // If two pointers come from the same origin but have different offsets they can never alias.
     if (offset_1 && offset_2 && offset_1->first == offset_2->first &&
@@ -313,8 +317,8 @@ bool PointerAliasing::can_alias(const Value* v1, const Value* v2) const {
     return true;
   }
 
-  const auto v1_stackalloc = get_value_from_map(stackalloc_safety, v1_origin);
-  const auto v2_stackalloc = get_value_from_map(stackalloc_safety, v2_origin);
+  const auto v1_stackalloc = lookup_map(stackalloc_safety, v1_origin);
+  const auto v2_stackalloc = lookup_map(stackalloc_safety, v2_origin);
 
   // We don't have any information about pointers. They may alias.
   if (!v1_stackalloc && !v2_stackalloc) {
@@ -346,7 +350,7 @@ bool PointerAliasing::can_instruction_access_pointer(const Instruction* instruct
 
   if (access_type == AccessType::Store || access_type == AccessType::All) {
     if (const auto store = cast<Store>(instruction)) {
-      if (can_alias(store->get_ptr(), pointer)) {
+      if (can_alias(store, store->get_ptr(), pointer)) {
         return true;
       }
     }
@@ -354,7 +358,7 @@ bool PointerAliasing::can_instruction_access_pointer(const Instruction* instruct
 
   if (access_type == AccessType::Load || access_type == AccessType::All) {
     if (const auto load = cast<Load>(instruction)) {
-      if (can_alias(load->get_ptr(), pointer)) {
+      if (can_alias(load, load->get_ptr(), pointer)) {
         return true;
       }
     }
@@ -367,14 +371,14 @@ bool PointerAliasing::can_instruction_access_pointer(const Instruction* instruct
     }
 
     const auto origin = pointer_origin_map.get(pointer);
-    const auto stackalloc = get_value_from_map(stackalloc_safety, origin);
+    const auto stackalloc = lookup_map(stackalloc_safety, origin);
 
     if (!stackalloc || *stackalloc != true) {
       // We have no idea about non-safe stackallocs or pointers with unknown origin.
       return true;
     } else {
-      // Pointer is a safely used stackalloc. If no argument originates from
-      // the same stackalloc, this call cannot affect the pointer.
+      // Pointer is a safely used stackalloc. If no argument originates from the same stackalloc,
+      // this call cannot affect the pointer.
       for (size_t i = 0; i < call->get_arg_count(); ++i) {
         const auto arg_origin = pointer_origin_map.get(call->get_arg(i));
         if (arg_origin == origin) {

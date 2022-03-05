@@ -33,7 +33,7 @@ public:
 
   explicit PointerAliasing(const Function* function);
 
-  bool can_alias(const Value* v1, const Value* v2) const;
+  bool can_alias(const Instruction* instruction, const Value* v1, const Value* v2) const;
   bool can_instruction_access_pointer(const Instruction* instruction, const Value* pointer,
                                       AccessType access_type) const;
 
