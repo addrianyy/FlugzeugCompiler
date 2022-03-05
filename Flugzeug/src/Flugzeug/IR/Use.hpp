@@ -8,17 +8,18 @@ namespace flugzeug {
 
 class Value;
 class User;
+
+namespace detail {
+
 class Use;
 
 #ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
-namespace detail {
 void validate_use(const Value* used_value, const Use* use);
-}
 #endif
 
 class Use {
   friend class ValueUses;
-  friend class User;
+  friend class flugzeug::User;
 
 #ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
   Value* used_value = nullptr;
@@ -86,7 +87,7 @@ class ValueUses {
 
     UserIteratorInternal& operator++() {
 #ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
-      detail::validate_use(used_value, current);
+      validate_use(used_value, current);
 #endif
 
       current = current->get_next();
@@ -131,5 +132,7 @@ public:
   const_iterator begin() const { return const_iterator(first); }
   const_iterator end() const { return const_iterator(nullptr); }
 };
+
+} // namespace detail
 
 } // namespace flugzeug

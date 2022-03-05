@@ -17,10 +17,10 @@ class User : public Value {
   friend class Value;
 
   constexpr static size_t static_use_count = 3;
-  Use static_uses[static_use_count]{};
+  detail::Use static_uses[static_use_count]{};
 
   std::vector<Value*> used_operands;
-  std::vector<Use*> uses_for_operands;
+  std::vector<detail::Use*> uses_for_operands;
 
   template <typename TOperand> class OperandIteratorInternal {
     TOperand* const* current;

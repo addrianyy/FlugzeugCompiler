@@ -57,7 +57,7 @@ private:
   Type* const type;
   Context* const context;
 
-  ValueUses uses;
+  detail::ValueUses uses;
   size_t user_count_excluding_self = 0;
 
   size_t display_index = 0;
@@ -65,8 +65,8 @@ private:
   static Block* cast_to_block(Value* value);
   static void set_user_operand(User* user, size_t operand_index, Value* value);
 
-  void add_use(Use* use);
-  void remove_use(Use* use);
+  void add_use(detail::Use* use);
+  void remove_use(detail::Use* use);
 
   bool is_phi() const;
   void deduplicate_phi_incoming_blocks(Block* block, User* user);
@@ -110,9 +110,9 @@ public:
 
     const auto block = cast<Block>(new_value);
 
-    Use* current_use = uses.get_first();
+    auto current_use = uses.get_first();
     while (current_use) {
-      Use* next_use = current_use->get_next();
+      auto next_use = current_use->get_next();
 
       User* user = current_use->get_user();
       if (predicate(user)) {
@@ -142,8 +142,8 @@ public:
 
   virtual std::string format() const;
 
-  using UserIterator = ValueUses::iterator;
-  using ConstUserIterator = ValueUses::const_iterator;
+  using UserIterator = detail::ValueUses::iterator;
+  using ConstUserIterator = detail::ValueUses::const_iterator;
 
   template <typename TUser> using SpecificUserIterator = TypeFilteringIterator<TUser, UserIterator>;
   template <typename TUser>

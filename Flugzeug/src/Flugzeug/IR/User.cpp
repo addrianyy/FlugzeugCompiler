@@ -10,7 +10,7 @@ User::~User() {
     set_operand(i, nullptr);
   }
 
-  for (Use* use : uses_for_operands) {
+  for (auto use : uses_for_operands) {
     verify(!use->next && !use->previous, "Use is still inserted at destructor");
 
     if (use->heap_allocated) {
@@ -31,8 +31,8 @@ void User::remove_phi_incoming_helper(size_t incoming_index) {
     // It's not the last index, we need to move operands.
     // We need to be careful to not invalidate Users iterators.
 
-    Use* saved_u1 = uses_for_operands[start_operand + 0];
-    Use* saved_u2 = uses_for_operands[start_operand + 1];
+    auto saved_u1 = uses_for_operands[start_operand + 0];
+    auto saved_u2 = uses_for_operands[start_operand + 1];
 
     const auto offset = std::ptrdiff_t(start_operand);
     std::copy(used_operands.begin() + offset + 2, used_operands.end(),
@@ -63,7 +63,7 @@ void User::adjust_uses_count(size_t count) {
 
     for (size_t i = previous_size; i < count; ++i) {
       if (i < static_use_count) {
-        Use* use = &static_uses[i];
+        auto use = &static_uses[i];
 
         use->user = this;
         use->operand_index = uint32_t(i);
@@ -71,7 +71,7 @@ void User::adjust_uses_count(size_t count) {
 
         uses_for_operands[i] = use;
       } else {
-        uses_for_operands[i] = new Use(this, i);
+        uses_for_operands[i] = new detail::Use(this, i);
         uses_for_operands[i]->heap_allocated = true;
       }
     }

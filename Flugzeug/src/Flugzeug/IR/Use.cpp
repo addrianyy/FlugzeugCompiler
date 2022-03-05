@@ -3,9 +3,10 @@
 #include <Flugzeug/Core/Error.hpp>
 
 using namespace flugzeug;
+using namespace flugzeug::detail;
 
 #ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
-void flugzeug::detail::validate_use(const Value* used_value, const Use* use) {
+void flugzeug::detail::validate_use(const Value* used_value, const detail::Use* use) {
   verify(use->get_used_value() == used_value, "Use iterator was invalidated");
 }
 #endif

@@ -11,7 +11,7 @@ void Value::set_user_operand(User* user, size_t operand_index, Value* value) {
   return user->set_operand(operand_index, value);
 }
 
-void Value::add_use(Use* use) {
+void Value::add_use(detail::Use* use) {
   uses.add_use(use);
 
   if (use->get_user() != this) {
@@ -23,7 +23,7 @@ void Value::add_use(Use* use) {
   }
 }
 
-void Value::remove_use(Use* use) {
+void Value::remove_use(detail::Use* use) {
   uses.remove_use(use);
 
   if (use->get_user() != this) {
@@ -150,7 +150,7 @@ void Value::replace_uses_with(Value* new_value) {
   const auto block = cast<Block>(new_value);
 
   while (!uses.is_empty()) {
-    Use* use = uses.get_first();
+    auto use = uses.get_first();
     User* user = use->get_user();
     user->set_operand(use->get_operand_index(), new_value);
 
