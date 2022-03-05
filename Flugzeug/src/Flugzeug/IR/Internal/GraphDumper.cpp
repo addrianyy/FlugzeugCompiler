@@ -1,6 +1,6 @@
 #include "GraphDumper.hpp"
-#include "Function.hpp"
-#include "Instructions.hpp"
+#include <Flugzeug/IR/Function.hpp>
+#include <Flugzeug/IR/Instructions.hpp>
 
 #include <Flugzeug/Core/Environment.hpp>
 #include <Flugzeug/Core/Process.hpp>

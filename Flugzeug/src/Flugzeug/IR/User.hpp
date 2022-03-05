@@ -1,5 +1,5 @@
 #pragma once
-#include "Use.hpp"
+#include "Internal/Use.hpp"
 #include "Value.hpp"
 
 #include <Flugzeug/Core/ClassTraits.hpp>

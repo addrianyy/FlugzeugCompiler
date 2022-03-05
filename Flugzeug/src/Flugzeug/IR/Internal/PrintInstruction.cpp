@@ -1,5 +1,6 @@
-#include "Function.hpp"
-#include "Instructions.hpp"
+#include "PrintInstruction.hpp"
+#include <Flugzeug/IR/Function.hpp>
+#include <Flugzeug/IR/Instructions.hpp>
 
 using namespace flugzeug;
 

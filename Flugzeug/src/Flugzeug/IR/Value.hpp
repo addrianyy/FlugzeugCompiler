@@ -1,8 +1,8 @@
 #pragma once
 #include "Context.hpp"
+#include "Internal/Use.hpp"
 #include "Type.hpp"
 #include "TypeFilteringIterator.hpp"
-#include "Use.hpp"
 
 #include <Flugzeug/Core/Casting.hpp>
 #include <Flugzeug/Core/ClassTraits.hpp>
