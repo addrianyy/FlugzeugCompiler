@@ -105,9 +105,6 @@ public:
   const_reverse_iterator rbegin() const { return instruction_list.rbegin(); }
   const_reverse_iterator rend() const { return instruction_list.rend(); }
 
-  InstructionList::ReversedRange reversed() { return instruction_list.reversed(); }
-  InstructionList::ReversedConstRange reversed() const { return instruction_list.reversed(); }
-
   template <typename TInstruction>
   IteratorRange<SpecificInstructionIterator<TInstruction>> instructions() {
     return {SpecificInstructionIterator<TInstruction>(begin()),

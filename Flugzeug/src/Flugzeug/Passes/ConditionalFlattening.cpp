@@ -43,7 +43,7 @@ template <size_t N> static bool move_instructions(const std::array<Block*, N>& f
   for (Block* from_block : from) {
     // As we are moving to the beggining of `to` we need to iterate over instructions in reverse
     // order.
-    for (Instruction& instruction : dont_invalidate_current(from_block->reversed())) {
+    for (Instruction& instruction : dont_invalidate_current(reversed(*from_block))) {
       // Skip last instruction in the block (branch).
       if (&instruction == from_block->get_last_instruction()) {
         continue;

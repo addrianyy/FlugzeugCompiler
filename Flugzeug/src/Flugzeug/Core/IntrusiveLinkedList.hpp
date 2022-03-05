@@ -300,7 +300,4 @@ public:
 
   const_reverse_iterator rbegin() const { return const_reverse_iterator(last); }
   const_reverse_iterator rend() const { return const_reverse_iterator(nullptr); }
-
-  ReversedRange reversed() { return IteratorRange(rbegin(), rend()); }
-  ReversedConstRange reversed() const { return IteratorRange(rbegin(), rend()); }
 };

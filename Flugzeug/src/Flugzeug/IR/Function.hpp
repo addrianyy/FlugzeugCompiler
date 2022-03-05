@@ -1,7 +1,7 @@
 #pragma once
 #include "Block.hpp"
+#include "Internal/TypeFilteringIterator.hpp"
 #include "Type.hpp"
-#include "TypeFilteringIterator.hpp"
 #include "Validator.hpp"
 #include "Value.hpp"
 

@@ -1,18 +1,7 @@
 #pragma once
 #include <type_traits>
 
-template <typename T> class IteratorRange {
-  T begin_it;
-  T end_it;
-
-public:
-  using iterator = T;
-
-  IteratorRange(T begin_it, T end_it) : begin_it(begin_it), end_it(end_it) {}
-
-  T begin() const { return begin_it; }
-  T end() const { return end_it; }
-};
+namespace detail {
 
 template <typename T> class NonInvalidatingIterator {
   T current;
@@ -60,25 +49,40 @@ public:
   bool operator!=(const NonInvalidatingIterator& rhs) const { return current != rhs.current; }
 };
 
+} // namespace detail
+
+template <typename T> class IteratorRange {
+  T begin_it;
+  T end_it;
+
+public:
+  using iterator = T;
+
+  IteratorRange(T begin_it, T end_it) : begin_it(begin_it), end_it(end_it) {}
+
+  T begin() const { return begin_it; }
+  T end() const { return end_it; }
+};
+
 template <typename T, typename std::enable_if_t<std::is_trivially_copyable_v<T>, int> = 0>
-inline IteratorRange<NonInvalidatingIterator<typename T::iterator>>
+inline IteratorRange<detail::NonInvalidatingIterator<typename T::iterator>>
 dont_invalidate_current(T object) {
-  return IteratorRange(NonInvalidatingIterator(object.begin()),
-                       NonInvalidatingIterator(object.end()));
+  return IteratorRange(detail::NonInvalidatingIterator(object.begin()),
+                       detail::NonInvalidatingIterator(object.end()));
 }
 
 template <typename T, typename std::enable_if_t<!std::is_trivially_copyable_v<T>, int> = 0>
-inline IteratorRange<NonInvalidatingIterator<typename T::iterator>>
+inline IteratorRange<detail::NonInvalidatingIterator<typename T::iterator>>
 dont_invalidate_current(T& object) {
-  return IteratorRange(NonInvalidatingIterator(object.begin()),
-                       NonInvalidatingIterator(object.end()));
+  return IteratorRange(detail::NonInvalidatingIterator(object.begin()),
+                       detail::NonInvalidatingIterator(object.end()));
 }
 
 template <typename T>
-inline IteratorRange<NonInvalidatingIterator<typename T::const_iterator>>
+inline IteratorRange<detail::NonInvalidatingIterator<typename T::const_iterator>>
 dont_invalidate_current(const T& object) {
-  return IteratorRange(NonInvalidatingIterator(object.begin()),
-                       NonInvalidatingIterator(object.end()));
+  return IteratorRange(detail::NonInvalidatingIterator(object.begin()),
+                       detail::NonInvalidatingIterator(object.end()));
 }
 
 template <typename T, typename std::enable_if_t<std::is_trivially_copyable_v<T>, int> = 0>
