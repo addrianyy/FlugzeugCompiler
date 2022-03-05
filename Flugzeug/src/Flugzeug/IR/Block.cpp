@@ -1,9 +1,9 @@
 #include "Block.hpp"
 #include "ConsolePrinter.hpp"
-#include "DebugPrinter.hpp"
 #include "DominatorTree.hpp"
 #include "Function.hpp"
 #include "Instructions.hpp"
+#include "Internal/DebugPrinter.hpp"
 
 #include <deque>
 
@@ -207,15 +207,7 @@ void Block::update_instruction_order() const {
   }
 }
 
-Block::~Block() {
-  verify(instruction_list.is_empty(), "Cannot remove non-empty block.");
-  verify(!get_function(), "Cannot remove block that is attached to the function.");
-
-  verify(predecessors_list.empty(), "Predecessors list is not empty.");
-  verify(predecessors_list_unique.empty(), "Unique predecessors list is not empty.");
-}
-
-std::unordered_set<const Value*> Block::get_inlineable_values_created_in_block() const {
+std::unordered_set<const Value*> Block::get_inlineable_values_in_block() const {
   std::unordered_set<const Value*> inlineable;
   std::unordered_map<const Value*, uint32_t> values_complexity;
 
@@ -261,6 +253,14 @@ std::unordered_set<const Value*> Block::get_inlineable_values_created_in_block()
   return inlineable;
 }
 
+Block::~Block() {
+  verify(instruction_list.is_empty(), "Cannot remove non-empty block.");
+  verify(!get_function(), "Cannot remove block that is attached to the function.");
+
+  verify(predecessors_list.empty(), "Predecessors list is not empty.");
+  verify(predecessors_list_unique.empty(), "Unique predecessors list is not empty.");
+}
+
 void Block::print(IRPrinter& printer, IRPrintingMethod method) const {
   {
     auto p = printer.create_line_printer();
@@ -273,19 +273,16 @@ void Block::print(IRPrinter& printer, IRPrintingMethod method) const {
       instruction.print(printer);
     }
   } else {
-    print_compact(printer, get_inlineable_values_created_in_block());
-  }
-}
+    const auto inlined = get_inlineable_values_in_block();
 
-void Block::print_compact(IRPrinter& printer,
-                          const std::unordered_set<const Value*>& inlined) const {
-  for (const Instruction& instruction : instruction_list) {
-    if (inlined.contains(&instruction)) {
-      continue;
+    for (const Instruction& instruction : instruction_list) {
+      if (inlined.contains(&instruction)) {
+        continue;
+      }
+
+      printer.tab();
+      instruction.print_compact(printer, inlined);
     }
-
-    printer.tab();
-    instruction.print_compact(printer, inlined);
   }
 }
 

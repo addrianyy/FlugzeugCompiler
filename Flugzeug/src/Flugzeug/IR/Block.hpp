@@ -55,17 +55,16 @@ class Block : public Value, public IntrusiveNode<Block, Function> {
 
   void update_instruction_order() const;
 
+  std::unordered_set<const Value*> get_inlineable_values_in_block() const;
+
   explicit Block(Context* context)
       : Value(context, Value::Kind::Block, context->get_block_ty()), instruction_list(this) {}
 
 public:
   ~Block() override;
 
-  std::unordered_set<const Value*> get_inlineable_values_created_in_block() const;
-
   void print(IRPrinter& printer, IRPrintingMethod method = IRPrintingMethod::Standard) const;
   void print(IRPrintingMethod method = IRPrintingMethod::Standard) const;
-  void print_compact(IRPrinter& printer, const std::unordered_set<const Value*>& inlined) const;
   void debug_print() const;
 
 #pragma region instruction_list

@@ -1,9 +1,9 @@
 #include "Instruction.hpp"
 #include "Block.hpp"
 #include "ConsolePrinter.hpp"
-#include "DebugPrinter.hpp"
 #include "InstructionVisitor.hpp"
 #include "Instructions.hpp"
+#include "Internal/DebugPrinter.hpp"
 
 using namespace flugzeug;
 

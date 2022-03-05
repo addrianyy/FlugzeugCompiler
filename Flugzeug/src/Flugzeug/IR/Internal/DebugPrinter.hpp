@@ -1,5 +1,5 @@
 #pragma once
-#include "IRPrinter.hpp"
+#include <Flugzeug/IR/IRPrinter.hpp>
 
 namespace flugzeug {
 

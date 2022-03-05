@@ -1,6 +1,6 @@
 #include "Function.hpp"
 #include "ConsolePrinter.hpp"
-#include "DebugPrinter.hpp"
+#include "Internal/DebugPrinter.hpp"
 #include "Module.hpp"
 
 using namespace flugzeug;
