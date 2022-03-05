@@ -76,7 +76,7 @@ bool minimize_phis(const std::unordered_set<Phi*>& phis,
   return minimized;
 }
 
-bool PhiMinimization::run(Function* function) {
+bool opt::PhiMinimization::run(Function* function) {
   std::unordered_map<Phi*, std::vector<Value*>> phi_graph;
   std::unordered_set<Phi*> phis;
 

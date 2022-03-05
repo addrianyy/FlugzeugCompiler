@@ -88,10 +88,10 @@ public:
   using reverse_iterator = InstructionList::reverse_iterator;
 
   template <typename TInstruction>
-  using SpecificInstructionIterator = TypeFilteringIterator<TInstruction, iterator>;
+  using SpecificInstructionIterator = detail::TypeFilteringIterator<TInstruction, iterator>;
   template <typename TInstruction>
   using ConstSpecificInstructionIterator =
-    TypeFilteringIterator<const TInstruction, const_iterator>;
+    detail::TypeFilteringIterator<const TInstruction, const_iterator>;
 
   iterator begin() { return instruction_list.begin(); }
   iterator end() { return instruction_list.end(); }

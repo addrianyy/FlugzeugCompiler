@@ -51,7 +51,7 @@ static bool deduplicate_block_local(Function* function) {
 
 static bool deduplicate_global(Function* function) { fatal_error("TODO"); }
 
-bool InstructionDeduplication::run(Function* function, DeduplicationStrategy strategy) {
+bool opt::InstructionDeduplication::run(Function* function, DeduplicationStrategy strategy) {
   switch (strategy) {
   case DeduplicationStrategy::BlockLocal:
     return deduplicate_block_local(function);

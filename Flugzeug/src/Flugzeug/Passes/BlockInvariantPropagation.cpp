@@ -57,7 +57,7 @@ static std::optional<std::pair<Value*, Value*>> get_edge_invariant(Block* from, 
   return std::nullopt;
 }
 
-bool BlockInvariantPropagation::run(Function* function) {
+bool opt::BlockInvariantPropagation::run(Function* function) {
   // Certain blocks have invariants and to be reached some condition must be true.
   // if (x == y) { block1 }
   // In this case in block1 it is known that x == y. If one of these is constant we will

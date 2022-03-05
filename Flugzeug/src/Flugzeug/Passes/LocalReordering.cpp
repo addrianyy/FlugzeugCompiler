@@ -83,7 +83,7 @@ static bool can_move_earlier_down(Instruction* earlier_instruction,
   return true;
 }
 
-bool LocalReordering::run(Function* function) {
+bool opt::LocalReordering::run(Function* function) {
   Reorderer reorderer;
   bool did_something = false;
 

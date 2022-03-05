@@ -612,7 +612,7 @@ public:
   BitOptimizationResult visit_ret(Argument<Ret> ret) { return BitOptimizationResult::Unchanged; }
 };
 
-bool KnownBitsOptimization::run(Function* function) {
+bool opt::KnownBitsOptimization::run(Function* function) {
   bool did_something = false;
 
   // We need to traverse blocks in the DFS order.

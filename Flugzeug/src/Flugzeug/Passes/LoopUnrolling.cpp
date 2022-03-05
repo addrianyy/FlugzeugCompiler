@@ -658,7 +658,7 @@ static bool unroll_loop_or_sub_loops(Function* function, const analysis::Loop* l
   return false;
 }
 
-bool LoopUnrolling::run(Function* function) {
+bool opt::LoopUnrolling::run(Function* function) {
   DominatorTree dominator_tree(function);
 
   const auto loops = analysis::analyze_function_loops(function, dominator_tree);

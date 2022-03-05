@@ -5,7 +5,7 @@ namespace flugzeug {
 
 class Instruction;
 
-enum InsertDestination {
+enum class InsertDestination {
   Front,
   Back,
 };

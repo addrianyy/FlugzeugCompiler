@@ -184,7 +184,7 @@ static bool optimize_invariants_in_loop_or_sub_loops(Function* function,
   return false;
 }
 
-bool LoopInvariantOptimization::run(Function* function) {
+bool opt::LoopInvariantOptimization::run(Function* function) {
   const auto loops = analysis::analyze_function_loops(function);
 
   bool did_something = false;

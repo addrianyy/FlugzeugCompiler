@@ -717,7 +717,7 @@ public:
   OptimizationResult visit_ret(Argument<Ret> ret) { return OptimizationResult::unchanged(); }
 };
 
-bool InstructionSimplification::run(Function* function) {
+bool opt::InstructionSimplification::run(Function* function) {
   bool did_something = false;
 
   for (Instruction& instruction : dont_invalidate_current(function->instructions())) {

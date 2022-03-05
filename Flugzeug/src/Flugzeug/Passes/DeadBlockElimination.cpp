@@ -22,7 +22,7 @@ static void destroy_dead_block(Block* block) {
   block->destroy();
 }
 
-bool DeadBlockElimination::run(Function* function) {
+bool opt::DeadBlockElimination::run(Function* function) {
   // Do DFS traversal on the CFG to find blocks reachable from entry block.
   const auto reachable_blocks =
     function->get_entry_block()->get_reachable_blocks_set(IncludeStart::Yes);

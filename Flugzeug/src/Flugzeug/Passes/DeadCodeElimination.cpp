@@ -31,7 +31,7 @@ static bool try_to_eliminate(Instruction* instruction, std::vector<Instruction*>
   return true;
 }
 
-bool DeadCodeElimination::run(Function* function) {
+bool opt::DeadCodeElimination::run(Function* function) {
   std::vector<Instruction*> worklist;
   bool did_something = false;
 

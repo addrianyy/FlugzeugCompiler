@@ -106,7 +106,7 @@ static void test_minimization(Context& context) {
   phi2->add_incoming(entry, a);
   phi2->add_incoming(b1, phi1);
 
-  PhiMinimization::run(f);
+  opt::PhiMinimization::run(f);
 
   m->print();
   m->destroy();
@@ -116,21 +116,21 @@ static void optimize_function(Function* f) {
   while (true) {
     bool did_something = false;
 
-    did_something |= CallInlining::run(f, InliningStrategy::InlineEverything);
-    did_something |= CFGSimplification::run(f);
-    did_something |= MemoryToSSA::run(f);
-    did_something |= PhiMinimization::run(f);
-    did_something |= DeadCodeElimination::run(f);
-    did_something |= ConstPropagation::run(f);
-    did_something |= InstructionSimplification::run(f);
-    did_something |= DeadBlockElimination::run(f);
-    did_something |= LocalReordering::run(f);
-    did_something |= LoopUnrolling::run(f);
-    did_something |= LoopInvariantOptimization::run(f);
-    did_something |= BlockInvariantPropagation::run(f);
-    did_something |= ConditionalFlattening::run(f);
-    did_something |= KnownBitsOptimization::run(f);
-    did_something |= InstructionDeduplication::run(f, DeduplicationStrategy::BlockLocal);
+    did_something |= opt::CallInlining::run(f, opt::InliningStrategy::InlineEverything);
+    did_something |= opt::CFGSimplification::run(f);
+    did_something |= opt::MemoryToSSA::run(f);
+    did_something |= opt::PhiMinimization::run(f);
+    did_something |= opt::DeadCodeElimination::run(f);
+    did_something |= opt::ConstPropagation::run(f);
+    did_something |= opt::InstructionSimplification::run(f);
+    did_something |= opt::DeadBlockElimination::run(f);
+    did_something |= opt::LocalReordering::run(f);
+    did_something |= opt::LoopUnrolling::run(f);
+    did_something |= opt::LoopInvariantOptimization::run(f);
+    did_something |= opt::BlockInvariantPropagation::run(f);
+    did_something |= opt::ConditionalFlattening::run(f);
+    did_something |= opt::KnownBitsOptimization::run(f);
+    did_something |= opt::InstructionDeduplication::run(f, opt::DeduplicationStrategy::BlockLocal);
 
     if (!did_something) {
       f->reassign_display_indices();

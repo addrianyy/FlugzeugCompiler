@@ -145,9 +145,10 @@ public:
   using UserIterator = detail::ValueUses::iterator;
   using ConstUserIterator = detail::ValueUses::const_iterator;
 
-  template <typename TUser> using SpecificUserIterator = TypeFilteringIterator<TUser, UserIterator>;
   template <typename TUser>
-  using ConstSpecificUserIterator = TypeFilteringIterator<const TUser, ConstUserIterator>;
+  using SpecificUserIterator = detail::TypeFilteringIterator<TUser, UserIterator>;
+  template <typename TUser>
+  using ConstSpecificUserIterator = detail::TypeFilteringIterator<const TUser, ConstUserIterator>;
 
   IteratorRange<UserIterator> users() { return {uses.begin(), uses.end()}; }
   IteratorRange<ConstUserIterator> users() const { return {uses.begin(), uses.end()}; }

@@ -201,7 +201,7 @@ static bool flatten_block(Block* block) {
   return true;
 }
 
-bool ConditionalFlattening::run(Function* function) {
+bool opt::ConditionalFlattening::run(Function* function) {
   bool did_something = false;
 
   while (true) {

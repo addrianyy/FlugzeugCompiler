@@ -169,10 +169,11 @@ public:
   using ConstInstructionIterator = InstructionIteratorInternal<const Block, const Instruction>;
 
   template <typename TInstruction>
-  using SpecificInstructionIterator = TypeFilteringIterator<TInstruction, InstructionIterator>;
+  using SpecificInstructionIterator =
+    detail::TypeFilteringIterator<TInstruction, InstructionIterator>;
   template <typename TInstruction>
   using ConstSpecificInstructionIterator =
-    TypeFilteringIterator<const TInstruction, ConstInstructionIterator>;
+    detail::TypeFilteringIterator<const TInstruction, ConstInstructionIterator>;
 
   IteratorRange<InstructionIterator> instructions() {
     return {InstructionIterator(get_first_block()), InstructionIterator(nullptr)};

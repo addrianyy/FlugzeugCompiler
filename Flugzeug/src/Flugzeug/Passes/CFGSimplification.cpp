@@ -132,6 +132,6 @@ static bool merge_blocks(Function* function) {
   return did_something;
 }
 
-bool CFGSimplification::run(Function* function) {
+bool opt::CFGSimplification::run(Function* function) {
   return thread_jumps(function) | merge_blocks(function);
 }

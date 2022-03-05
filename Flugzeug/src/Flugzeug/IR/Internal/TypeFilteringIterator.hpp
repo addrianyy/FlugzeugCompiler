@@ -2,7 +2,7 @@
 #include <Flugzeug/Core/Casting.hpp>
 #include <iterator>
 
-namespace flugzeug {
+namespace flugzeug::detail {
 
 template <typename T, typename TUnderlyingIterator> class TypeFilteringIterator {
   TUnderlyingIterator underlying;
@@ -48,4 +48,4 @@ public:
   bool operator!=(const TypeFilteringIterator& rhs) const { return !(*this == rhs); }
 };
 
-} // namespace flugzeug
+} // namespace flugzeug::detail

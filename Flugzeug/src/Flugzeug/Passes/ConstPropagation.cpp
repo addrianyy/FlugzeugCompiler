@@ -114,7 +114,7 @@ public:
   OptimizationResult visit_ret(Argument<Ret> ret) { return OptimizationResult::unchanged(); }
 };
 
-bool ConstPropagation::run(Function* function) {
+bool opt::ConstPropagation::run(Function* function) {
   bool did_something = false;
 
   for (Instruction& instruction : dont_invalidate_current(function->instructions())) {

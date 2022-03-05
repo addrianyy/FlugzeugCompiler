@@ -23,7 +23,7 @@ static bool inline_everything(Function* function) {
   return !inlinable_calls.empty();
 }
 
-bool CallInlining::run(Function* function, InliningStrategy strategy) {
+bool opt::CallInlining::run(Function* function, InliningStrategy strategy) {
   switch (strategy) {
   case InliningStrategy::InlineEverything:
     return inline_everything(function);

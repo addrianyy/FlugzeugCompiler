@@ -4,9 +4,13 @@ namespace flugzeug {
 
 class Function;
 
+namespace opt {
+
 class BlockInvariantPropagation {
 public:
   static bool run(Function* function);
 };
+
+} // namespace opt
 
 } // namespace flugzeug

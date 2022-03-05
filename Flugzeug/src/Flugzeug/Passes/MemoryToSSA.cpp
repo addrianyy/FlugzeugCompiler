@@ -114,7 +114,7 @@ static void optimize_stackalloc(StackAlloc* stackalloc) {
   stackalloc->destroy();
 }
 
-bool MemoryToSSA::run(Function* function) {
+bool opt::MemoryToSSA::run(Function* function) {
   const auto optimizable = find_optimizable_stackallocs(function);
   for (StackAlloc* stackalloc : optimizable) {
     optimize_stackalloc(stackalloc);

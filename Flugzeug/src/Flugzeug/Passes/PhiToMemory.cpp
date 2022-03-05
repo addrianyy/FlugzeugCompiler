@@ -29,7 +29,7 @@ static void convert_phi_to_memory(Phi* phi) {
   phi->replace_with_instruction_and_destroy(load);
 }
 
-bool PhiToMemory::run(Function* function) {
+bool opt::PhiToMemory::run(Function* function) {
   bool did_something = false;
 
   for (Phi& phi : dont_invalidate_current(function->instructions<Phi>())) {
