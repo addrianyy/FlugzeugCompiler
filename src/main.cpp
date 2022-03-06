@@ -4,6 +4,7 @@
 #include <Flugzeug/IR/ConsolePrinter.hpp>
 #include <Flugzeug/IR/Context.hpp>
 #include <Flugzeug/IR/DominatorTree.hpp>
+#include <Flugzeug/IR/FilePrinter.hpp>
 #include <Flugzeug/IR/Function.hpp>
 #include <Flugzeug/IR/InstructionInserter.hpp>
 #include <Flugzeug/IR/Module.hpp>
