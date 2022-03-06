@@ -294,12 +294,20 @@ bool PointerAliasing::can_alias(const Instruction* instruction, const Value* v1,
   }
 
   {
-    const auto offset_1 = lookup_map(constant_offset_db, v1);
-    const auto offset_2 = lookup_map(constant_offset_db, v2);
+    const auto get_constant_offset = [&](const Value* value) -> std::pair<const Value*, int64_t> {
+      const auto it = constant_offset_db.find(value);
+      if (it == constant_offset_db.end()) {
+        return {value, 0};
+      }
+
+      return it->second;
+    };
+
+    const auto offset_1 = get_constant_offset(v1);
+    const auto offset_2 = get_constant_offset(v2);
 
     // If two pointers come from the same origin but have different offsets they can never alias.
-    if (offset_1 && offset_2 && offset_1->first == offset_2->first &&
-        offset_1->second != offset_2->second) {
+    if (offset_1.first == offset_2.first && offset_1.second != offset_2.second) {
       return false;
     }
   }
