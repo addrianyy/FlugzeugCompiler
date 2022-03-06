@@ -52,6 +52,11 @@ static bool eliminate_dead_stores_local(Function* function) {
 static bool eliminate_dead_stores_global(Function* function) { fatal_error("TODO"); }
 
 bool opt::DeadStoreElimination::run(Function* function, OptimizationLocality locality) {
+  // store X, Y
+  // ... instructions that don't modify X
+  // store X, Z
+  // => first store will be removed
+
   switch (locality) {
   case OptimizationLocality::BlockLocal:
     return eliminate_dead_stores_local(function);

@@ -50,6 +50,11 @@ static bool eliminate_known_loads_local(Function* function) {
 static bool eliminate_known_loads_global(Function* function) { fatal_error("TODO"); }
 
 bool opt::KnownLoadElimination::run(Function* function, OptimizationLocality locality) {
+  // store X, Y
+  // ... instructions that don't modify X
+  // Z = load X
+  // => last load will be replaced with Y
+
   switch (locality) {
   case OptimizationLocality::BlockLocal:
     return eliminate_known_loads_local(function);
