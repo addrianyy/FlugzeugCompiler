@@ -242,7 +242,7 @@ std::unordered_set<const Value*> Block::get_inlineable_values_in_block() const {
       }
     }
 
-    if (complexity > 5) {
+    if (complexity > 6) {
       continue;
     }
 

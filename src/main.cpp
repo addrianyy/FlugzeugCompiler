@@ -87,8 +87,8 @@ int main() {
 
   Context context;
 
-  const auto printing_method = IRPrintingMethod::Standard;
-  const auto source_path = "TestsBF/test.bf";
+  const auto printing_method = IRPrintingMethod::Compact;
+  const auto source_path = "TestsTC/memory.tc";
 
   const auto module = compile_source(&context, source_path);
 
@@ -109,7 +109,10 @@ int main() {
     }
   }
 
+  FilePrinter file_printer("TestResults/result.flug");
+  ConsolePrinter console_printer(ConsolePrinter::Variant::ColorfulIfSupported);
+
   module->validate(ValidationBehaviour::ErrorsAreFatal);
-  module->print(printing_method);
+  module->print(console_printer, printing_method);
   module->destroy();
 }
