@@ -138,14 +138,6 @@ static void optimize_function(Function* f) {
 
     if (!did_something) {
       f->reassign_display_indices();
-
-      //      {
-      //        log_debug("{}", f->get_name());
-      //        analysis::PointerAliasing aliasing(f);
-      //        aliasing.debug_dump();
-      //        log_debug("");
-      //      }
-
       break;
     }
   }

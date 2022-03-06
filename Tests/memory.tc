@@ -1,7 +1,29 @@
-u32 test(i32* y, i64 c) {
+u32 test_deduplicate(i32* y, i64 c) {
     y[1] = 1;
     i32 cc = y[2];
     y[3] = 3;
 
     return cc + y[2];
+}
+
+void blackbox(i32* x) {
+    *(i32*)((i32)x) = 12;
+}
+
+u32 test_known_load(i32* y, i64 c) {
+    y[1] = 1;
+    y[2] += 4;
+    y[3] = 3;
+
+    return y[2];
+}
+
+u32 test_dead_store(i32* y, i64 c) {
+    y[1] = 1;
+    y[2] += 4;
+    y[3] = 3;
+    y[2] = 33;
+    y[3] = 123;
+
+    return y[2];
 }

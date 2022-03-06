@@ -391,6 +391,20 @@ bool PointerAliasing::can_instruction_access_pointer(const Instruction* instruct
   return false;
 }
 
+bool PointerAliasing::is_pointer_accessed_inbetween(const Value* pointer, const Instruction* begin,
+                                                    const Instruction* end,
+                                                    PointerAliasing::AccessType access_type) const {
+  verify(begin->get_block() == end->get_block(), "Instructions are in different blocks");
+
+  for (const Instruction& instruction : instruction_range(begin, end)) {
+    if (can_instruction_access_pointer(&instruction, pointer, access_type)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void PointerAliasing::debug_dump() const {
   log_debug("Pointer origins:");
   for (auto [pointer, origin] : pointer_origin_map) {

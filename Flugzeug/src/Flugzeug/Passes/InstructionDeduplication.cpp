@@ -23,21 +23,6 @@ static bool can_be_deduplicated(Instruction* instruction) {
   }
 }
 
-static bool is_value_stored_to_inbetween(const analysis::PointerAliasing& alias_analysis,
-                                         const Value* pointer, const Instruction* begin,
-                                         const Instruction* end) {
-  verify(begin->get_block() == end->get_block(), "Instructions are in different blocks");
-
-  for (const Instruction& instruction : instruction_range(begin, end)) {
-    if (alias_analysis.can_instruction_access_pointer(
-          &instruction, pointer, analysis::PointerAliasing::AccessType::Store)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 static bool deduplicate_block_local(Function* function) {
   bool did_something = false;
 
@@ -64,10 +49,11 @@ static bool deduplicate_block_local(Function* function) {
         if (const auto load = cast<Load>(instruction)) {
           // Special care needs to be taken if we want to deduplicate load. Something inbetween two
           // instructions may have modified loaded ptr and output value will be different.
-          const bool stored_to = is_value_stored_to_inbetween(alias_analysis, load->get_ptr(),
-                                                              previous->get_next(), &instruction);
+          const auto stored_to_inbetween = alias_analysis.is_pointer_accessed_inbetween(
+            load->get_ptr(), previous->get_next(), &instruction,
+            analysis::PointerAliasing::AccessType::Store);
 
-          if (stored_to) {
+          if (stored_to_inbetween) {
             map.insert({std::move(identifier), &instruction});
             continue;
           }

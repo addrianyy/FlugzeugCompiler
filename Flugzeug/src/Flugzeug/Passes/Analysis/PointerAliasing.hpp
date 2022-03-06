@@ -37,6 +37,9 @@ public:
   bool can_instruction_access_pointer(const Instruction* instruction, const Value* pointer,
                                       AccessType access_type) const;
 
+  bool is_pointer_accessed_inbetween(const Value* pointer, const Instruction* begin,
+                                     const Instruction* end, AccessType access_type) const;
+
   void debug_dump() const;
 };
 
