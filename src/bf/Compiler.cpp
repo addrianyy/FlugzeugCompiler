@@ -93,7 +93,7 @@ Module* bf::Compiler::compile_from_file(Context* context, const std::string& sou
       const auto loop = loops.back();
       loops.pop_back();
 
-      ins.branch(loop.after);
+      ins.branch(loop.header);
       ins.set_insertion_block(loop.after);
 
       break;

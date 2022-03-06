@@ -46,7 +46,6 @@ static Module* compile_source(Context* context, const std::string& source_path) 
 }
 
 static void optimize_function(Function* f) {
-
   constexpr bool enable_loop_optimizations = true;
 
   while (true) {
@@ -83,11 +82,13 @@ int main() {
   std::filesystem::current_path("../");
   std::filesystem::remove_all("Graphs/");
   std::filesystem::create_directory("Graphs/");
+  std::filesystem::remove_all("TestResults/");
+  std::filesystem::create_directory("TestResults/");
 
   Context context;
 
-  const auto printing_method = IRPrintingMethod::Compact;
-  const auto source_path = "TestsTC/memory.tc";
+  const auto printing_method = IRPrintingMethod::Standard;
+  const auto source_path = "TestsBF/test.bf";
 
   const auto module = compile_source(&context, source_path);
 

@@ -11,9 +11,18 @@ using namespace flugzeug;
 
 static bool is_instruction_loop_invariant(Instruction* instruction, const analysis::Loop* loop,
                                           std::unordered_set<Instruction*>& invariants) {
-  // Volatile instructions cannot be loop invariants.
+  // Volatile instructions or loads cannot be loop invariants.
   if (instruction->is_volatile()) {
     return false;
+  }
+
+  switch (instruction->get_kind()) {
+  case Value::Kind::Load:
+  case Value::Kind::Phi:
+    return false;
+
+  default:
+    break;
   }
 
   if (const auto phi = cast<Phi>(instruction)) {
