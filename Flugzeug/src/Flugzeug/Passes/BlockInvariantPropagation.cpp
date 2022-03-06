@@ -70,6 +70,7 @@ bool opt::BlockInvariantPropagation::run(Function* function) {
     function->get_entry_block()->get_reachable_blocks(TraversalType::DFS_WithStart);
 
   std::unordered_map<Block*, std::unordered_map<Value*, Value*>> block_invariants;
+  std::vector<std::unordered_map<Value*, Value*>> predecessor_invariants;
 
   for (Block* block : blocks) {
     // Entry block doesn't have any invariants so nothing can be optimized.
@@ -77,7 +78,7 @@ bool opt::BlockInvariantPropagation::run(Function* function) {
       continue;
     }
 
-    std::vector<std::unordered_map<Value*, Value*>> predecessor_invariants;
+    predecessor_invariants.clear();
 
     // Get invariants for every predecessor.
     for (Block* predecessor : block->predecessors()) {

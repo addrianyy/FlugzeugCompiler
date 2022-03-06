@@ -208,6 +208,10 @@ PointerAliasing::PointerAliasing(const Function* function) {
   const auto traversal =
     function->get_entry_block()->get_reachable_blocks(TraversalType::DFS_WithStart);
 
+  size_t offset_instruction_count = 0;
+  size_t pointer_instruction_count = 0;
+  size_t stackalloc_instruction_count = 0;
+
   std::unordered_set<const Value*> safe_pointers;
   {
     // Reverse ordering so every value is used before being created.
@@ -221,6 +225,14 @@ PointerAliasing::PointerAliasing(const Function* function) {
       for (const Instruction& instruction : reversed(*block)) {
         if (!instruction.get_type()->is_pointer()) {
           continue;
+        }
+
+        pointer_instruction_count++;
+        if (const auto offset = cast<Offset>(instruction)) {
+          offset_instruction_count++;
+        }
+        if (const auto stackalloc = cast<StackAlloc>(instruction)) {
+          stackalloc_instruction_count++;
         }
 
         PointerSafetyCalculator safety_calculator(safe_pointers, &instruction);
@@ -246,6 +258,11 @@ PointerAliasing::PointerAliasing(const Function* function) {
   {
     PointerOriginCalculator origin_calculator(pointer_origin_map);
     BaseIndexToOffset base_index_to_offset;
+
+    base_index_to_offset.reserve(offset_instruction_count);
+    constant_offset_db.reserve(offset_instruction_count);
+    pointer_origin_map.reserve(pointer_instruction_count);
+    stackalloc_safety.reserve(stackalloc_instruction_count);
 
     // Get origin of all pointers used in the function.
     // Save safety of stackallocs.

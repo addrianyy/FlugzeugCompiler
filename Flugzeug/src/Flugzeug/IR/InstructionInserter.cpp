@@ -4,7 +4,6 @@ using namespace flugzeug;
 
 void InstructionInserter::insert_internal(Instruction* instruction) {
   switch (insert_type) {
-
   case InsertType::BlockFront:
     insertion_block->push_instruction_front(instruction);
     break;

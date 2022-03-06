@@ -27,16 +27,21 @@ template <typename TBlock> TBlock* get_single_successor_generic(TBlock* block) {
 template <typename TBlock, bool ReturnVector>
 std::conditional_t<ReturnVector, std::vector<TBlock*>, std::unordered_set<TBlock*>>
 traverse_generic(TBlock* start_block, TraversalType traversal) {
-  const size_t reserve_count = std::min(size_t(8), start_block->get_function()->get_block_count());
+  const size_t block_count = start_block->get_function()->get_block_count();
+
+  size_t reserve_count = start_block->get_function()->get_block_count() / 8;
+  if (reserve_count < 4) {
+    reserve_count = start_block->get_function()->get_block_count();
+  }
 
   std::vector<TBlock*> result;
   std::unordered_set<TBlock*> visited;
 
   if constexpr (ReturnVector) {
-    result.reserve(reserve_count);
+    result.reserve(block_count);
   }
 
-  visited.reserve(reserve_count);
+  visited.reserve(block_count);
 
   const bool with_start =
     traversal == TraversalType::BFS_WithStart || traversal == TraversalType::DFS_WithStart;

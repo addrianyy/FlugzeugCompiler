@@ -6,13 +6,29 @@
 
 #include <Flugzeug/Core/ConsoleColors.hpp>
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <iostream>
 
 using namespace flugzeug;
 
 #define validation_check(value, format, ...)                                                       \
   (check_fmt(__FILE__, __LINE__, !!(value), (format), ##__VA_ARGS__))
+
+template <typename T> class Format {
+  const T* value;
+
+public:
+  explicit Format(const T* value) : value(value) {}
+  const T* get() const { return value; }
+};
+
+template <typename T> struct fmt::formatter<Format<T>> {
+  template <typename ParseContext> constexpr auto parse(ParseContext& ctx) { return ctx.begin(); }
+
+  template <typename FormatContext> auto format(const Format<T>& value, FormatContext& ctx) {
+    return fmt::format_to(ctx.out(), "{}", value.get()->format());
+  }
+};
 
 class Validator : public ConstInstructionVisitor {
   template <typename TInstruction, typename TVisitor>
@@ -49,7 +65,7 @@ class Validator : public ConstInstructionVisitor {
 
     validation_check(type == val_type,
                      "Unary instruction return type ({}) differs from operand type ({})",
-                     type->format(), val_type->format());
+                     Format(type), Format(val_type));
     validation_check(type->is_arithmetic(), "Unary instruction type is not arithmetic");
   }
 
@@ -60,10 +76,10 @@ class Validator : public ConstInstructionVisitor {
 
     validation_check(lhs_type == rhs_type,
                      "Binary instruction LHS type ({}) differs from RHS type ({})",
-                     lhs_type->format(), rhs_type->format());
+                     Format(lhs_type), Format(rhs_type));
     validation_check(type == lhs_type,
                      "Binary instruction return type ({}) differs from operand type ({})",
-                     type->format(), lhs_type->format());
+                     Format(type), Format(lhs_type));
     validation_check(type->is_arithmetic(), "Binary instruction type is not arithmetic");
   }
 
@@ -74,21 +90,20 @@ class Validator : public ConstInstructionVisitor {
 
     validation_check(lhs_type == rhs_type,
                      "Compare instruction LHS type ({}) differs from RHS type ({})",
-                     lhs_type->format(), rhs_type->format());
+                     Format(lhs_type), Format(rhs_type));
     validation_check(lhs_type->is_arithmetic_or_pointer(),
                      "Compare instruction operands are not arithmetic or pointer types");
-    validation_check(type->is_i1(), "Compare instruction doesn't return i1 but {}", type->format());
+    validation_check(type->is_i1(), "Compare instruction doesn't return i1 but {}", Format(type));
   }
 
   void visit_load(Argument<Load> load) {
     const auto type = load->get_type();
     const auto ptr_type = load->get_ptr()->get_type();
 
-    validation_check(ptr_type->is_pointer(), "Load operand isn't a pointer ({})",
-                     ptr_type->format());
+    validation_check(ptr_type->is_pointer(), "Load operand isn't a pointer ({})", Format(ptr_type));
     validation_check(type->ref() == ptr_type, "Load operand and return type mismatch");
     validation_check(type->is_arithmetic_or_pointer(),
-                     "Loaded value isn't of arithmetic or pointer type ({})", type->format());
+                     "Loaded value isn't of arithmetic or pointer type ({})", Format(type));
   }
 
   void visit_store(Argument<Store> store) {
@@ -98,23 +113,22 @@ class Validator : public ConstInstructionVisitor {
 
     validation_check(val_type->ref() == ptr_type, "Store destination and value type mismatch");
     validation_check(val_type->is_arithmetic_or_pointer(),
-                     "Stored value isn't of arithmetic or pointer type ({})", val_type->format());
-    validation_check(type->is_void(), "Store doesn't return void ({})", type->format());
+                     "Stored value isn't of arithmetic or pointer type ({})", Format(val_type));
+    validation_check(type->is_void(), "Store doesn't return void ({})", Format(type));
   }
 
   void visit_branch(Argument<Branch> branch) {
     const auto type = branch->get_type();
 
-    validation_check(type->is_void(), "Branch doesn't return void ({})", type->format());
+    validation_check(type->is_void(), "Branch doesn't return void ({})", Format(type));
   }
 
   void visit_cond_branch(Argument<CondBranch> cond_branch) {
     const auto type = cond_branch->get_type();
     const auto cond_type = cond_branch->get_cond()->get_type();
 
-    validation_check(cond_type->is_i1(), "Cond branch condition isn't i1 ({})",
-                     cond_type->format());
-    validation_check(type->is_void(), "Cond branch doesn't return void ({})", type->format());
+    validation_check(cond_type->is_i1(), "Cond branch condition isn't i1 ({})", Format(cond_type));
+    validation_check(type->is_void(), "Cond branch doesn't return void ({})", Format(type));
   }
 
   void visit_call(Argument<Call> call) {
@@ -124,8 +138,8 @@ class Validator : public ConstInstructionVisitor {
     validation_check(called_function->get_module() == function->get_module(),
                      "Call instruction crosses module boundary.");
     validation_check(type == called_function->get_return_type(),
-                     "Call return type ({}) differs from functon return type", type->format(),
-                     called_function->get_return_type()->format());
+                     "Call return type ({}) differs from functon return type", Format(type),
+                     Format(called_function->get_return_type()));
     validation_check(called_function->get_parameter_count() == call->get_arg_count(),
                      "Call parameter count mismatch");
 
@@ -134,7 +148,7 @@ class Validator : public ConstInstructionVisitor {
       const auto call_type = call->get_arg(i)->get_type();
 
       validation_check(call_type == func_type, "Call argument {}: expected {}, found {}", i,
-                       func_type->format(), call_type->format());
+                       Format(func_type), Format(call_type));
     }
   }
 
@@ -143,11 +157,11 @@ class Validator : public ConstInstructionVisitor {
 
     validation_check(stackalloc->get_size() > 0, "Stackalloc size is 0");
     if (validation_check(type->is_pointer(), "Stackalloc type isn't a pointer ({})",
-                         type->format())) {
+                         Format(type))) {
       const auto allocated_type = stackalloc->get_allocated_type();
       validation_check(allocated_type->is_arithmetic_or_pointer(),
                        "Stackalloced type isn't arithmetic or pointer ({})",
-                       allocated_type->format());
+                       Format(allocated_type));
     }
   }
 
@@ -160,10 +174,10 @@ class Validator : public ConstInstructionVisitor {
       validation_check(!ret->get_val(), "Void functions return non-void value");
     } else {
       validation_check(val_type == return_type, "Function returns {} but Ret operand is of type {}",
-                       return_type->format(), val_type->format());
+                       Format(return_type), Format(val_type));
     }
 
-    validation_check(type->is_void(), "Ret doesn't return void ({})", type->format());
+    validation_check(type->is_void(), "Ret doesn't return void ({})", Format(type));
   }
 
   void visit_offset(Argument<Offset> offset) {
@@ -172,11 +186,10 @@ class Validator : public ConstInstructionVisitor {
     const auto index_type = offset->get_index()->get_type();
 
     validation_check(type == base_type, "Offset base type ({}) and return type ({}) are mismatched",
-                     base_type->format(), type->format());
-    validation_check(base_type->is_pointer(), "Base type isn't a pointer ({})",
-                     base_type->format());
+                     Format(base_type), Format(type));
+    validation_check(base_type->is_pointer(), "Base type isn't a pointer ({})", Format(base_type));
     validation_check(index_type->is_arithmetic(), "Index type isn't arithmetic ({})",
-                     index_type->format());
+                     Format(index_type));
   }
 
   void visit_cast(Argument<Cast> cast) {
@@ -185,7 +198,7 @@ class Validator : public ConstInstructionVisitor {
     const auto kind = cast->get_cast_kind();
 
     validation_check(val_type->is_arithmetic_or_pointer(),
-                     "Cast operand ({}) is not arithmetic or pointer", val_type->format());
+                     "Cast operand ({}) is not arithmetic or pointer", Format(val_type));
 
     const auto from_bit_size = val_type->get_bit_size();
     const auto to_bit_size = type->get_bit_size();
@@ -218,27 +231,27 @@ class Validator : public ConstInstructionVisitor {
     const auto true_type = select->get_true_val()->get_type();
     const auto false_type = select->get_false_val()->get_type();
 
-    validation_check(cond_type->is_i1(), "Select condition isn't i1 ({})", cond_type->format());
+    validation_check(cond_type->is_i1(), "Select condition isn't i1 ({})", Format(cond_type));
     validation_check(true_type == false_type,
                      "Select instruction true type ({}) differs from false type ({})",
-                     true_type->format(), false_type->format());
+                     Format(true_type), Format(false_type));
     validation_check(type == true_type,
                      "Select instruction return type ({}) differs from operand type ({})",
-                     type->format(), true_type->format());
+                     Format(type), Format(true_type));
     validation_check(type->is_arithmetic_or_pointer(),
-                     "Select instruction type ({}) is not arithmetic or pointer", type->format());
+                     "Select instruction type ({}) is not arithmetic or pointer", Format(type));
   }
 
   void visit_phi(Argument<Phi> phi) {
     const auto type = phi->get_type();
     validation_check(type->is_arithmetic_or_pointer(),
-                     "Phi return type ({}) isn't arithmetic or pointer", type->format());
+                     "Phi return type ({}) isn't arithmetic or pointer", Format(type));
 
     for (const auto incoming : *phi) {
       const auto value_type = incoming.value->get_type();
       validation_check(value_type == type,
                        "Phi incoming value `{}` ({}) has different type than Phi ({})",
-                       incoming.value->format(), value_type->format(), type->format());
+                       Format(incoming.value), Format(value_type), Format(type));
     }
   }
 
@@ -253,7 +266,7 @@ class Validator : public ConstInstructionVisitor {
 
       validation_check(!operand->is_void(), "Instruction operand nr {} is void", i);
       validation_check(instruction->get_context() == operand->get_context(),
-                       "Instruction operand `{}` has mismatched context", operand->format());
+                       "Instruction operand `{}` has mismatched context", Format(operand));
 
       if (const auto parameter = cast<Parameter>(operand)) {
         validation_check(parameters.contains(parameter),
@@ -267,12 +280,12 @@ class Validator : public ConstInstructionVisitor {
           validation_check(instruction != other,
                            "Self references are only allowed in Phi instructions");
           validation_check(other->dominates(instruction, dominator_tree),
-                           "`{}` doesn't dominate this instruction", other->format());
+                           "`{}` doesn't dominate this instruction", Format(other));
         }
 
         if (const auto other_phi = cast<Phi>(other)) {
           validation_check(!other_phi->is_empty(),
-                           "Instruction used empty Phi (`{}`) as an operand", other->format());
+                           "Instruction used empty Phi (`{}`) as an operand", Format(other));
         }
       }
     }
@@ -285,7 +298,7 @@ class Validator : public ConstInstructionVisitor {
       for (const auto incoming : *phi) {
         validation_check(current_block_predecessors.contains(incoming.block),
                          "Phi has incoming block `{}` which isn't a predecessor",
-                         incoming.block->format());
+                         Format(incoming.block));
 
         // If this incoming block is dead skip dominance checks.
         if (dominator_tree.is_block_dead(incoming.block)) {
@@ -297,7 +310,7 @@ class Validator : public ConstInstructionVisitor {
           validation_check(
             incoming_instruction->dominates(incoming.block->get_last_instruction(), dominator_tree),
             "Phi has incoming value `{}` which doesn't dominate the last instruction of `{}`",
-            incoming.value->format(), incoming.block->format());
+            Format(incoming.value), Format(incoming.block));
         }
       }
     }

@@ -10,6 +10,8 @@ class PointerOriginMap {
   std::unordered_map<const Value*, const Value*> map;
 
 public:
+  void reserve(size_t size) { map.reserve(size); }
+
   auto begin() const { return map.begin(); }
   auto end() const { return map.end(); }
 

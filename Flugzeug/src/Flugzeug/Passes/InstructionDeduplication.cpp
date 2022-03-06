@@ -27,11 +27,14 @@ static bool deduplicate_block_local(Function* function) {
   bool did_something = false;
 
   analysis::PointerAliasing alias_analysis(function);
+  std::unordered_map<Value::Kind, std::unordered_map<InstructionUniqueIdentifier, Instruction*,
+                                                     InstructionUniqueIdentifierHash>>
+    deduplication_map;
 
   for (Block& block : *function) {
-    std::unordered_map<Value::Kind, std::unordered_map<InstructionUniqueIdentifier, Instruction*,
-                                                       InstructionUniqueIdentifierHash>>
-      deduplication_map;
+    for (auto& [key, value] : deduplication_map) {
+      value.clear();
+    }
 
     for (Instruction& instruction : dont_invalidate_current(block)) {
       if (!can_be_deduplicated(&instruction)) {

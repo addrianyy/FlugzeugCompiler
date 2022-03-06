@@ -46,7 +46,7 @@ static Module* compile_source(Context* context, const std::string& source_path) 
 }
 
 static void optimize_function(Function* f) {
-  constexpr bool enable_loop_optimizations = true;
+  constexpr bool enable_loop_optimizations = false;
 
   while (true) {
     bool did_something = false;
@@ -88,7 +88,7 @@ int main() {
   Context context;
 
   const auto printing_method = IRPrintingMethod::Compact;
-  const auto source_path = "TestsTC/memory.tc";
+  const auto source_path = "TestsBF/mandel.bf";
 
   const auto module = compile_source(&context, source_path);
 
@@ -103,7 +103,7 @@ int main() {
              std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
   }
 
-  if (true) {
+  if (false) {
     for (Function& f : module->local_functions()) {
       f.generate_graph(fmt::format("Graphs/{}.svg", f.get_name()), printing_method);
     }
@@ -113,6 +113,6 @@ int main() {
   ConsolePrinter console_printer(ConsolePrinter::Variant::ColorfulIfSupported);
 
   module->validate(ValidationBehaviour::ErrorsAreFatal);
-  module->print(console_printer, printing_method);
+  module->print(file_printer, printing_method);
   module->destroy();
 }
