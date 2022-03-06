@@ -71,9 +71,8 @@ static OptimizationResult simplify_bit_operations(BinaryInstr* binary) {
     Value* y;
 
     // ((x & y) | (x & ~y)) => x
-    if (match_pattern(binary,
-                      pat::or_(pat::and_(pat::value(x), pat::value(y)),
-                               pat::and_(pat::specific_ref(x), pat::not_(pat::specific_ref(y)))))) {
+    if (match_pattern(binary, pat::or_(pat::and_(pat::not_(pat::value(x)), pat::value(y)),
+                                       pat::and_(pat::exact_ref(x), pat::exact_ref(y))))) {
       return x;
     }
   }
@@ -82,7 +81,7 @@ static OptimizationResult simplify_bit_operations(BinaryInstr* binary) {
     Value* x;
 
     // x & ~x => 0
-    if (match_pattern(binary, pat::and_(pat::value(x), pat::not_(pat::specific_ref(x))))) {
+    if (match_pattern(binary, pat::and_(pat::value(x), pat::not_(pat::exact_ref(x))))) {
       return binary->get_type()->get_zero();
     }
   }

@@ -33,8 +33,8 @@ public:
     for (Instruction& instruction :
          make_instruction_range(binary->get_block()->get_first_instruction(), previous)) {
       if (match_pattern(&instruction,
-                        pat::binary_specific(pat::specific(binary->get_lhs()), *corresponding_op,
-                                             pat::specific(binary->get_rhs())))) {
+                        pat::binary_specific(pat::exact(binary->get_lhs()), *corresponding_op,
+                                             pat::exact(binary->get_rhs())))) {
         // Move this instruction just after corresponding `div`/`mod`.
         binary->move_after(&instruction);
 

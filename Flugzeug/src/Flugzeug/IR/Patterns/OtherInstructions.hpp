@@ -296,9 +296,9 @@ auto cond_branch(CondPattern cond, TruePattern on_true, FalsePattern on_false) {
 template <typename TInstruction> auto stackalloc(TInstruction*& instruction) {
   static_assert(std::is_same_v<StackAlloc, std::remove_cv_t<TInstruction>>,
                 "Expected StackAlloc instruction in this pattern");
-  return detail::ClassFilteringPattern<TInstruction>(&instruction);
+  return detail::ValueBindingPattern<TInstruction>(&instruction);
 }
-inline auto stackalloc() { return detail::ClassFilteringPattern<const StackAlloc>(nullptr); }
+inline auto stackalloc() { return detail::ValueBindingPattern<const StackAlloc>(nullptr); }
 
 template <typename TInstruction> auto ret_void(TInstruction*& instruction) {
   static_assert(std::is_same_v<Ret, std::remove_cv_t<TInstruction>>,
@@ -348,8 +348,8 @@ auto select(CondPattern cond, TruePattern on_true, FalsePattern on_false) {
 template <typename TInstruction> auto phi(TInstruction*& instruction) {
   static_assert(std::is_same_v<Phi, std::remove_cv_t<TInstruction>>,
                 "Expected Phi instruction in this pattern");
-  return detail::ClassFilteringPattern<TInstruction>(&instruction);
+  return detail::ValueBindingPattern<TInstruction>(&instruction);
 }
-inline auto phi() { return detail::ClassFilteringPattern<const Phi>(nullptr); }
+inline auto phi() { return detail::ValueBindingPattern<const Phi>(nullptr); }
 
 } // namespace flugzeug::pat
