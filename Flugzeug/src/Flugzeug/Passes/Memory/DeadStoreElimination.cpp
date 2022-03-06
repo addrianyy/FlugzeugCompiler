@@ -1,17 +1,21 @@
+#pragma once
 #include "DeadStoreElimination.hpp"
 
 #include <Flugzeug/IR/Block.hpp>
 #include <Flugzeug/IR/Function.hpp>
 #include <Flugzeug/IR/Instructions.hpp>
 
-#include "Analysis/PointerAliasing.hpp"
-
 using namespace flugzeug;
 
-static bool eliminate_dead_stores_local(Function* function) {
+// store X, Y
+// ... instructions that don't modify X
+// store X, Z
+// => first store will be removed
+
+bool opt::memory::eliminate_dead_stores_local(Function* function,
+                                              const analysis::PointerAliasing& alias_analysis) {
   bool did_something = false;
 
-  analysis::PointerAliasing alias_analysis(function);
   std::unordered_map<Value*, Store*> stores;
 
   for (Block& block : *function) {
@@ -49,22 +53,7 @@ static bool eliminate_dead_stores_local(Function* function) {
   return did_something;
 }
 
-static bool eliminate_dead_stores_global(Function* function) { fatal_error("TODO"); }
-
-bool opt::DeadStoreElimination::run(Function* function, OptimizationLocality locality) {
-  // store X, Y
-  // ... instructions that don't modify X
-  // store X, Z
-  // => first store will be removed
-
-  switch (locality) {
-  case OptimizationLocality::BlockLocal:
-    return eliminate_dead_stores_local(function);
-
-  case OptimizationLocality::Global:
-    return eliminate_dead_stores_global(function);
-
-  default:
-    unreachable();
-  }
+bool opt::memory::eliminate_dead_stores_global(Function* function,
+                                               const analysis::PointerAliasing& alias_analysis) {
+  fatal_error("TODO");
 }

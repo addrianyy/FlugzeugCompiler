@@ -7,7 +7,7 @@ class Function;
 
 namespace opt {
 
-class KnownLoadElimination {
+class MemoryOptimization {
 public:
   static bool run(Function* function, OptimizationLocality locality);
 };
