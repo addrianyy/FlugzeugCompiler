@@ -164,7 +164,7 @@ int main() {
 
   Context context;
 
-  const auto printing_method = IRPrintingMethod::Standard;
+  const auto printing_method = IRPrintingMethod::Compact;
 
   const auto parsed_source = turboc::Parser::parse_from_file("Tests/test.tc");
   const auto module = turboc::IRGenerator::generate(&context, parsed_source);

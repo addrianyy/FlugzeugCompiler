@@ -124,6 +124,62 @@ public:
   }
 };
 
+template <typename Class, typename Pattern1, typename Pattern2> class EitherPattern {
+  Class** bind_value;
+  Pattern1 pattern1;
+  Pattern2 pattern2;
+
+public:
+  explicit EitherPattern(Class** bind_value, Pattern1 pattern1, Pattern2 pattern2)
+      : bind_value(bind_value), pattern1(pattern1), pattern2(pattern2) {}
+
+  template <typename T> bool match(T* m_value) {
+    const auto value = ::cast<Class>(m_value);
+    if (!value) {
+      return false;
+    }
+
+    const bool matched = pattern1.match(value) || pattern2.match(value);
+    if (!matched) {
+      return false;
+    }
+
+    if (bind_value) {
+      *bind_value = value;
+    }
+
+    return true;
+  }
+};
+
+template <typename Class, typename Pattern1, typename Pattern2> class BothPattern {
+  Class** bind_value;
+  Pattern1 pattern1;
+  Pattern2 pattern2;
+
+public:
+  explicit BothPattern(Class** bind_value, Pattern1 pattern1, Pattern2 pattern2)
+      : bind_value(bind_value), pattern1(pattern1), pattern2(pattern2) {}
+
+  template <typename T> bool match(T* m_value) {
+    const auto value = ::cast<Class>(m_value);
+    if (!value) {
+      return false;
+    }
+
+    const bool matched = pattern1.match(value) && pattern2.match(value);
+    if (!matched) {
+      return false;
+    }
+
+    if (bind_value) {
+      *bind_value = value;
+    }
+
+    return true;
+  }
+};
+
 } // namespace detail
 
 template <typename T = Value> auto value() { return detail::ValueBindingPattern<const T>(nullptr); }
@@ -168,6 +224,22 @@ inline auto negative_one() { return detail::ExactConstantPattern<false>(-1); }
 
 template <typename Pattern> auto typed(Type* type, Pattern pattern) {
   return detail::TypeCheckingPattern<Pattern>(type, pattern);
+}
+
+template <typename T, typename Pattern1, typename Pattern2>
+auto either(T*& v, Pattern1 pattern1, Pattern2 pattern2) {
+  return detail::EitherPattern<T, Pattern1, Pattern2>(&v, pattern1, pattern2);
+}
+template <typename Pattern1, typename Pattern2> auto either(Pattern1 pattern1, Pattern2 pattern2) {
+  return detail::EitherPattern<const Value, Pattern1, Pattern2>(nullptr, pattern1, pattern2);
+}
+
+template <typename T, typename Pattern1, typename Pattern2>
+auto both(T*& v, Pattern1 pattern1, Pattern2 pattern2) {
+  return detail::BothPattern<T, Pattern1, Pattern2>(&v, pattern1, pattern2);
+}
+template <typename Pattern1, typename Pattern2> auto both(Pattern1 pattern1, Pattern2 pattern2) {
+  return detail::BothPattern<const Value, Pattern1, Pattern2>(nullptr, pattern1, pattern2);
 }
 
 } // namespace flugzeug::pat

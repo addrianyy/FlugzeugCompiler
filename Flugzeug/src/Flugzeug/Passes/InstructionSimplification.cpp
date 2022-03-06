@@ -12,9 +12,9 @@
 
 using namespace flugzeug;
 
-#define PROPAGATE_RESULT(call_expression)                                                          \
+#define PROPAGATE_RESULT(result_expression)                                                        \
   do {                                                                                             \
-    if (const auto _result = (call_expression)) {                                                  \
+    if (const auto _result = (result_expression)) {                                                \
       return _result;                                                                              \
     }                                                                                              \
   } while (0)
@@ -63,6 +63,30 @@ static OptimizationResult chain_commutative_expressions(BinaryInstr* binary) {
   parent_binary->destroy_if_unused();
 
   return OptimizationResult::changed();
+}
+
+static OptimizationResult simplify_arithmetic(BinaryInstr* binary) {
+  {
+    Value* a;
+    Value* b;
+    Value* c;
+    Value* common;
+
+    // (a * b) + (a * c) => a * (b + c)
+    if (match_pattern(binary,
+                      pat::add(pat::mul(pat::value(a), pat::value(b)),
+                               pat::mul(pat::either(common, pat::exact_ref(a), pat::exact_ref(b)),
+                                        pat::value(c))))) {
+      if (common == b) {
+        std::swap(a, b);
+      }
+
+      return OptimizationResult::rewrite(binary,
+                                         [&](Rewriter& r) { return r.mul(a, r.add(b, c)); });
+    }
+  }
+
+  return OptimizationResult::unchanged();
 }
 
 static OptimizationResult simplify_bit_operations(BinaryInstr* binary) {
@@ -268,6 +292,7 @@ public:
     PROPAGATE_RESULT(make_undef_if_uses_undef(binary));
     PROPAGATE_RESULT(chain_commutative_expressions(binary));
     PROPAGATE_RESULT(simplify_bit_operations(binary));
+    PROPAGATE_RESULT(simplify_arithmetic(binary));
 
     const auto type = binary->get_type();
     const auto lhs = binary->get_lhs();
