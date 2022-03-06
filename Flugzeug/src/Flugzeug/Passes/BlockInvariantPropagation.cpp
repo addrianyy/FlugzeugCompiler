@@ -78,11 +78,17 @@ bool opt::BlockInvariantPropagation::run(Function* function) {
       continue;
     }
 
-    predecessor_invariants.clear();
+    // Reuse the previous allocations.
+    const size_t predecessor_count = block->predecessors().size();
+    if (predecessor_count > predecessor_invariants.size()) {
+      predecessor_invariants.resize(predecessor_count);
+    }
 
     // Get invariants for every predecessor.
+    size_t predecessor_index = 0;
     for (Block* predecessor : block->predecessors()) {
-      std::unordered_map<Value*, Value*> current_invariants;
+      auto& current_invariants = predecessor_invariants[predecessor_index++];
+      current_invariants.clear();
 
       // Get known invariants for this predecessor. If we don't know them just use an empty
       // invariant list.
@@ -111,8 +117,6 @@ bool opt::BlockInvariantPropagation::run(Function* function) {
           }
         }
       }
-
-      predecessor_invariants.push_back(std::move(current_invariants));
     }
 
     std::unordered_map<Value*, Value*> final_invariants;
@@ -122,7 +126,7 @@ bool opt::BlockInvariantPropagation::run(Function* function) {
       bool valid = true;
 
       // Make sure that this invariant is valid from every predecessor.
-      for (size_t i = 1; i < predecessor_invariants.size(); ++i) {
+      for (size_t i = 1; i < predecessor_count; ++i) {
         const auto& other = predecessor_invariants[i];
         const auto from_it = other.find(from);
 
