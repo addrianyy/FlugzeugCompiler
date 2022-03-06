@@ -16,9 +16,11 @@
 #include <Flugzeug/Passes/ConstPropagation.hpp>
 #include <Flugzeug/Passes/DeadBlockElimination.hpp>
 #include <Flugzeug/Passes/DeadCodeElimination.hpp>
+#include <Flugzeug/Passes/DeadStoreElimination.hpp>
 #include <Flugzeug/Passes/InstructionDeduplication.hpp>
 #include <Flugzeug/Passes/InstructionSimplification.hpp>
 #include <Flugzeug/Passes/KnownBitsOptimization.hpp>
+#include <Flugzeug/Passes/KnownLoadElimination.hpp>
 #include <Flugzeug/Passes/LocalReordering.hpp>
 #include <Flugzeug/Passes/LoopInvariantOptimization.hpp>
 #include <Flugzeug/Passes/LoopUnrolling.hpp>
@@ -130,7 +132,9 @@ static void optimize_function(Function* f) {
     did_something |= opt::BlockInvariantPropagation::run(f);
     did_something |= opt::ConditionalFlattening::run(f);
     did_something |= opt::KnownBitsOptimization::run(f);
-    did_something |= opt::InstructionDeduplication::run(f, opt::DeduplicationStrategy::BlockLocal);
+    did_something |= opt::InstructionDeduplication::run(f, opt::OptimizationLocality::BlockLocal);
+    did_something |= opt::KnownLoadElimination::run(f, opt::OptimizationLocality::BlockLocal);
+    did_something |= opt::DeadStoreElimination::run(f, opt::OptimizationLocality::BlockLocal);
 
     if (!did_something) {
       f->reassign_display_indices();
@@ -166,7 +170,7 @@ int main() {
 
   const auto printing_method = IRPrintingMethod::Compact;
 
-  const auto parsed_source = turboc::Parser::parse_from_file("Tests/test.tc");
+  const auto parsed_source = turboc::Parser::parse_from_file("Tests/memory.tc");
   const auto module = turboc::IRGenerator::generate(&context, parsed_source);
 
   for (Function& f : module->local_functions()) {

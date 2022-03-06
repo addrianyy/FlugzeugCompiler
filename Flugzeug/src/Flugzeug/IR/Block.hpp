@@ -168,13 +168,12 @@ public:
 };
 
 template <typename TInstruction1, typename TInstruction2>
-auto make_instruction_range(TInstruction1* begin, TInstruction2* end) {
+auto instruction_range(TInstruction1* begin, TInstruction2* end) {
   using Iterator =
     std::conditional_t<std::is_const_v<TInstruction1>, Block::const_iterator, Block::iterator>;
 
 #if 1
-  verify(begin == end || begin->is_before(end),
-         "Begin must be before end for `make_instruction_range`");
+  verify(begin == end || begin->is_before(end), "Begin must be before end for `instruction_range`");
 #endif
 
   return IteratorRange(Iterator(begin), Iterator(end));

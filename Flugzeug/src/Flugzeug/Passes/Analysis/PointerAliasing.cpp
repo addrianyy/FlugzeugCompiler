@@ -160,6 +160,7 @@ static void process_offset_instruction(
   const Offset* offset,
   std::unordered_map<const Value*, std::pair<const Value*, int64_t>>& constant_offset_db,
   BaseIndexToOffset& base_index_to_offset) {
+
   const auto base = offset->get_base();
   const auto index = offset->get_index();
 
@@ -211,9 +212,8 @@ PointerAliasing::PointerAliasing(const Function* function) {
   {
     // Reverse ordering so every value is used before being created.
     //
-    // We are at point P in the processing order on which value V is created.
-    // It is guaranteed that all output values of instructions that use V will
-    // after P.
+    // We are at point P in the processing order on which value V is created. It is guaranteed that
+    // all output values of instructions that use V will after P.
     //
     // After reversing it, it is guaranteed that all output values of instructions that
     // use V are before P and were already processed (which is what we want).

@@ -31,7 +31,7 @@ public:
     }
 
     for (Instruction& instruction :
-         make_instruction_range(binary->get_block()->get_first_instruction(), previous)) {
+         instruction_range(binary->get_block()->get_first_instruction(), previous)) {
       if (match_pattern(&instruction,
                         pat::binary_specific(pat::exact(binary->get_lhs()), *corresponding_op,
                                              pat::exact(binary->get_rhs())))) {
@@ -74,7 +74,7 @@ public:
 static bool can_move_earlier_down(Instruction* earlier_instruction,
                                   Instruction* later_instruction) {
   for (Instruction& instruction :
-       make_instruction_range(earlier_instruction->get_next(), later_instruction)) {
+       instruction_range(earlier_instruction->get_next(), later_instruction)) {
     if (instruction.uses_value(earlier_instruction)) {
       return false;
     }
