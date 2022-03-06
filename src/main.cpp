@@ -28,14 +28,27 @@
 #include <Flugzeug/Passes/MemoryToSSA.hpp>
 #include <Flugzeug/Passes/PhiMinimization.hpp>
 
-#include <turboc/IRGenerator.hpp>
-#include <turboc/Parser.hpp>
+#include <bf/Compiler.hpp>
+#include <turboc/Compiler.hpp>
 
 #include <filesystem>
 
 using namespace flugzeug;
 
+static Module* compile_source(Context* context, const std::string& source_path) {
+  if (source_path.ends_with(".tc")) {
+    return turboc::Compiler::compile_from_file(context, source_path);
+  } else if (source_path.ends_with(".bf")) {
+    return bf::Compiler::compile_from_file(context, source_path);
+  } else {
+    fatal_error("Unknown source file extension.");
+  }
+}
+
 static void optimize_function(Function* f) {
+
+  constexpr bool enable_loop_optimizations = true;
+
   while (true) {
     bool did_something = false;
 
@@ -48,8 +61,10 @@ static void optimize_function(Function* f) {
     did_something |= opt::InstructionSimplification::run(f);
     did_something |= opt::DeadBlockElimination::run(f);
     did_something |= opt::LocalReordering::run(f);
-    did_something |= opt::LoopUnrolling::run(f);
-    did_something |= opt::LoopInvariantOptimization::run(f);
+    if (enable_loop_optimizations) {
+      did_something |= opt::LoopUnrolling::run(f);
+      did_something |= opt::LoopInvariantOptimization::run(f);
+    }
     did_something |= opt::BlockInvariantPropagation::run(f);
     did_something |= opt::ConditionalFlattening::run(f);
     did_something |= opt::KnownBitsOptimization::run(f);
@@ -72,14 +87,25 @@ int main() {
   Context context;
 
   const auto printing_method = IRPrintingMethod::Compact;
+  const auto source_path = "TestsTC/memory.tc";
 
-  const auto parsed_source = turboc::Parser::parse_from_file("Tests/memory.tc");
-  const auto module = turboc::IRGenerator::generate(&context, parsed_source);
+  const auto module = compile_source(&context, source_path);
 
-  for (Function& f : module->local_functions()) {
-    optimize_function(&f);
+  if (true) {
+    const auto start = std::chrono::high_resolution_clock::now();
+    for (Function& f : module->local_functions()) {
+      optimize_function(&f);
+    }
+    const auto end = std::chrono::high_resolution_clock::now();
 
-    f.generate_graph(fmt::format("Graphs/{}.svg", f.get_name()), printing_method);
+    log_info("Optimized module in {}ms.",
+             std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+  }
+
+  if (true) {
+    for (Function& f : module->local_functions()) {
+      f.generate_graph(fmt::format("Graphs/{}.svg", f.get_name()), printing_method);
+    }
   }
 
   module->validate(ValidationBehaviour::ErrorsAreFatal);
