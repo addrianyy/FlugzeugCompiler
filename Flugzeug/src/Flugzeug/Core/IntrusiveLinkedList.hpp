@@ -286,9 +286,6 @@ public:
   using reverse_iterator = IteratorInternal<T, Node, true>;
   using const_reverse_iterator = IteratorInternal<const T, const Node, true>;
 
-  using ReversedRange = IteratorRange<reverse_iterator>;
-  using ReversedConstRange = IteratorRange<const_reverse_iterator>;
-
   iterator begin() { return iterator(first); }
   iterator end() { return iterator(nullptr); }
 

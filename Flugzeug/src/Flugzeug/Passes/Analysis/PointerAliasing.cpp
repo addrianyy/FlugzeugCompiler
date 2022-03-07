@@ -12,20 +12,14 @@ using namespace flugzeug::analysis;
 
 using analysis::detail::PointerOriginMap;
 
-template <typename T> struct ValuePair {
-  T v1, v2;
-
-  ValuePair(T v_1, T v_2) : v1(v_1), v2(v_2) {}
-
-  bool operator==(const ValuePair& other) const { return v1 == other.v1 && v2 == other.v2; }
-};
-
 template <typename T> struct ValuePairHash {
-  size_t operator()(const ValuePair<T>& p) const { return hash_combine(p.v1, p.v2); }
+  size_t operator()(const std::pair<const Value*, const Value*>& p) const {
+    return hash_combine(p.first, p.second);
+  }
 };
 
-using BaseIndexToOffset =
-  std::unordered_map<ValuePair<const Value*>, const Offset*, ValuePairHash<const Value*>>;
+using BaseIndexToOffset = std::unordered_map<std::pair<const Value*, const Value*>, const Offset*,
+                                             ValuePairHash<const Value*>>;
 
 template <typename K, typename V>
 std::optional<V> lookup_map(const std::unordered_map<K, V>& map, K key) {
@@ -177,14 +171,14 @@ static void process_offset_instruction(
     return;
   }
 
-  base_index_to_offset[ValuePair{base, index}] = offset;
+  base_index_to_offset[std::pair{base, index}] = offset;
 
   const Value* index_base;
   int64_t index_add;
   if (match_pattern(index, pat::add(pat::value(index_base), pat::constant_i(index_add)))) {
     const Offset* other_offset;
     {
-      const auto it = base_index_to_offset.find(ValuePair{base, index_base});
+      const auto it = base_index_to_offset.find(std::pair{base, index_base});
       if (it == base_index_to_offset.end()) {
         return;
       }
