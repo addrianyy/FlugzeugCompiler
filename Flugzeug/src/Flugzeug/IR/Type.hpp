@@ -76,7 +76,7 @@ public:
   std::string format() const;
 };
 
-class PointerType : public Type {
+class PointerType final : public Type {
   DEFINE_INSTANCEOF(Type, Type::Kind::Pointer)
 
   friend class Context;
@@ -97,7 +97,7 @@ public:
 };
 
 #define DEFINE_SIMPLE_TYPE(type_name, kind_name)                                                   \
-  class type_name : public Type {                                                                  \
+  class type_name final : public Type {                                                            \
     DEFINE_INSTANCEOF(Type, Type::Kind::kind_name)                                                 \
                                                                                                    \
     friend class Context;                                                                          \

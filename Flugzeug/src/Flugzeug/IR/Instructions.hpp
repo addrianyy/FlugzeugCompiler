@@ -49,7 +49,7 @@ enum class CastKind {
   Bitcast,
 };
 
-class UnaryInstr : public Instruction {
+class UnaryInstr final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::UnaryInstr)
 
   UnaryOp op;
@@ -84,7 +84,7 @@ protected:
     const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
-class BinaryInstr : public Instruction {
+class BinaryInstr final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::BinaryInstr)
 
   BinaryOp op;
@@ -129,7 +129,7 @@ protected:
     const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
-class IntCompare : public Instruction {
+class IntCompare final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::IntCompare)
 
   IntPredicate pred;
@@ -175,7 +175,7 @@ protected:
     const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
-class Load : public Instruction {
+class Load final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Load)
 
 public:
@@ -201,7 +201,7 @@ protected:
     const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
-class Store : public Instruction {
+class Store final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Store)
 
 public:
@@ -235,7 +235,7 @@ protected:
     const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
-class Call : public Instruction {
+class Call final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Call)
 
 public:
@@ -265,7 +265,7 @@ protected:
     const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
-class Branch : public Instruction {
+class Branch final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Branch)
 
 public:
@@ -291,7 +291,7 @@ protected:
     const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
-class CondBranch : public Instruction {
+class CondBranch final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::CondBranch)
 
 public:
@@ -336,7 +336,7 @@ protected:
     const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
-class StackAlloc : public Instruction {
+class StackAlloc final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::StackAlloc)
 
   size_t size;
@@ -359,7 +359,7 @@ protected:
     const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
-class Ret : public Instruction {
+class Ret final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Ret)
 
 public:
@@ -392,7 +392,7 @@ protected:
     const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
-class Offset : public Instruction {
+class Offset final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Offset)
 
 public:
@@ -426,7 +426,7 @@ protected:
     const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
-class Cast : public Instruction {
+class Cast final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Cast)
 
   CastKind cast_kind;
@@ -458,7 +458,7 @@ protected:
     const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
-class Select : public Instruction {
+class Select final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Select)
 
 public:
@@ -503,7 +503,7 @@ protected:
     const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
-class Phi : public Instruction {
+class Phi final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Phi)
 
   static inline size_t get_block_index(size_t i) { return i * 2 + 0; }

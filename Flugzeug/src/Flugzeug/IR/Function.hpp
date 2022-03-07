@@ -15,7 +15,7 @@ namespace flugzeug {
 class Context;
 class Module;
 
-class Function : public Value, public IntrusiveNode<Function, Module> {
+class Function final : public Value, public IntrusiveNode<Function, Module> {
   DEFINE_INSTANCEOF(Value, Value::Kind::Function)
 
   friend class IntrusiveLinkedList<Block, Function>;

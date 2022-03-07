@@ -23,7 +23,7 @@ enum class IncludeStart {
   No,
 };
 
-class Block : public Value, public IntrusiveNode<Block, Function> {
+class Block final : public Value, public IntrusiveNode<Block, Function> {
   DEFINE_INSTANCEOF(Value, Value::Kind::Block)
 
   friend class IntrusiveLinkedList<Instruction, Block>;

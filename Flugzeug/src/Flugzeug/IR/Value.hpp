@@ -162,7 +162,7 @@ public:
   }
 };
 
-class Constant : public Value {
+class Constant final : public Value {
   DEFINE_INSTANCEOF(Value, Value::Kind::Constant)
 
   friend class Context;
@@ -184,7 +184,7 @@ public:
   std::string format() const override;
 };
 
-class Parameter : public Value {
+class Parameter final : public Value {
   DEFINE_INSTANCEOF(Value, Value::Kind::Parameter)
 
   friend class Function;
@@ -192,7 +192,7 @@ class Parameter : public Value {
   Parameter(Context* context, Type* type) : Value(context, Kind::Parameter, type) {}
 };
 
-class Undef : public Value {
+class Undef final : public Value {
   DEFINE_INSTANCEOF(Value, Value::Kind::Undef)
 
   friend class Context;
