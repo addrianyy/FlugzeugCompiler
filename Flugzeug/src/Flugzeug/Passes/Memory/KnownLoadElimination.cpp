@@ -40,7 +40,7 @@ bool opt::memory::eliminate_known_loads_local(Function* function,
 
         // Make sure that nothing inbetween can modify the pointer.
         const auto store = it->second;
-        const auto stored_to_inbetween = alias_analysis.is_pointer_accessed_inbetween(
+        const auto stored_to_inbetween = alias_analysis.is_pointer_accessed_inbetween_simple(
           load->get_ptr(), store->get_next(), load, analysis::PointerAliasing::AccessType::Store);
 
         if (!stored_to_inbetween) {
@@ -83,8 +83,9 @@ bool opt::memory::eliminate_known_loads_global(Function* function,
       const auto result = path_validator.validate_path(
         dominator_tree, store, &load, analysis::PathValidator::MemoryKillTarget::End,
         [&](const Instruction* instruction) {
-          return !alias_analysis.can_instruction_access_pointer(
-            instruction, pointer, analysis::PointerAliasing::AccessType::Store);
+          return alias_analysis.can_instruction_access_pointer(
+                   instruction, pointer, analysis::PointerAliasing::AccessType::Store) ==
+                 analysis::Aliasing::Never;
         });
 
       if (result) {

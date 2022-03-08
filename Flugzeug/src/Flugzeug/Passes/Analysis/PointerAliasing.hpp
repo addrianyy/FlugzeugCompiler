@@ -21,6 +21,12 @@ public:
 
 } // namespace detail
 
+enum class Aliasing {
+  Never,
+  May,
+  Always,
+};
+
 class PointerAliasing {
   detail::PointerOriginMap pointer_origin_map;
   std::unordered_map<const Value*, bool> stackalloc_safety;
@@ -35,12 +41,14 @@ public:
 
   explicit PointerAliasing(const Function* function);
 
-  bool can_alias(const Instruction* instruction, const Value* v1, const Value* v2) const;
-  bool can_instruction_access_pointer(const Instruction* instruction, const Value* pointer,
-                                      AccessType access_type) const;
+  Aliasing can_alias(const Instruction* instruction, const Value* v1, const Value* v2) const;
+  Aliasing can_instruction_access_pointer(const Instruction* instruction, const Value* pointer,
+                                          AccessType access_type) const;
 
-  bool is_pointer_accessed_inbetween(const Value* pointer, const Instruction* begin,
-                                     const Instruction* end, AccessType access_type) const;
+  Aliasing is_pointer_accessed_inbetween(const Value* pointer, const Instruction* begin,
+                                         const Instruction* end, AccessType access_type) const;
+  bool is_pointer_accessed_inbetween_simple(const Value* pointer, const Instruction* begin,
+                                            const Instruction* end, AccessType access_type) const;
 
   void debug_dump() const;
 };

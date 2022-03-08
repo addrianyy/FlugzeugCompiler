@@ -52,7 +52,7 @@ static bool deduplicate_block_local(Function* function) {
         if (const auto load = cast<Load>(instruction)) {
           // Special care needs to be taken if we want to deduplicate load. Something inbetween two
           // instructions may have modified loaded ptr and output value will be different.
-          const auto stored_to_inbetween = alias_analysis.is_pointer_accessed_inbetween(
+          const auto stored_to_inbetween = alias_analysis.is_pointer_accessed_inbetween_simple(
             load->get_ptr(), previous->get_next(), &instruction,
             analysis::PointerAliasing::AccessType::Store);
 

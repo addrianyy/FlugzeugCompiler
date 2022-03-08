@@ -198,6 +198,20 @@ static void process_offset_instruction(
   }
 }
 
+static Aliasing combine_aliasing(Aliasing a1, Aliasing a2) {
+  // may + may          == may
+  // may + always/never == may
+  // always + never     == may
+  // always + always    == always
+  // never + never      == never
+
+  if (a1 == a2) {
+    return a1;
+  }
+
+  return Aliasing::May;
+}
+
 PointerAliasing::PointerAliasing(const Function* function) {
   const auto traversal =
     function->get_entry_block()->get_reachable_blocks(TraversalType::DFS_WithStart);
@@ -286,8 +300,8 @@ PointerAliasing::PointerAliasing(const Function* function) {
   }
 }
 
-bool PointerAliasing::can_alias(const Instruction* instruction, const Value* v1,
-                                const Value* v2) const {
+Aliasing PointerAliasing::can_alias(const Instruction* instruction, const Value* v1,
+                                    const Value* v2) const {
   verify(v1->get_type()->is_pointer() && v2->get_type()->is_pointer(),
          "Provided values aren't pointers");
 
@@ -296,12 +310,12 @@ bool PointerAliasing::can_alias(const Instruction* instruction, const Value* v1,
 
   // Undefined pointers don't alias anything.
   if (v1->is_undef() || v2->is_undef()) {
-    return false;
+    return Aliasing::Never;
   }
 
   // If two pointers are the same they always alias.
   if (v1 == v2) {
-    return true;
+    return Aliasing::Always;
   }
 
   {
@@ -317,9 +331,8 @@ bool PointerAliasing::can_alias(const Instruction* instruction, const Value* v1,
     const auto offset_1 = get_constant_offset(v1);
     const auto offset_2 = get_constant_offset(v2);
 
-    // If two pointers come from the same origin but have different offsets they can never alias.
-    if (offset_1.first == offset_2.first && offset_1.second != offset_2.second) {
-      return false;
+    if (offset_1.first == offset_2.first) {
+      return offset_1.second != offset_2.second ? Aliasing::Never : Aliasing::Always;
     }
   }
 
@@ -328,12 +341,12 @@ bool PointerAliasing::can_alias(const Instruction* instruction, const Value* v1,
 
   // Undefined pointers don't alias anything.
   if (v1_origin->is_undef() || v2_origin->is_undef()) {
-    return false;
+    return Aliasing::Never;
   }
 
   // If two pointers have the same origin they may alias.
   if (v1_origin == v2_origin) {
-    return true;
+    return Aliasing::May;
   }
 
   const auto v1_stackalloc = lookup_map(stackalloc_safety, v1_origin);
@@ -341,52 +354,48 @@ bool PointerAliasing::can_alias(const Instruction* instruction, const Value* v1,
 
   // We don't have any information about pointers. They may alias.
   if (!v1_stackalloc && !v2_stackalloc) {
-    return true;
+    return Aliasing::May;
   }
 
   // Both pointers come from different stackallocs. It doesn't matter if stackallocs are safe -
   // pointers don't alias.
   if (v1_stackalloc && v2_stackalloc) {
-    return false;
+    return Aliasing::Never;
   }
 
   // One pointer comes from stackalloc, other does not. If stackalloc usage is safe then these two
   // pointers can't alias. Otherwise they can.
   if (v1_stackalloc) {
-    return !*v1_stackalloc;
+    return *v1_stackalloc ? Aliasing::Never : Aliasing::May;
   }
   if (v2_stackalloc) {
-    return !*v2_stackalloc;
+    return *v2_stackalloc ? Aliasing::Never : Aliasing::May;
   }
 
   unreachable();
 }
 
-bool PointerAliasing::can_instruction_access_pointer(const Instruction* instruction,
-                                                     const Value* pointer,
-                                                     AccessType access_type) const {
+Aliasing PointerAliasing::can_instruction_access_pointer(const Instruction* instruction,
+                                                         const Value* pointer,
+                                                         AccessType access_type) const {
   verify(pointer->get_type()->is_pointer(), "Provided value is not a pointer");
 
   if (access_type == AccessType::Store || access_type == AccessType::All) {
     if (const auto store = cast<Store>(instruction)) {
-      if (can_alias(store, store->get_ptr(), pointer)) {
-        return true;
-      }
+      return can_alias(store, store->get_ptr(), pointer);
     }
   }
 
   if (access_type == AccessType::Load || access_type == AccessType::All) {
     if (const auto load = cast<Load>(instruction)) {
-      if (can_alias(load, load->get_ptr(), pointer)) {
-        return true;
-      }
+      return can_alias(load, load->get_ptr(), pointer);
     }
   }
 
   if (const auto call = cast<Call>(instruction)) {
     // No pointer can be accessed if this function doesn't take any parameters.
     if (call->get_arg_count() == 0) {
-      return false;
+      return Aliasing::Never;
     }
 
     const auto origin = pointer_origin_map.get(pointer);
@@ -394,29 +403,49 @@ bool PointerAliasing::can_instruction_access_pointer(const Instruction* instruct
 
     if (!stackalloc || *stackalloc != true) {
       // We have no idea about non-safe stackallocs or pointers with unknown origin.
-      return true;
+      return Aliasing::May;
     } else {
       // Pointer is a safely used stackalloc. If no argument originates from the same stackalloc,
       // this call cannot affect the pointer.
       for (size_t i = 0; i < call->get_arg_count(); ++i) {
         const auto arg_origin = pointer_origin_map.get(call->get_arg(i));
         if (arg_origin == origin) {
-          return true;
+          return Aliasing::May;
         }
       }
     }
   }
 
-  return false;
+  return Aliasing::Never;
 }
 
-bool PointerAliasing::is_pointer_accessed_inbetween(const Value* pointer, const Instruction* begin,
-                                                    const Instruction* end,
-                                                    PointerAliasing::AccessType access_type) const {
+Aliasing
+PointerAliasing::is_pointer_accessed_inbetween(const Value* pointer, const Instruction* begin,
+                                               const Instruction* end,
+                                               PointerAliasing::AccessType access_type) const {
+  verify(begin->get_block() == end->get_block(), "Instructions are in different blocks");
+
+  Aliasing aliasing = Aliasing::Never;
+
+  for (const Instruction& instruction : instruction_range(begin, end)) {
+    aliasing = combine_aliasing(aliasing,
+                                can_instruction_access_pointer(&instruction, pointer, access_type));
+    if (aliasing == Aliasing::May) {
+      return aliasing;
+    }
+  }
+
+  return aliasing;
+}
+
+bool PointerAliasing::is_pointer_accessed_inbetween_simple(
+  const Value* pointer, const Instruction* begin, const Instruction* end,
+  PointerAliasing::AccessType access_type) const {
+
   verify(begin->get_block() == end->get_block(), "Instructions are in different blocks");
 
   for (const Instruction& instruction : instruction_range(begin, end)) {
-    if (can_instruction_access_pointer(&instruction, pointer, access_type)) {
+    if (can_instruction_access_pointer(&instruction, pointer, access_type) != Aliasing::Never) {
       return true;
     }
   }
