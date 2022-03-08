@@ -420,6 +420,11 @@ bool PointerAliasing::is_pointer_accessed_inbetween(const Value* pointer, const 
   return false;
 }
 
+bool PointerAliasing::is_pointer_stackalloc(const Value* pointer) const {
+  const auto origin = pointer_origin_map.get(pointer);
+  return !!lookup_map(stackalloc_safety, origin);
+}
+
 void PointerAliasing::debug_dump() const {
   log_debug("Pointer origins:");
   for (auto [pointer, origin] : pointer_origin_map) {

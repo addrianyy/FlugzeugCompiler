@@ -49,6 +49,7 @@ public:
   TBlock** end() const { return targets + target_count; }
 
   size_t size() const { return target_count; }
+  bool empty() const { return target_count == 0; }
 };
 
 class Instruction : public User, public IntrusiveNode<Instruction, Block> {

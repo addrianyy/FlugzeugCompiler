@@ -47,6 +47,7 @@ public:
 
   bool is_pointer_accessed_inbetween(const Value* pointer, const Instruction* begin,
                                      const Instruction* end, AccessType access_type) const;
+  bool is_pointer_stackalloc(const Value* pointer) const;
 
   void debug_dump() const;
 };
