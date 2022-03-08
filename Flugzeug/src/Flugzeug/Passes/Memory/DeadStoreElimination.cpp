@@ -5,8 +5,6 @@
 #include <Flugzeug/IR/Function.hpp>
 #include <Flugzeug/IR/Instructions.hpp>
 
-#include <Flugzeug/Passes/Analysis/Paths.hpp>
-
 using namespace flugzeug;
 
 // store X, Y
@@ -66,7 +64,7 @@ static bool is_store_dead(const Store* store, const analysis::PointerAliasing& a
 
   const auto check_instruction_range = [&](const Instruction* begin, const Instruction* end) {
     for (const Instruction& instruction : instruction_range(begin, end)) {
-      // If there is another store to this pointer then no successors can observe old value.
+      // If there is another store to this pointer then no successors can observe the old value.
       if (const auto store = cast<Store>(instruction)) {
         if (alias_analysis.can_alias(store, store->get_ptr(), pointer) ==
             analysis::Aliasing::Always) {
@@ -164,11 +162,8 @@ bool opt::memory::eliminate_dead_stores_global(Function* function,
                                                const analysis::PointerAliasing& alias_analysis) {
   bool did_something = false;
 
-  std::unordered_map<Value*, std::vector<Store*>> stores_to_pointers;
-  analysis::PathValidator path_validator;
-
   for (Store& store : dont_invalidate_current(function->instructions<Store>())) {
-    // Make sure that removing this store won't have any side effects.
+    // Remove this store if it's dead.
     if (is_store_dead(&store, alias_analysis)) {
       store.destroy();
       did_something = true;
