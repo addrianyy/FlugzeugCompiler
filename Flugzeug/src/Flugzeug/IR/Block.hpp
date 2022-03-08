@@ -178,5 +178,11 @@ auto instruction_range(TInstruction1* begin, TInstruction2* end) {
 
   return IteratorRange(Iterator(begin), Iterator(end));
 }
+template <typename TInstruction1> auto instruction_range(TInstruction1* begin, std::nullptr_t end) {
+  using Iterator =
+    std::conditional_t<std::is_const_v<TInstruction1>, Block::const_iterator, Block::iterator>;
+
+  return IteratorRange(Iterator(begin), Iterator(nullptr));
+}
 
 } // namespace flugzeug

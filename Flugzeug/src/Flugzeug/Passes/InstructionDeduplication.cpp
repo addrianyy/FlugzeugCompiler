@@ -44,7 +44,7 @@ static bool deduplicate_block_local(Function* function) {
       auto& map = deduplication_map[instruction.get_kind()];
       auto identifier = instruction.calculate_unique_identifier();
 
-      if (const auto& it = map.find(identifier); it == map.end()) {
+      if (const auto it = map.find(identifier); it == map.end()) {
         map.insert({std::move(identifier), &instruction});
       } else {
         const auto previous = it->second;
