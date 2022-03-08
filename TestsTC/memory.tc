@@ -27,3 +27,15 @@ u32 test_dead_store(i32* y, i64 c) {
 
     return y[2];
 }
+
+i32 test_known_load_global(i32* y, i64 c) {
+    y[0] = 33;
+
+    i32 z = 0;
+    while (c) {
+        z += y[0];
+        c -= 1;
+    }
+
+    return z;
+}

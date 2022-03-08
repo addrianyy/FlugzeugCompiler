@@ -54,6 +54,7 @@ bool opt::memory::eliminate_dead_stores_local(Function* function,
 }
 
 bool opt::memory::eliminate_dead_stores_global(Function* function,
+                                               const DominatorTree& dominator_tree,
                                                const analysis::PointerAliasing& alias_analysis) {
-  fatal_error("TODO");
+  return eliminate_dead_stores_local(function, alias_analysis);
 }
