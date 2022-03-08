@@ -3,6 +3,7 @@
 #include <Flugzeug/IR/Block.hpp>
 #include <Flugzeug/IR/DominatorTree.hpp>
 #include <Flugzeug/IR/Function.hpp>
+#include <Flugzeug/IR/InstructionVisitor.hpp>
 #include <Flugzeug/IR/Instructions.hpp>
 
 #include "Analysis/Paths.hpp"
@@ -11,6 +12,65 @@
 #include <span>
 
 using namespace flugzeug;
+
+using InstructionUniqueIdentifier = std::vector<uintptr_t>;
+
+struct InstructionUniqueIdentifierHash {
+  size_t operator()(const InstructionUniqueIdentifier& identifier) const {
+    size_t hash = 0;
+
+    for (const auto element : identifier) {
+      hash_combine(hash, element);
+    }
+
+    return hash;
+  }
+};
+
+class UniqueIdentifierVisitor : public ConstInstructionVisitor {
+  InstructionUniqueIdentifier& identifier;
+
+public:
+  explicit UniqueIdentifierVisitor(InstructionUniqueIdentifier& identifier)
+      : identifier(identifier) {}
+
+  void visit_unary_instr(Argument<UnaryInstr> unary) {
+    identifier.push_back(uintptr_t(unary->get_op()));
+  }
+  void visit_binary_instr(Argument<BinaryInstr> binary) {
+    identifier.push_back(uintptr_t(binary->get_op()));
+  }
+  void visit_int_compare(Argument<IntCompare> int_compare) {
+    identifier.push_back(uintptr_t(int_compare->get_pred()));
+  }
+  void visit_load(Argument<Load> load) {}
+  void visit_store(Argument<Store> store) {}
+  void visit_call(Argument<Call> call) {}
+  void visit_branch(Argument<Branch> branch) {}
+  void visit_cond_branch(Argument<CondBranch> cond_branch) {}
+  void visit_stackalloc(Argument<StackAlloc> stackalloc) {
+    identifier.push_back(uintptr_t(stackalloc->get_size()));
+  }
+  void visit_ret(Argument<Ret> ret) {}
+  void visit_offset(Argument<Offset> offset) {}
+  void visit_cast(Argument<Cast> cast) { identifier.push_back(uintptr_t(cast->get_cast_kind())); }
+  void visit_select(Argument<Select> select) {}
+  void visit_phi(Argument<Phi> phi) {}
+};
+
+static InstructionUniqueIdentifier calculate_unique_identifier(const Instruction* instruction) {
+  InstructionUniqueIdentifier identifier;
+
+  identifier.reserve(instruction->get_operand_count() + 1);
+  for (const Value& operand : instruction->operands()) {
+    identifier.push_back(uintptr_t(&operand));
+  }
+
+  UniqueIdentifierVisitor visitor(identifier);
+  visitor::visit_instruction(instruction, visitor);
+
+  return identifier;
+}
 
 static bool can_be_deduplicated(Instruction* instruction) {
   if (instruction->is_volatile()) {
@@ -46,7 +106,7 @@ static bool deduplicate_block_local(Function* function) {
       }
 
       auto& map = deduplication_map[instruction.get_kind()];
-      auto identifier = instruction.calculate_unique_identifier();
+      auto identifier = calculate_unique_identifier(&instruction);
 
       if (const auto it = map.find(identifier); it == map.end()) {
         map.insert({std::move(identifier), &instruction});
@@ -87,7 +147,7 @@ static bool deduplicate_global(Function* function) {
       continue;
     }
 
-    auto identifier = instruction.calculate_unique_identifier();
+    auto identifier = calculate_unique_identifier(&instruction);
     deduplication_map[instruction.get_kind()][std::move(identifier)].push_back(&instruction);
   }
 

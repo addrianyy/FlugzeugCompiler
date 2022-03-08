@@ -13,20 +13,6 @@ class Block;
 class IRPrinter;
 class DominatorTree;
 
-using InstructionUniqueIdentifier = std::vector<uintptr_t>;
-
-struct InstructionUniqueIdentifierHash {
-  size_t operator()(const InstructionUniqueIdentifier& identifier) const {
-    size_t hash = 0;
-
-    for (const auto element : identifier) {
-      hash_combine(hash, element);
-    }
-
-    return hash;
-  }
-};
-
 template <typename TBlock> class BlockTargets {
   constexpr static size_t max_targets = 2;
 
@@ -45,8 +31,8 @@ public:
   TBlock** begin() { return targets; }
   TBlock** end() { return targets + target_count; }
 
-  TBlock** begin() const { return targets; }
-  TBlock** end() const { return targets + target_count; }
+  TBlock* const* begin() const { return targets; }
+  TBlock* const* end() const { return targets + target_count; }
 
   size_t size() const { return target_count; }
   bool empty() const { return target_count == 0; }
@@ -56,6 +42,7 @@ class Instruction : public User, public IntrusiveNode<Instruction, Block> {
   DEFINE_INSTANCEOF_RANGE(Value, Value::Kind::InstructionBegin, Value::Kind::InstructionEnd)
 
   friend class Block;
+  friend class Function;
 
   mutable size_t order_in_block = 0;
 
@@ -73,6 +60,9 @@ protected:
     IRPrinter::LinePrinter& printer,
     const std::unordered_set<const Value*>& inlined_values) const = 0;
 
+  bool print_compact(IRPrinter& printer,
+                     const std::unordered_set<const Value*>& inlined_values) const;
+
 public:
   using IntrusiveNode::insert_after;
   using IntrusiveNode::insert_before;
@@ -85,11 +75,6 @@ public:
   using IntrusiveNode::unlink;
 
   virtual Instruction* clone() = 0;
-
-  InstructionUniqueIdentifier calculate_unique_identifier() const;
-
-  bool print_compact(IRPrinter& printer,
-                     const std::unordered_set<const Value*>& inlined_values) const;
 
   void print(IRPrinter& printer) const;
   void print() const;

@@ -125,7 +125,7 @@ static bool is_store_dead(const Store* store, const analysis::PointerAliasing& a
       }
     }
 
-    auto successors = block->successors();
+    const auto successors = block->successors();
 
     // If block ends with `ret` and `pointer` is not coming from stackalloc than `store`
     // can be observed by the caller.

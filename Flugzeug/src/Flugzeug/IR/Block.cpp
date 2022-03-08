@@ -212,8 +212,8 @@ void Block::update_instruction_order() const {
   }
 }
 
-std::unordered_set<const Value*> Block::get_inlineable_values_in_block() const {
-  std::unordered_set<const Value*> inlineable;
+std::unordered_set<const Value*> Block::get_inlinable_values() const {
+  std::unordered_set<const Value*> inlinable;
   std::unordered_map<const Value*, uint32_t> values_complexity;
 
   for (const Instruction& instruction : *this) {
@@ -251,11 +251,11 @@ std::unordered_set<const Value*> Block::get_inlineable_values_in_block() const {
       continue;
     }
 
-    inlineable.insert(&instruction);
+    inlinable.insert(&instruction);
     values_complexity.insert({&instruction, complexity});
   }
 
-  return inlineable;
+  return inlinable;
 }
 
 Block::~Block() {
@@ -278,7 +278,7 @@ void Block::print(IRPrinter& printer, IRPrintingMethod method) const {
       instruction.print(printer);
     }
   } else {
-    const auto inlined = get_inlineable_values_in_block();
+    const auto inlined = get_inlinable_values();
 
     for (const Instruction& instruction : instruction_list) {
       if (inlined.contains(&instruction)) {

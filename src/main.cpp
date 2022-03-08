@@ -85,7 +85,7 @@ int main() {
 
   Context context;
 
-  const auto printing_method = IRPrintingMethod::Standard;
+  const auto printing_method = IRPrintingMethod::Compact;
   const auto source_path = "TestsTC/memory.tc";
 
   const auto module = compile_source(&context, source_path);

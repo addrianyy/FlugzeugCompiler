@@ -95,11 +95,9 @@ static std::vector<Instruction*> get_loop_invariants(Function* function,
 static std::unordered_set<Block*> get_entering_blocks(const analysis::Loop* loop) {
   std::unordered_set<Block*> entering_blocks;
 
-  for (auto& instruction : loop->get_header()->users<Instruction>()) {
-    const auto block = instruction.get_block();
-
-    if (instruction.is_branching() && !loop->contains_block(block)) {
-      entering_blocks.insert(block);
+  for (auto predecessor : loop->get_header()->predecessors()) {
+    if (!loop->contains_block(predecessor)) {
+      entering_blocks.insert(predecessor);
     }
   }
 

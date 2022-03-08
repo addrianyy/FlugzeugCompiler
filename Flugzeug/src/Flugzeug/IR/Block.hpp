@@ -55,7 +55,7 @@ class Block final : public Value, public IntrusiveNode<Block, Function> {
 
   void update_instruction_order() const;
 
-  std::unordered_set<const Value*> get_inlineable_values_in_block() const;
+  std::unordered_set<const Value*> get_inlinable_values() const;
 
   explicit Block(Context* context)
       : Value(context, Value::Kind::Block, context->get_block_ty()), instruction_list(this) {}

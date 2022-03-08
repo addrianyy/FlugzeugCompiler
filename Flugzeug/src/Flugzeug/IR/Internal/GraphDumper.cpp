@@ -139,7 +139,7 @@ void Function::generate_dot_graph_source(std::ostream& output, bool colors,
 
     std::unordered_set<const Value*> inlined;
     if (method == IRPrintingMethod::Compact) {
-      inlined = block.get_inlineable_values_in_block();
+      inlined = block.get_inlinable_values();
     }
 
     for (const Instruction& instruction : block) {

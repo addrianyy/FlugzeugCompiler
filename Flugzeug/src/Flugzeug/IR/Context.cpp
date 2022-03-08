@@ -60,7 +60,7 @@ Constant* Context::get_constant(Type* type, uint64_t constant) {
   verify(!type->is_void() && !type->is_block() && !type->is_function(),
          "Cannot create constant with that type.");
 
-  Constant::constrain_constant(type, constant, &constant, nullptr);
+  constant = Constant::constrain_u(type, constant);
 
   const ConstantKey key{type, constant};
 
