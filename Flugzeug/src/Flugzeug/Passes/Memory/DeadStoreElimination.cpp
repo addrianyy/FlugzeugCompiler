@@ -55,21 +55,22 @@ bool opt::memory::eliminate_dead_stores_local(Function* function,
   return did_something;
 }
 
-static bool can_remove_store(Block* killed_store_block, Block* killer_store_block, Value* pointer,
-                             const analysis::PointerAliasing& alias_analysis) {
-  enum class CheckBlockResult {
+static bool is_store_dead(const Store* store, const analysis::PointerAliasing& alias_analysis) {
+  enum class CheckResult {
     Ok,
     Invalid,
     CheckSuccessors,
   };
 
-  const auto check_block = [&](Block* block) -> CheckBlockResult {
-    for (Instruction& instruction : *block) {
-      // If there is another store to this pointer than no successors can observe old value.
+  const auto pointer = store->get_ptr();
+
+  const auto check_instruction_range = [&](const Instruction* begin, const Instruction* end) {
+    for (const Instruction& instruction : instruction_range(begin, end)) {
+      // If there is another store to this pointer then no successors can observe old value.
       if (const auto store = cast<Store>(instruction)) {
         if (alias_analysis.can_alias(store, store->get_ptr(), pointer) ==
             analysis::Aliasing::Always) {
-          return CheckBlockResult::Ok;
+          return CheckResult::Ok;
         }
       }
 
@@ -77,19 +78,36 @@ static bool can_remove_store(Block* killed_store_block, Block* killer_store_bloc
       if (alias_analysis.can_instruction_access_pointer(
             &instruction, pointer, analysis::PointerAliasing::AccessType::Load) !=
           analysis::Aliasing::Never) {
-        return CheckBlockResult::Invalid;
+        return CheckResult::Invalid;
       }
     }
 
     // Nothing here can observe the pointer but block's successors may.
-    return CheckBlockResult::CheckSuccessors;
+    return CheckResult::CheckSuccessors;
   };
 
-  std::unordered_set<Block*> visited;
-  std::vector<Block*> stack;
+  const auto check_block = [&](const Block* block) -> CheckResult {
+    return check_instruction_range(block->get_first_instruction(), nullptr);
+  };
 
-  // Start from `killed_store_block` and traverse down.
-  stack.push_back(killed_store_block);
+  {
+    // Make sure that nothing in the remaining part of the store block can observe the pointer.
+    const auto result = check_instruction_range(store->get_next(), nullptr);
+    if (result == CheckResult::Ok) {
+      return true;
+    }
+    if (result == CheckResult::Invalid) {
+      return false;
+    }
+  }
+
+  std::unordered_set<const Block*> visited;
+  std::vector<const Block*> stack;
+
+  // Start from store block and traverse down.
+  stack.push_back(store->get_block());
+
+  bool can_reach_itself = false;
 
   while (!stack.empty()) {
     const auto block = stack.back();
@@ -99,14 +117,12 @@ static bool can_remove_store(Block* killed_store_block, Block* killer_store_bloc
       continue;
     }
 
-    if (block != killed_store_block) {
+    if (block != store->get_block()) {
       const auto result = check_block(block);
-
-      if (result == CheckBlockResult::Ok) {
+      if (result == CheckResult::Ok) {
         continue;
       }
-
-      if (result == CheckBlockResult::Invalid) {
+      if (result == CheckResult::Invalid) {
         return false;
       }
     }
@@ -120,66 +136,27 @@ static bool can_remove_store(Block* killed_store_block, Block* killer_store_bloc
     }
 
     for (const auto successor : successors) {
-      // Stop going down if we hit `killer_store_block`.
-      if (successor == killer_store_block || visited.contains(successor)) {
+      if (successor == store->get_block()) {
+        can_reach_itself = true;
         continue;
       }
 
-      stack.push_back(successor);
+      if (!visited.contains(successor)) {
+        stack.push_back(successor);
+      }
+    }
+  }
+
+  if (can_reach_itself) {
+    // Store block can reach itself. Make sure that nothing in the initial part of the store block
+    // can observe the pointer.
+    const auto first_instruction = store->get_block()->get_first_instruction();
+    if (check_instruction_range(first_instruction, store) == CheckResult::Invalid) {
+      return false;
     }
   }
 
   return true;
-}
-
-static bool remove_one_store(std::vector<Store*>& stores, const DominatorTree& dominator_tree,
-                             const analysis::PointerAliasing& alias_analysis,
-                             analysis::PathValidator& path_validator) {
-  if (stores.size() <= 1) {
-    return false;
-  }
-
-  const auto pointer = stores.front()->get_ptr();
-
-  // Go through all store combinations and find which one can be removed.
-  for (Store* killed_store : stores) {
-    for (Store* killer_store : stores) {
-      if (killed_store == killer_store) {
-        continue;
-      }
-
-      // Fix for CLion bug.
-      const auto pointer_2 = pointer;
-
-      // Path will go from `killed_store` to `killer_store`. Make sure that there is nothing
-      // inbetween that can load our pointer. If there is something, we can't eliminate the store.
-      const auto result = path_validator.validate_path(
-        dominator_tree, killed_store, killer_store,
-        analysis::PathValidator::MemoryKillTarget::Start, [&](const Instruction* instruction) {
-          return alias_analysis.can_instruction_access_pointer(
-                   instruction, pointer_2, analysis::PointerAliasing::AccessType::Load) ==
-                 analysis::Aliasing::Never;
-        });
-
-      if (!result) {
-        continue;
-      }
-
-      // Make sure that removing this store won't have any side effects.
-      if (!can_remove_store(killed_store->get_block(), killer_store->get_block(), pointer,
-                            alias_analysis)) {
-        continue;
-      }
-
-      // Remove store from the list and destroy it.
-      stores.erase(std::remove(begin(stores), end(stores), killed_store), end(stores));
-      killed_store->destroy();
-
-      return true;
-    }
-  }
-
-  return false;
 }
 
 bool opt::memory::eliminate_dead_stores_global(Function* function,
@@ -190,15 +167,10 @@ bool opt::memory::eliminate_dead_stores_global(Function* function,
   std::unordered_map<Value*, std::vector<Store*>> stores_to_pointers;
   analysis::PathValidator path_validator;
 
-  // Create a database of all stores in the function.
-  for (Store& store : function->instructions<Store>()) {
-    stores_to_pointers[store.get_ptr()].push_back(&store);
-  }
-
-  for (auto& [pointer, stores] : stores_to_pointers) {
-    // Keep removing one store from the list as long as we were successful in the previous
-    // iteration.
-    while (remove_one_store(stores, dominator_tree, alias_analysis, path_validator)) {
+  for (Store& store : dont_invalidate_current(function->instructions<Store>())) {
+    // Make sure that removing this store won't have any side effects.
+    if (is_store_dead(&store, alias_analysis)) {
+      store.destroy();
       did_something = true;
     }
   }

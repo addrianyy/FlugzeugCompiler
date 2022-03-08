@@ -173,7 +173,10 @@ auto instruction_range(TInstruction1* begin, TInstruction2* end) {
     std::conditional_t<std::is_const_v<TInstruction1>, Block::const_iterator, Block::iterator>;
 
 #if 1
-  verify(begin == end || begin->is_before(end), "Begin must be before end for `instruction_range`");
+  if (end) {
+    verify(begin == end || begin->is_before(end),
+           "Begin must be before end for `instruction_range`");
+  }
 #endif
 
   return IteratorRange(Iterator(begin), Iterator(end));
