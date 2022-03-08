@@ -40,7 +40,7 @@ bool opt::memory::eliminate_known_loads_local(Function* function,
 
         // Make sure that nothing inbetween can modify the pointer.
         const auto store = it->second;
-        const auto stored_to_inbetween = alias_analysis.is_pointer_accessed_inbetween_simple(
+        const auto stored_to_inbetween = alias_analysis.is_pointer_accessed_inbetween(
           load->get_ptr(), store->get_next(), load, analysis::PointerAliasing::AccessType::Store);
 
         if (!stored_to_inbetween) {

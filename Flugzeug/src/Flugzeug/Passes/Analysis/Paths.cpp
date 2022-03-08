@@ -225,3 +225,45 @@ std::optional<size_t> PathValidator::validate_path(const DominatorTree& dominato
 
   return instruction_count;
 }
+
+std::optional<size_t> PathValidator::validate_path_count(const DominatorTree& dominator_tree,
+                                                         Instruction* start, Instruction* end) {
+  size_t instruction_count = 0;
+
+  // Base case: both path points are in the same block.
+  if (start->get_block() == end->get_block()) {
+    // Start must be before end to make a valid path.
+    if (!start->is_before(end)) {
+      return std::nullopt;
+    }
+
+    // Verify all instructions between `start` and `end`.
+    for (Instruction& instruction : instruction_range(start->get_next(), end)) {
+      instruction_count++;
+    }
+
+    return instruction_count;
+  }
+
+  const std::unordered_set<Block*>* blocks_to_check;
+  if (!get_blocks_to_check(blocks_to_check, dominator_tree, start, end, MemoryKillTarget::None)) {
+    return std::nullopt;
+  }
+
+  for (Block* block : *blocks_to_check) {
+    verify(block != start->get_block() && block != end->get_block(),
+           "Encountered unexpected block");
+    instruction_count += block->get_instruction_count();
+  }
+
+  for (Instruction& instruction : instruction_range(start->get_next(), nullptr)) {
+    instruction_count++;
+  }
+
+  const auto first_instruction = end->get_block()->get_first_instruction();
+  for (Instruction& instruction : instruction_range(first_instruction, end)) {
+    instruction_count++;
+  }
+
+  return instruction_count;
+}

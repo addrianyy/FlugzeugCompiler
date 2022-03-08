@@ -66,7 +66,7 @@ static void optimize_function(Function* f) {
     did_something |= opt::BlockInvariantPropagation::run(f);
     did_something |= opt::ConditionalFlattening::run(f);
     did_something |= opt::KnownBitsOptimization::run(f);
-    did_something |= opt::InstructionDeduplication::run(f, opt::OptimizationLocality::BlockLocal);
+    did_something |= opt::InstructionDeduplication::run(f, opt::OptimizationLocality::Global);
     did_something |= opt::MemoryOptimization::run(f, opt::OptimizationLocality::Global);
 
     if (!did_something) {

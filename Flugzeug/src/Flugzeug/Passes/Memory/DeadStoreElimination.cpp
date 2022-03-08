@@ -5,6 +5,8 @@
 #include <Flugzeug/IR/Function.hpp>
 #include <Flugzeug/IR/Instructions.hpp>
 
+#include <Flugzeug/Passes/Analysis/Paths.hpp>
+
 using namespace flugzeug;
 
 // store X, Y
@@ -38,7 +40,7 @@ bool opt::memory::eliminate_dead_stores_local(Function* function,
       }
 
       // Make sure that nothing inbetween can load the pointer.
-      const auto loaded_inbetween = alias_analysis.is_pointer_accessed_inbetween_simple(
+      const auto loaded_inbetween = alias_analysis.is_pointer_accessed_inbetween(
         store.get_ptr(), previous_store->get_next(), &store,
         analysis::PointerAliasing::AccessType::Load);
 
@@ -56,5 +58,6 @@ bool opt::memory::eliminate_dead_stores_local(Function* function,
 bool opt::memory::eliminate_dead_stores_global(Function* function,
                                                const DominatorTree& dominator_tree,
                                                const analysis::PointerAliasing& alias_analysis) {
+  // TODO
   return eliminate_dead_stores_local(function, alias_analysis);
 }

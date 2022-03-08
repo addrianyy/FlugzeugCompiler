@@ -198,20 +198,6 @@ static void process_offset_instruction(
   }
 }
 
-static Aliasing combine_aliasing(Aliasing a1, Aliasing a2) {
-  // may + may          == may
-  // may + always/never == may
-  // always + never     == may
-  // always + always    == always
-  // never + never      == never
-
-  if (a1 == a2) {
-    return a1;
-  }
-
-  return Aliasing::May;
-}
-
 PointerAliasing::PointerAliasing(const Function* function) {
   const auto traversal =
     function->get_entry_block()->get_reachable_blocks(TraversalType::DFS_WithStart);
@@ -419,28 +405,9 @@ Aliasing PointerAliasing::can_instruction_access_pointer(const Instruction* inst
   return Aliasing::Never;
 }
 
-Aliasing
-PointerAliasing::is_pointer_accessed_inbetween(const Value* pointer, const Instruction* begin,
-                                               const Instruction* end,
-                                               PointerAliasing::AccessType access_type) const {
-  verify(begin->get_block() == end->get_block(), "Instructions are in different blocks");
-
-  Aliasing aliasing = Aliasing::Never;
-
-  for (const Instruction& instruction : instruction_range(begin, end)) {
-    aliasing = combine_aliasing(aliasing,
-                                can_instruction_access_pointer(&instruction, pointer, access_type));
-    if (aliasing == Aliasing::May) {
-      return aliasing;
-    }
-  }
-
-  return aliasing;
-}
-
-bool PointerAliasing::is_pointer_accessed_inbetween_simple(
-  const Value* pointer, const Instruction* begin, const Instruction* end,
-  PointerAliasing::AccessType access_type) const {
+bool PointerAliasing::is_pointer_accessed_inbetween(const Value* pointer, const Instruction* begin,
+                                                    const Instruction* end,
+                                                    PointerAliasing::AccessType access_type) const {
 
   verify(begin->get_block() == end->get_block(), "Instructions are in different blocks");
 

@@ -54,6 +54,9 @@ public:
   std::optional<size_t> validate_path(const DominatorTree& dominator_tree, Instruction* start,
                                       Instruction* end, MemoryKillTarget kill_target,
                                       const VerifierFn& verifier);
+
+  std::optional<size_t> validate_path_count(const DominatorTree& dominator_tree, Instruction* start,
+                                            Instruction* end);
 };
 
 } // namespace flugzeug::analysis
