@@ -15,6 +15,23 @@ using namespace flugzeug;
 // Z = load X
 // => last load will be replaced with Y
 
+static bool handle_out_of_bounds_stackalloc_load(Load* load,
+                                                 const analysis::PointerAliasing& alias_analysis) {
+  const auto const_offset = alias_analysis.get_constant_offset_from_stackalloc(load->get_ptr());
+  if (!const_offset) {
+    return false;
+  }
+
+  const auto size = int64_t(const_offset->first->get_size());
+  const auto offset = const_offset->second;
+  if (offset < 0 || offset >= size) {
+    load->replace_uses_with_and_destroy(load->get_type()->get_undef());
+    return true;
+  }
+
+  return false;
+}
+
 bool opt::memory::eliminate_known_loads_local(Function* function,
                                               const analysis::PointerAliasing& alias_analysis) {
   bool did_something = false;
@@ -26,6 +43,7 @@ bool opt::memory::eliminate_known_loads_local(Function* function,
     stores.clear();
 
     for (Instruction& instruction : dont_invalidate_current(block)) {
+
       if (const auto store = cast<Store>(instruction)) {
         // The newest known value for the pointer is now defined by this store.
         stores[store->get_ptr()] = store;
@@ -33,6 +51,11 @@ bool opt::memory::eliminate_known_loads_local(Function* function,
       }
 
       if (const auto load = cast<Load>(instruction)) {
+        if (handle_out_of_bounds_stackalloc_load(load, alias_analysis)) {
+          did_something = true;
+          continue;
+        }
+
         const auto it = stores.find(load->get_ptr());
         if (it == stores.end()) {
           continue;
@@ -69,6 +92,11 @@ bool opt::memory::eliminate_known_loads_global(Function* function,
   }
 
   for (Load& load : dont_invalidate_current(function->instructions<Load>())) {
+    if (handle_out_of_bounds_stackalloc_load(&load, alias_analysis)) {
+      did_something = true;
+      continue;
+    }
+
     const auto pointer = load.get_ptr();
     const auto it = stores_to_pointers.find(pointer);
     if (it == stores_to_pointers.end()) {

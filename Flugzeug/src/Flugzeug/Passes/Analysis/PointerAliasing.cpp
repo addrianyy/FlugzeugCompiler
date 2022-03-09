@@ -198,6 +198,15 @@ static void process_offset_instruction(
   }
 }
 
+std::pair<const Value*, int64_t> PointerAliasing::get_constant_offset(const Value* value) const {
+  const auto it = constant_offset_db.find(value);
+  if (it == constant_offset_db.end()) {
+    return {value, 0};
+  }
+
+  return it->second;
+}
+
 PointerAliasing::PointerAliasing(const Function* function) {
   const auto traversal =
     function->get_entry_block()->get_reachable_blocks(TraversalType::DFS_WithStart);
@@ -305,15 +314,6 @@ Aliasing PointerAliasing::can_alias(const Instruction* instruction, const Value*
   }
 
   {
-    const auto get_constant_offset = [&](const Value* value) -> std::pair<const Value*, int64_t> {
-      const auto it = constant_offset_db.find(value);
-      if (it == constant_offset_db.end()) {
-        return {value, 0};
-      }
-
-      return it->second;
-    };
-
     const auto offset_1 = get_constant_offset(v1);
     const auto offset_2 = get_constant_offset(v2);
 
@@ -394,7 +394,12 @@ Aliasing PointerAliasing::can_instruction_access_pointer(const Instruction* inst
       // Pointer is a safely used stackalloc. If no argument originates from the same stackalloc,
       // this call cannot affect the pointer.
       for (size_t i = 0; i < call->get_arg_count(); ++i) {
-        const auto arg_origin = pointer_origin_map.get(call->get_arg(i));
+        const auto arg = call->get_arg(i);
+        if (!arg->get_type()->is_pointer()) {
+          continue;
+        }
+
+        const auto arg_origin = pointer_origin_map.get(arg);
         if (arg_origin == origin) {
           return Aliasing::May;
         }
@@ -423,6 +428,16 @@ bool PointerAliasing::is_pointer_accessed_inbetween(const Value* pointer, const 
 bool PointerAliasing::is_pointer_stackalloc(const Value* pointer) const {
   const auto origin = pointer_origin_map.get(pointer);
   return !!lookup_map(stackalloc_safety, origin);
+}
+
+std::optional<std::pair<const StackAlloc*, int64_t>>
+PointerAliasing::get_constant_offset_from_stackalloc(const Value* pointer) const {
+  const auto [base, offset] = get_constant_offset(pointer);
+  if (lookup_map(stackalloc_safety, base)) {
+    return std::pair{cast<StackAlloc>(base), offset};
+  } else {
+    return std::nullopt;
+  }
 }
 
 void PointerAliasing::debug_dump() const {

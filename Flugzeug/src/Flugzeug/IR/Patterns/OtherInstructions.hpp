@@ -129,7 +129,7 @@ public:
       : bind_instruction(bind_instruction), cond(cond), on_true(on_true), on_false(on_false) {}
 
   template <typename T> bool match(T* m_value) {
-    const auto instruction = ::cast<TInstruction>(m_value);
+    const auto instruction = ::cast<std::remove_cv_t<TInstruction>>(m_value);
     if (!instruction) {
       return false;
     }

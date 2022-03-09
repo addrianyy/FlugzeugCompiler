@@ -545,8 +545,8 @@ public:
       const auto pat1 = pat::add(add, pat::constant(add_const), pat::value(add_unknown));
       const auto pat2 = pat::constant(compared_to);
 
-      if (match_pattern(int_compare, pat::compare(pat1, pat2)) ||
-          match_pattern(int_compare, pat::compare(pat2, pat1))) {
+      if (match_pattern(int_compare,
+                        pat::either(pat::compare(pat1, pat2), pat::compare(pat2, pat1)))) {
         const auto new_constant = compared_to->get_type()->get_constant(
           compared_to->get_constant_u() - add_const->get_constant_u());
 

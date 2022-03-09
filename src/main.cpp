@@ -45,7 +45,7 @@ static Module* compile_source(Context* context, const std::string& source_path) 
 }
 
 static void optimize_function(Function* f) {
-  constexpr bool enable_loop_optimizations = false;
+  constexpr bool enable_loop_optimizations = true;
 
   while (true) {
     bool did_something = false;
@@ -85,7 +85,7 @@ int main() {
 
   Context context;
 
-  const auto printing_method = IRPrintingMethod::Compact;
+  const auto printing_method = IRPrintingMethod::Standard;
   const auto source_path = "TestsTC/memory.tc";
 
   const auto module = compile_source(&context, source_path);

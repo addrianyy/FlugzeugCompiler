@@ -32,6 +32,8 @@ class PointerAliasing {
   std::unordered_map<const Value*, bool> stackalloc_safety;
   std::unordered_map<const Value*, std::pair<const Value*, int64_t>> constant_offset_db;
 
+  std::pair<const Value*, int64_t> get_constant_offset(const Value* value) const;
+
 public:
   enum class AccessType {
     Load,
@@ -48,6 +50,8 @@ public:
   bool is_pointer_accessed_inbetween(const Value* pointer, const Instruction* begin,
                                      const Instruction* end, AccessType access_type) const;
   bool is_pointer_stackalloc(const Value* pointer) const;
+  std::optional<std::pair<const StackAlloc*, int64_t>>
+  get_constant_offset_from_stackalloc(const Value* pointer) const;
 
   void debug_dump() const;
 };
