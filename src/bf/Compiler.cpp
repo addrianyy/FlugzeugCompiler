@@ -2,23 +2,14 @@
 
 #include <fstream>
 
+#include <Flugzeug/Core/Files.hpp>
 #include <Flugzeug/IR/Function.hpp>
 #include <Flugzeug/IR/InstructionInserter.hpp>
 
 using namespace flugzeug;
 
 Module* bf::Compiler::compile_from_file(Context* context, const std::string& source_path) {
-  std::string source;
-  {
-    std::ifstream file(source_path);
-    verify(!!file, "Failed to open `{}` for reading", source_path);
-
-    file.seekg(0, std::ios::end);
-    source.reserve(file.tellg());
-    file.seekg(0, std::ios::beg);
-
-    source.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-  }
+  const std::string source = read_file_to_string(source_path);
 
   const auto void_ty = context->get_void_ty();
   const auto i8 = context->get_i8_ty();

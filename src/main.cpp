@@ -85,6 +85,15 @@ int main() {
 
   Context context;
 
+  {
+
+    const auto module = context.create_module_from_file("TestsFZ/test.flug");
+
+    module->print(IRPrintingMethod::Standard);
+    module->destroy();
+    return 1;
+  }
+
   const auto printing_method = IRPrintingMethod::Standard;
   const auto source_path = "TestsTC/memory.tc";
 
@@ -101,7 +110,7 @@ int main() {
              std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
   }
 
-  if (true) {
+  if (false) {
     for (Function& f : module->local_functions()) {
       f.generate_graph(fmt::format("Graphs/{}.svg", f.get_name()), printing_method);
     }

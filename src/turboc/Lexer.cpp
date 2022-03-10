@@ -1,6 +1,7 @@
 #include "Lexer.hpp"
 
 #include <Flugzeug/Core/Error.hpp>
+#include <Flugzeug/Core/Files.hpp>
 
 #include <array>
 #include <fstream>
@@ -222,20 +223,7 @@ Token Lexer::lex_identifier(std::string_view& source) {
 }
 
 Lexer Lexer::from_file(const std::string& path) {
-  std::ifstream file(path);
-  verify(file, "Failed to open file {}", path);
-
-  std::string source;
-
-  file.seekg(0, std::ios::end);
-  source.reserve(file.tellg());
-  file.seekg(0, std::ios::beg);
-
-  source.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-
-  file.close();
-
-  return Lexer(source);
+  return Lexer(flugzeug::read_file_to_string(path));
 }
 
 void Lexer::lex() {
@@ -288,6 +276,7 @@ void Lexer::print_tokens() {
 
   std::cout << std::endl;
 }
+
 const Token& Lexer::current_token() const { return get_token(cursor); }
 
 const Token& Lexer::consume_token() {

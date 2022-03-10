@@ -33,6 +33,11 @@ void Function::on_removed_node(Block* block) {
 
 void Function::print_prototype(IRPrinter& printer, bool end_line) const {
   auto p = printer.create_line_printer();
+
+  if (is_extern()) {
+    p.print("extern");
+  }
+
   p.print(return_type, IRPrinter::NonKeywordWord{name}, IRPrinter::Item::ParenOpen);
 
   for (auto param : parameters) {

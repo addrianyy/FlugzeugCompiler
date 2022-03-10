@@ -136,3 +136,18 @@ PointerType* Context::get_pointer_type(Type* pointee, uint32_t indirection) {
 }
 
 Module* Context::create_module() { return new Module(this); }
+
+#include "Parser/ModuleParser.hpp"
+#include <Flugzeug/Core/Files.hpp>
+
+Module* Context::create_module_from_source(std::string source) {
+  const auto module = create_module();
+
+  parse_to_module(std::move(source), module);
+
+  return module;
+}
+
+Module* Context::create_module_from_file(const std::string& path) {
+  return create_module_from_source(read_file_to_string(path));
+}

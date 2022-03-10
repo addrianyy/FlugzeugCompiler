@@ -86,6 +86,8 @@ public:
   PointerType* get_pointer_type(Type* pointee, uint32_t indirection = 1);
 
   Module* create_module();
+  Module* create_module_from_source(std::string source);
+  Module* create_module_from_file(const std::string& path);
 };
 
 } // namespace flugzeug

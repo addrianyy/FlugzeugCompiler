@@ -77,6 +77,9 @@ public:
 
   void destroy();
 
+  size_t get_function_count() const { return function_list.get_size(); }
+  bool is_empty() const { return function_list.is_empty(); }
+
   std::unordered_map<const Function*, ValidationResults>
   validate(ValidationBehaviour behaviour) const;
 

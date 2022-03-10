@@ -81,7 +81,7 @@ void test() {
     fill_buffer(buffer1, 5);
     fill_buffer(buffer2, 6);
 
-    for (i32 i = 0; i < 6; i += 1) {
+    for (i32 i = 0; i < 5; i += 1) {
         print_num(buffer1[i] + buffer2[i] * i);
     }
 }
