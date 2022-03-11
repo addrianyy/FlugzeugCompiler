@@ -3,34 +3,54 @@
 using namespace flugzeug;
 using namespace flugzeug::analysis;
 
-static void process_block(Block* current, Block* destination, Block* barrier,
-                          std::unordered_set<Block*>& visited, std::vector<Block*>& path,
-                          std::unordered_set<Block*>& blocks_inbetween, bool first_iteration) {
-  const bool ignore_block = first_iteration && current == destination;
+class Children {
+  BlockTargets<Block> successors;
+  size_t index = 0;
 
-  if (!ignore_block) {
-    visited.insert(current);
-  }
-  path.push_back(current);
-
-  if (!ignore_block && current == destination) {
-    for (const auto block_in_path : path) {
-      blocks_inbetween.insert(block_in_path);
+public:
+  Children(Block* block, Block* barrier) {
+    for (const auto successor : block->successors()) {
+      if (successor != barrier) {
+        successors.insert(successor);
+      }
     }
-  } else {
-    for (const auto target : current->successors()) {
-      if (target == barrier || visited.contains(target)) {
+  }
+
+  std::optional<Block*> next() {
+    if (index >= successors.size()) {
+      return std::nullopt;
+    }
+
+    return successors[index++];
+  }
+};
+
+static bool can_reach(Block* from, Block* to, Block* barrier, std::unordered_set<Block*>& visited) {
+  std::vector<Block*> stack;
+  stack.push_back(from);
+
+  while (!stack.empty()) {
+    const auto block = stack.back();
+    stack.pop_back();
+
+    if (!visited.insert(block).second) {
+      continue;
+    }
+
+    for (const auto successor : block->successors()) {
+      if (successor == to) {
+        return true;
+      }
+
+      if (successor == barrier || visited.contains(successor)) {
         continue;
       }
 
-      process_block(target, destination, barrier, visited, path, blocks_inbetween, false);
+      stack.push_back(successor);
     }
   }
 
-  path.pop_back();
-  if (!ignore_block) {
-    visited.erase(current);
-  }
+  return false;
 }
 
 void analysis::get_blocks_inbetween(Block* from, Block* to, Block* barrier,
@@ -38,9 +58,42 @@ void analysis::get_blocks_inbetween(Block* from, Block* to, Block* barrier,
   verify(from != barrier && to != barrier, "Invalid barrier block");
 
   std::unordered_set<Block*> visited;
-  std::vector<Block*> path;
 
-  process_block(from, to, barrier, visited, path, blocks_inbetween, true);
+  // Fast case: if we cannot reach `to` from `from` we don't need to do anything.
+  if (!can_reach(from, to, barrier, visited)) {
+    return;
+  }
+
+  visited.clear();
+
+  std::vector<Block*> path;
+  std::vector<Children> stack;
+
+  visited.insert(from);
+  path.emplace_back(from);
+  stack.emplace_back(from, barrier);
+
+  while (!stack.empty()) {
+    auto& children = stack.back();
+
+    if (const auto child = children.next()) {
+      if (*child == to) {
+        for (const auto path_block : path) {
+          blocks_inbetween.insert(path_block);
+        }
+
+        blocks_inbetween.insert(to);
+      } else if (!visited.contains(*child)) {
+        visited.insert(*child);
+        path.emplace_back(*child);
+        stack.emplace_back(*child, barrier);
+      }
+    } else {
+      visited.erase(path.back());
+      path.pop_back();
+      stack.pop_back();
+    }
+  }
 }
 
 std::unordered_set<Block*> analysis::get_blocks_inbetween(Block* from, Block* to, Block* barrier) {

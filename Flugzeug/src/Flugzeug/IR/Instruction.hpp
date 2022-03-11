@@ -28,6 +28,9 @@ public:
     targets[target_count++] = block;
   }
 
+  TBlock* operator[](size_t index) { return targets[index]; }
+  const TBlock* operator[](size_t index) const { return targets[index]; }
+
   TBlock** begin() { return targets; }
   TBlock** end() { return targets + target_count; }
 
