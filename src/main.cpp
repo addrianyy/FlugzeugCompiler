@@ -85,15 +85,6 @@ int main() {
 
   Context context;
 
-  {
-
-    const auto module = context.create_module_from_file("TestsFZ/test.flug");
-
-    module->print(IRPrintingMethod::Standard);
-    module->destroy();
-    return 1;
-  }
-
   const auto printing_method = IRPrintingMethod::Standard;
   const auto source_path = "TestsTC/memory.tc";
 
