@@ -98,8 +98,8 @@ Offset* InstructionInserter::offset(Value* base, Value* index) {
   return insert(new Offset(context, base, index));
 }
 
-Cast* InstructionInserter::cast(Value* val, CastKind kind, Type* target_type) {
-  return insert(new Cast(context, val, kind, target_type));
+Cast* InstructionInserter::cast(CastKind kind, Value* val, Type* target_type) {
+  return insert(new Cast(context, kind, val, target_type));
 }
 
 Select* InstructionInserter::select(Value* cond, Value* true_val, Value* false_val) {

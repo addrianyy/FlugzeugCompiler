@@ -143,7 +143,7 @@ fz::Value* IRGenerator::int_cast(fz::Value* value, Type from_type, Type to_type)
     const auto cast_kind =
       from_type.is_signed() ? fz::CastKind::SignExtend : fz::CastKind::ZeroExtend;
 
-    return inserter.cast(value, cast_kind, to_type_ir);
+    return inserter.cast(cast_kind, value, to_type_ir);
   } else {
     return value;
   }

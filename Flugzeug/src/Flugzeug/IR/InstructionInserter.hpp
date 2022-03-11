@@ -66,7 +66,7 @@ public:
   StackAlloc* stack_alloc(Type* type, size_t size = 1);
   Ret* ret(Value* val = nullptr);
   Offset* offset(Value* base, Value* index);
-  Cast* cast(Value* val, CastKind kind, Type* target_type);
+  Cast* cast(CastKind kind, Value* val, Type* target_type);
   Select* select(Value* cond, Value* true_val, Value* false_val);
   Phi* phi(Type* type);
   Phi* phi(const std::vector<Phi::Incoming>& incoming);
@@ -81,7 +81,7 @@ public:
   IntCompare* name(Value* lhs, Value* rhs) { return int_compare(lhs, pred, rhs); }
 
 #define CAST(name, kind)                                                                           \
-  Cast* name(Value* val, Type* target_type) { return cast(val, kind, target_type); }
+  Cast* name(Value* val, Type* target_type) { return cast(kind, val, target_type); }
 
   UNARY_INSTR(neg, UnaryOp::Neg)
   UNARY_INSTR(not_, UnaryOp::Not)

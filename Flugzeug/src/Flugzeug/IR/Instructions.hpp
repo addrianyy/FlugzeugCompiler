@@ -432,7 +432,7 @@ class Cast final : public Instruction {
   CastKind cast_kind;
 
 public:
-  Cast(Context* context, Value* val, CastKind cast_kind, Type* target_type)
+  Cast(Context* context, CastKind cast_kind, Value* val, Type* target_type)
       : Instruction(context, Value::Kind::Cast, target_type), cast_kind(cast_kind) {
     set_operand_count(1);
     set_val(val);
@@ -448,7 +448,7 @@ public:
   void set_cast_kind(CastKind new_cast_kind) { cast_kind = new_cast_kind; }
 
   Instruction* clone() override {
-    return new Cast(get_context(), get_val(), get_cast_kind(), get_type());
+    return new Cast(get_context(), get_cast_kind(), get_val(), get_type());
   }
 
 protected:

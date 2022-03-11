@@ -577,7 +577,7 @@ public:
       if (kind == parent_kind ||
           (kind == CastKind::SignExtend && parent_kind == CastKind::ZeroExtend)) {
         const auto new_cast =
-          new Cast(context, parent_cast->get_val(), parent_kind, cast_instr->get_type());
+          new Cast(context, parent_kind, parent_cast->get_val(), cast_instr->get_type());
 
         cast_instr->replace_with_instruction_and_destroy(new_cast);
         parent_cast->destroy_if_unused();
@@ -605,7 +605,7 @@ public:
           new_kind = parent_kind;
         }
 
-        const auto new_cast = new Cast(context, original, new_kind, cast_instr->get_type());
+        const auto new_cast = new Cast(context, new_kind, original, cast_instr->get_type());
 
         cast_instr->replace_with_instruction_and_destroy(new_cast);
         parent_cast->destroy_if_unused();

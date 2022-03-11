@@ -109,7 +109,7 @@ Instruction* ModuleFromASTGenerator::generate_instruction(const PRInstruction* i
   }
 
   if (const auto cast_kind = Token::keyword_to_cast(kind_kw)) {
-    return new Cast(context, operand_to_value(instruction, 0), *cast_kind,
+    return new Cast(context, *cast_kind, operand_to_value(instruction, 0),
                     convert_type(instruction->specific_type));
   }
 
