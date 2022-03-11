@@ -102,13 +102,8 @@ PRInstructionOperand Parser::parse_block_operand() {
 }
 
 void Parser::parse_call_instruction(PRInstruction* instruction) {
-  {
-    PRInstructionOperand operand{};
-    operand.kind = PRInstructionOperand::Kind::Function;
-    operand.type = parse_type();
-    operand.name = lexer.consume_identifier();
-    instruction->add_operand(operand);
-  }
+  instruction->specific_type = parse_type();
+  instruction->specific_name = lexer.consume_identifier();
 
   parse_argument_list(Token::Kind::ParenOpen, Token::Kind::ParenClose,
                       [&]() { instruction->add_operand(parse_value_operand()); });
