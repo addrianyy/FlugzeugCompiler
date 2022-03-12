@@ -49,6 +49,7 @@ public:
 
   Block* get_single_back_edge() const;
   std::pair<Block*, Block*> get_single_exiting_edge() const;
+  Block* get_single_exit_target() const;
 
   bool contains_block(Block* block) const;
   bool contains_block_skipping_sub_loops(Block* block) const;

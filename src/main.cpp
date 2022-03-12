@@ -23,6 +23,7 @@
 #include <Flugzeug/Passes/KnownBitsOptimization.hpp>
 #include <Flugzeug/Passes/LocalReordering.hpp>
 #include <Flugzeug/Passes/LoopInvariantOptimization.hpp>
+#include <Flugzeug/Passes/LoopRotation.hpp>
 #include <Flugzeug/Passes/LoopUnrolling.hpp>
 #include <Flugzeug/Passes/MemoryOptimization.hpp>
 #include <Flugzeug/Passes/MemoryToSSA.hpp>
@@ -48,6 +49,9 @@ static Module* compile_source(Context* context, const std::string& source_path) 
 static void optimize_function(Function* f) {
   constexpr bool enable_loop_optimizations = true;
 
+  // TODO
+  bool once = true;
+
   while (true) {
     bool did_something = false;
 
@@ -61,8 +65,14 @@ static void optimize_function(Function* f) {
     did_something |= opt::DeadBlockElimination::run(f);
     did_something |= opt::LocalReordering::run(f);
     if (enable_loop_optimizations) {
+      if (once) {
+        did_something |= opt::LoopRotation::run(f);
+        f->validate(ValidationBehaviour::ErrorsAreFatal);
+        once = false;
+      }
       did_something |= opt::LoopUnrolling::run(f);
       did_something |= opt::LoopInvariantOptimization::run(f);
+      did_something |= opt::CFGSimplification::run(f);
     }
     did_something |= opt::BlockInvariantPropagation::run(f);
     did_something |= opt::ConditionalFlattening::run(f);
@@ -88,7 +98,7 @@ int main() {
   Context context;
 
   const auto printing_method = IRPrintingMethod::Standard;
-  const auto source_path = "TestsTC/memory.tc";
+  const auto source_path = "TestsTC/loops.tc";
 
   const auto module = compile_source(&context, source_path);
 
@@ -103,7 +113,7 @@ int main() {
              std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
   }
 
-  if (false) {
+  if (true) {
     for (Function& f : module->local_functions()) {
       f.generate_graph(fmt::format("Graphs/{}.svg", f.get_name()), printing_method);
     }

@@ -50,7 +50,12 @@ static Block* thread_jump(Block* block, Block* target, bool* did_something) {
     }
 
     if (!do_phis_depend_on_predecessors(actual_target, block, target)) {
-      actual_target->replace_incoming_blocks_in_phis(target, block);
+      for (Phi& phi : actual_target->instructions<Phi>()) {
+        phi.replace_incoming_block(target, block);
+
+        // Target block is still a predecessor so we need to keep incoming value for it.
+        phi.add_incoming(target, phi.get_type()->get_undef());
+      }
 
       *did_something = true;
 
@@ -86,6 +91,13 @@ static bool thread_jumps(Function* function) {
             thread_jump(&block, cond_branch->get_false_target(), &did_something)) {
         cond_branch->set_false_target(new_target);
       }
+    }
+  }
+
+  // Remove all intermediate blocks that aren't used anymore.
+  for (Block& block : dont_invalidate_current(*function)) {
+    if (!block.is_entry_block() && block.predecessors().empty()) {
+      block.clear_and_destroy();
     }
   }
 

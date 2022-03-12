@@ -269,6 +269,22 @@ std::pair<Block*, Block*> Loop::get_single_exiting_edge() const {
   return {};
 }
 
+Block* Loop::get_single_exit_target() const {
+  Block* exit_target = nullptr;
+
+  for (const auto& [exit_from, exit_to] : exiting_edges) {
+    if (!exit_target) {
+      exit_target = exit_to;
+    }
+
+    if (exit_target != exit_to) {
+      return nullptr;
+    }
+  }
+
+  return exit_target;
+}
+
 bool Loop::contains_block(Block* block) const { return blocks.contains(block); }
 bool Loop::contains_block_skipping_sub_loops(Block* block) const {
   return blocks_without_sub_loops.contains(block);
