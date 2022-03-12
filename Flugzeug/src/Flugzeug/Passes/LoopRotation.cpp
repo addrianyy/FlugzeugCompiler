@@ -117,6 +117,19 @@ get_header_instructions_that_escape_loop(const analysis::Loop* loop, Block* exit
 }
 
 static bool rotate_loop(Function* function, const analysis::Loop* loop) {
+  // Change loop from form:
+  //   while (n) {
+  //     ..
+  //   }
+  // to:
+  //   if (n) {
+  //     while (n) {
+  //       ..
+  //     }
+  //   }
+  // In short we will do this by cloning the header block and making all back edges point to the
+  // cloned block.
+
   if (loop->get_blocks().size() == 1) {
     return false;
   }
