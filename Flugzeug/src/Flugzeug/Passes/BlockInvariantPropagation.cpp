@@ -131,7 +131,7 @@ bool opt::BlockInvariantPropagation::run(Function* function) {
         const auto from_it = other.find(from);
 
         // If this block has conflicting or not matching invariant then whole invariant is invalid.
-        if (from_it == other.end() || from_it->second != to || other.find(to) != other.end()) {
+        if (from_it == other.end() || from_it->second != to || other.contains(to)) {
           valid = false;
           break;
         }

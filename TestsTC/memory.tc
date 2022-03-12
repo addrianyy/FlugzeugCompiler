@@ -85,3 +85,7 @@ void test() {
         print_num(buffer1[i] + buffer2[i] * i);
     }
 }
+
+void simple(i32* ptr, i32 index) {
+    ptr[index] += 8;
+}

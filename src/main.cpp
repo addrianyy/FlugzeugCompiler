@@ -17,6 +17,7 @@
 #include <Flugzeug/Passes/ConstPropagation.hpp>
 #include <Flugzeug/Passes/DeadBlockElimination.hpp>
 #include <Flugzeug/Passes/DeadCodeElimination.hpp>
+#include <Flugzeug/Passes/GlobalReordering.hpp>
 #include <Flugzeug/Passes/InstructionDeduplication.hpp>
 #include <Flugzeug/Passes/InstructionSimplification.hpp>
 #include <Flugzeug/Passes/KnownBitsOptimization.hpp>
@@ -68,6 +69,7 @@ static void optimize_function(Function* f) {
     did_something |= opt::KnownBitsOptimization::run(f);
     did_something |= opt::InstructionDeduplication::run(f, opt::OptimizationLocality::Global);
     did_something |= opt::MemoryOptimization::run(f, opt::OptimizationLocality::Global);
+    did_something |= opt::GlobalReordering::run(f);
 
     if (!did_something) {
       f->reassign_display_indices();
