@@ -24,7 +24,7 @@ static Block* get_or_create_single_back_edge_block(Function* function, const ana
   const auto branch_to_header = new Branch(function->get_context(), header);
   back_edge_block->push_instruction_back(branch_to_header);
 
-  // Modify all branches to the header in the loop so they branch to the `back_edge_block` instead.
+  // Modify all branches to the header of the loop so they branch to the `back_edge_block` instead.
   for (const auto back_edge_from : loop->get_back_edges_from()) {
     back_edge_from->get_last_instruction()->replace_operands(header, back_edge_block);
   }
@@ -140,8 +140,23 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
     return false;
   }
 
-  // Get all instructions that are created in header and that have non-loop users. This actually
-  // skips instructions that are only used in Phis in `exit_target`.
+  // If all blocks that contain back edge can also exit the loop it means that loop is in rotated
+  // form.
+  const auto all_back_edge_blocks_exit_loop =
+    all_of(loop->get_back_edges_from(), [&](Block* block) {
+      const auto cond_branch = cast<CondBranch>(block->get_last_instruction());
+      if (!cond_branch) {
+        return false;
+      }
+      return !loop->contains_block(cond_branch->get_true_target()) ||
+             !loop->contains_block(cond_branch->get_false_target());
+    });
+  if (all_back_edge_blocks_exit_loop) {
+    return false;
+  }
+
+  // Get all instructions that are created in the header and that have non-loop users. This
+  // actually skips instructions that are only used in Phis in `exit_target`.
   const auto escaping_instructions = get_header_instructions_that_escape_loop(loop, exit_target);
 
   // We need single block that branches to the loop header. Create it if needed.
@@ -192,6 +207,7 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
   // Make back edge jump to the `jump_back_block` instead of the header.
   back_edge_block->get_last_instruction()->replace_operands(header, jump_back_block);
 
+  // Merge values in actual loop body.
   for (const auto& [header_instruction, jump_back_instruction] : jump_back_mapping) {
     // Fixup Phi instructions in header and jump back blocks.
     if (const auto header_phi = cast<Phi>(header_instruction)) {
@@ -211,6 +227,7 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
     }
 
     // Merge values from header and jump-back blocks.
+    // TODO: Check if we actually need it.
     const auto merging_phi =
       new Phi(function->get_context(),
               {{header, header_instruction}, {jump_back_block, jump_back_instruction}});
@@ -239,7 +256,7 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
   // predecessed it was loop header. Now `jump_back_block` predecesses it too.
   for (Phi& phi : exit_target->instructions<Phi>()) {
     const auto incoming = phi.get_incoming_by_block(header);
-    verify(incoming, "Phis in exit target block must contain entry as incoming block");
+    verify(incoming, "Phis in exit target block must contain header as incoming block");
 
     // Add incoming value for `jump_back_block`. If there is no mapping available that means that
     // header incoming value is global or that it was created in one of the header's dominators. In

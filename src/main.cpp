@@ -49,9 +49,6 @@ static Module* compile_source(Context* context, const std::string& source_path) 
 static void optimize_function(Function* f) {
   constexpr bool enable_loop_optimizations = true;
 
-  // TODO
-  bool once = true;
-
   while (true) {
     bool did_something = false;
 
@@ -65,11 +62,7 @@ static void optimize_function(Function* f) {
     did_something |= opt::DeadBlockElimination::run(f);
     did_something |= opt::LocalReordering::run(f);
     if (enable_loop_optimizations) {
-      if (once) {
-        did_something |= opt::LoopRotation::run(f);
-        f->validate(ValidationBehaviour::ErrorsAreFatal);
-        once = false;
-      }
+      did_something |= opt::LoopRotation::run(f);
       did_something |= opt::LoopUnrolling::run(f);
       did_something |= opt::LoopInvariantOptimization::run(f);
       did_something |= opt::CFGSimplification::run(f);
