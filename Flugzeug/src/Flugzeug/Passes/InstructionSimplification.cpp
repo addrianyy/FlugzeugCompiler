@@ -1,5 +1,4 @@
 #include "InstructionSimplification.hpp"
-#include "Utils/Commutative.hpp"
 #include "Utils/Evaluation.hpp"
 #include "Utils/OptimizationResult.hpp"
 

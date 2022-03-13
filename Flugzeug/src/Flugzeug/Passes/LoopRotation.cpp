@@ -38,10 +38,7 @@ static Block* get_or_create_single_back_edge_block(Function* function, const ana
     corresponding_phi->insert_before(branch_to_header);
 
     for (const auto back_edge_from : loop->get_back_edges_from()) {
-      const auto incoming = phi.get_incoming_by_block(back_edge_from);
-      verify(incoming, "Failed to get incoming value for back edge block");
-
-      phi.remove_incoming(back_edge_from);
+      const auto incoming = phi.remove_incoming(back_edge_from);
       corresponding_phi->add_incoming(back_edge_from, incoming);
     }
 
@@ -150,8 +147,8 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
   // We need single block that branches to the loop header. Create it if needed.
   const auto back_edge_block = get_or_create_single_back_edge_block(function, loop);
 
-  std::vector<std::pair<Phi*, Phi*>> phis;
-  std::unordered_map<Value*, Value*> jump_back_mapping;
+  std::vector<Phi*> phis;
+  std::unordered_map<Instruction*, Instruction*> jump_back_mapping;
 
   // Clone the loop header as it contains exit condition.
   const auto jump_back_block = function->create_block();
@@ -160,23 +157,27 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
 
     for (Instruction& instruction : *header) {
       const auto cloned = instruction.clone();
+
       if (!instruction.is_void()) {
         jump_back_mapping.insert({&instruction, cloned});
       }
 
-      // Save old and new Phi pairs as they will be needed later.
-      if (const auto original_phi = cast<Phi>(instruction)) {
-        phis.emplace_back(original_phi, cast<Phi>(cloned));
-      }
-
       // Update operands so they take cloned instructions instead of the original ones.
-      cloned->transform_operands([&](Value* operand) -> Value* {
-        const auto it = jump_back_mapping.find(operand);
-        if (it != jump_back_mapping.end()) {
-          return it->second;
-        }
-        return nullptr;
-      });
+      // The only exceptions are Phi instructions.
+      if (!cast<Phi>(instruction)) {
+        cloned->transform_operands([&](Value* operand) -> Value* {
+          const auto instruction = cast<Instruction>(operand);
+          if (!instruction) {
+            return nullptr;
+          }
+
+          const auto it = jump_back_mapping.find(instruction);
+          if (it != jump_back_mapping.end()) {
+            return it->second;
+          }
+          return nullptr;
+        });
+      }
 
       jump_back_block->push_instruction_back(cloned);
     }
@@ -191,27 +192,38 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
   // Make back edge jump to the `jump_back_block` instead of the header.
   back_edge_block->get_last_instruction()->replace_operands(header, jump_back_block);
 
-  // Fixup Phi instructions in header and jump back blocks.
-  for (const auto& [header_phi, jump_back_phi] : phis) {
-    // Back edge block doesn't branch to header anymore so remove incoming value for it.
-    header_phi->remove_incoming(back_edge_block);
+  for (const auto& [header_instruction, jump_back_instruction] : jump_back_mapping) {
+    // Fixup Phi instructions in header and jump back blocks.
+    if (const auto header_phi = cast<Phi>(header_instruction)) {
+      const auto jump_back_phi = cast<Phi>(jump_back_instruction);
 
-    // At this point nothing in the loop branches back to the header. Remove all non-loop incoming
-    // values from jump-back block Phis.
-    for (const auto header_predecessor : header->predecessors()) {
-      jump_back_phi->remove_incoming(header_predecessor);
+      phis.push_back(header_phi);
+      phis.push_back(jump_back_phi);
+
+      // Back edge block doesn't branch to header anymore so remove incoming value for it.
+      header_phi->remove_incoming(back_edge_block);
+
+      // At this point nothing in the loop branches back to the header. Remove all non-loop incoming
+      // values from jump-back block Phis.
+      for (const auto header_predecessor : header->predecessors()) {
+        jump_back_phi->remove_incoming(header_predecessor);
+      }
     }
 
     // Merge values from header and jump-back blocks.
     const auto merging_phi =
-      new Phi(function->get_context(), {{header, header_phi}, {jump_back_block, jump_back_phi}});
+      new Phi(function->get_context(),
+              {{header, header_instruction}, {jump_back_block, jump_back_instruction}});
     actual_body->push_instruction_front(merging_phi);
 
-    // All the code so far uses `header_phi`. The only places where it actually makes sense are:
+    phis.push_back(merging_phi);
+
+    // All the code so far uses `header_instruction`. The only places where it actually makes sense
+    // are:
     //   1. Header block.
     //   2. Merging Phi instruction in the actual loop body.
     //   3. Blocks outside of the loop (these uses will be fixed up later).
-    header_phi->replace_uses_with_predicated(merging_phi, [&](User* user) -> bool {
+    header_instruction->replace_uses_with_predicated(merging_phi, [&](User* user) -> bool {
       const auto instruction = cast<Instruction>(user);
       if (!instruction) {
         return false;
@@ -232,7 +244,7 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
     // Add incoming value for `jump_back_block`. If there is no mapping available that means that
     // header incoming value is global or that it was created in one of the header's dominators. In
     // this case we just add the original value.
-    const auto it = jump_back_mapping.find(incoming);
+    const auto it = jump_back_mapping.find(cast<Instruction>(incoming));
     phi.add_incoming(jump_back_block, it == jump_back_mapping.end() ? incoming : it->second);
   }
 
@@ -275,10 +287,9 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
     utils::simplify_phi(merging_phi, true);
   }
 
-  // Try to simplify all Phis in header and jump back blocks.
-  for (const auto& [header_phi, jump_back_phi] : phis) {
-    utils::simplify_phi(header_phi, true);
-    utils::simplify_phi(jump_back_phi, true);
+  // Try to simplify all created Phis.
+  for (const auto phi : phis) {
+    utils::simplify_phi(phi, true);
   }
 
   return true;

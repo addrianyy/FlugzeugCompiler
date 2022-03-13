@@ -244,7 +244,7 @@ class Validator : public ConstInstructionVisitor {
 
   void visit_phi(Argument<Phi> phi) {
     const auto type = phi->get_type();
-    validation_check(type->is_arithmetic_or_pointer(),
+    validation_check(type->is_arithmetic_or_pointer() || type->is_i1(),
                      "Phi return type ({}) isn't arithmetic or pointer", Format(type));
 
     for (const auto incoming : *phi) {

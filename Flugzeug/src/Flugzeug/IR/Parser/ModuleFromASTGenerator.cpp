@@ -290,25 +290,21 @@ void ModuleFromASTGenerator::generate_function_body() {
     }
 
     for (const auto user : users_it->second) {
-      bool all_operands_handled = true;
+      const bool all_operands_handled =
+        all_of(user->operands, [&](const PRInstructionOperand& operand) {
+          if (operand.kind != PRInstructionOperand::Kind::Value) {
+            return true;
+          }
 
-      for (const auto& operand : user->operands) {
-        if (operand.kind != PRInstructionOperand::Kind::Value) {
-          continue;
-        }
+          const auto instruction_operand = get_instruction_from_name(operand.name);
+          if (!instruction_operand) {
+            return true;
+          }
 
-        const auto instruction_operand = get_instruction_from_name(operand.name);
-        if (!instruction_operand) {
-          continue;
-        }
-
-        // This instruction depends on another instruction. Check if that instruction has been
-        // already handled.
-        if (!fn_ctx.ir_instruction_map.contains(instruction_operand)) {
-          all_operands_handled = false;
-          break;
-        }
-      }
+          // This instruction depends on another instruction. Check if that instruction has been
+          // already handled.
+          return fn_ctx.ir_instruction_map.contains(instruction_operand);
+        });
 
       if (all_operands_handled) {
         instruction_queue.push_back(user);
