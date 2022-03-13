@@ -506,6 +506,18 @@ protected:
 class Phi final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Phi)
 
+public:
+  struct Incoming {
+    Block* block;
+    Value* value;
+  };
+
+  struct ConstIncoming {
+    const Block* block;
+    const Value* value;
+  };
+
+private:
   static inline size_t get_block_index(size_t i) { return i * 2 + 0; }
   static inline size_t get_value_index(size_t i) { return i * 2 + 1; }
 
@@ -554,21 +566,27 @@ class Phi final : public Instruction {
   bool index_for_block(const Block* block, size_t& index) const;
   void remove_incoming_by_index(size_t index);
 
+  Incoming get_incoming(size_t i) {
+    const auto value = get_operand(get_value_index(i));
+    const auto block = cast<Block>(get_operand(get_block_index(i)));
+
+    return Incoming{block, value};
+  }
+  ConstIncoming get_incoming(size_t i) const {
+    const auto value = get_operand(get_value_index(i));
+    const auto block = cast<Block>(get_operand(get_block_index(i)));
+
+    return ConstIncoming{block, value};
+  }
+
+  Value* get_incoming_value(size_t i) { return get_operand(get_value_index(i)); }
+  const Value* get_incoming_value(size_t i) const { return get_operand(get_value_index(i)); }
+
 public:
-  struct Incoming {
-    Block* block;
-    Value* value;
-  };
-
-  struct ConstIncoming {
-    const Block* block;
-    const Value* value;
-  };
-
   explicit Phi(Context* context, Type* type) : Instruction(context, Instruction::Kind::Phi, type) {}
   explicit Phi(Context* context, const std::vector<Incoming>& incoming)
       : Phi(context, incoming[0].value->get_type()) {
-    reserve_operands(incoming.size());
+    reserve_operands(incoming.size() * 2);
 
     for (const auto& i : incoming) {
       add_incoming(i);
@@ -578,21 +596,10 @@ public:
   size_t get_incoming_count() const { return get_operand_count() / 2; }
   bool is_empty() const { return get_operand_count() == 0; }
 
-  Incoming get_incoming(size_t i) {
-    return Incoming{cast<Block>(get_operand(get_block_index(i))), get_operand(get_value_index(i))};
-  }
-  ConstIncoming get_incoming(size_t i) const {
-    return ConstIncoming{cast<Block>(get_operand(get_block_index(i))),
-                         get_operand(get_value_index(i))};
-  }
-
-  Value* get_incoming_value(size_t i) { return get_operand(get_value_index(i)); }
-  const Value* get_incoming_value(size_t i) const { return get_operand(get_value_index(i)); }
-
   Value* get_single_incoming_value();
 
-  bool remove_incoming_opt(const Block* block);
-  void remove_incoming(const Block* block);
+  Value* remove_incoming_opt(const Block* block);
+  Value* remove_incoming(const Block* block);
   void add_incoming(Block* block, Value* value);
   void add_incoming(const Incoming& incoming) { add_incoming(incoming.block, incoming.value); }
 

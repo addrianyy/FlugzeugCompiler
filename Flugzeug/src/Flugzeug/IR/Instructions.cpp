@@ -123,25 +123,28 @@ Value* Phi::get_single_incoming_value() {
   return single_incoming;
 }
 
-bool Phi::remove_incoming_opt(const Block* block) {
+Value* Phi::remove_incoming_opt(const Block* block) {
   size_t index;
   if (!index_for_block(block, index)) {
-    return false;
+    return nullptr;
   }
 
+  const auto value = get_incoming_value(index);
   remove_incoming_by_index(index);
-  return true;
+  return value;
 }
 
-void Phi::remove_incoming(const Block* block) {
-  verify(remove_incoming_opt(block), "Unknown block passed to remove incoming");
+Value* Phi::remove_incoming(const Block* block) {
+  const auto result = remove_incoming_opt(block);
+  verify(result, "Unknown block passed to remove incoming");
+  return result;
 }
 
 void Phi::add_incoming(Block* block, Value* value) {
   size_t prev_index;
   if (index_for_block(block, prev_index)) {
     verify(get_operand(get_value_index(prev_index)) == value,
-           "Tried to add 2 same blocks to PHI instruction.");
+           "Tried to add 2 same blocks to the Phi instruction.");
     return;
   }
 
