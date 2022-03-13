@@ -384,6 +384,28 @@ Aliasing PointerAliasing::can_instruction_access_pointer(const Instruction* inst
       return Aliasing::Never;
     }
 
+    // If function takes only constant and undef values then it won't access the pointer.
+    {
+      bool has_simple_arguments = true;
+      for (size_t i = 0; i < call->get_arg_count(); ++i) {
+        const auto arg = call->get_arg(i);
+        if (!arg->get_type()->is_pointer()) {
+          continue;
+        }
+
+        if ((cast<Constant>(arg) && arg != pointer) || arg->is_undef()) {
+          continue;
+        }
+
+        has_simple_arguments = false;
+        break;
+      }
+
+      if (has_simple_arguments) {
+        return Aliasing::Never;
+      }
+    }
+
     const auto origin = pointer_origin_map.get(pointer);
     const auto stackalloc = lookup_map(stackalloc_safety, origin);
 

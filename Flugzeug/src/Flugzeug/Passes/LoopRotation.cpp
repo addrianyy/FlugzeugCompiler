@@ -1,54 +1,12 @@
 #include "LoopRotation.hpp"
 #include "Analysis/Loops.hpp"
+#include "Utils/LoopTransforms.hpp"
 #include "Utils/SimplifyPhi.hpp"
 
 #include <Flugzeug/IR/Function.hpp>
 #include <Flugzeug/IR/Instructions.hpp>
 
 using namespace flugzeug;
-
-static Block* get_or_create_single_back_edge_block(Function* function, const analysis::Loop* loop) {
-  const auto header = loop->get_header();
-
-  {
-    // If there is only one block that branches to the header then just return it.
-    const auto back_edge_block = loop->get_single_back_edge();
-    if (back_edge_block) {
-      return back_edge_block;
-    }
-  }
-
-  // We need to create additional block that will become our single back edge block.
-  // We make it branch to the loop header.
-  const auto back_edge_block = function->create_block();
-  const auto branch_to_header = new Branch(function->get_context(), header);
-  back_edge_block->push_instruction_back(branch_to_header);
-
-  // Modify all branches to the header of the loop so they branch to the `back_edge_block` instead.
-  for (const auto back_edge_from : loop->get_back_edges_from()) {
-    back_edge_from->get_last_instruction()->replace_operands(header, back_edge_block);
-  }
-
-  // For every Phi in the header:
-  //   1. Create Phi in the back edge block. Move all incoming values that correspond to previous
-  //      back edge blocks to our new single back edge block.
-  //   2. Add created Phi as incoming value to the Phi in the header.
-  for (Phi& phi : header->instructions<Phi>()) {
-    const auto corresponding_phi = new Phi(function->get_context(), phi.get_type());
-    corresponding_phi->insert_before(branch_to_header);
-
-    for (const auto back_edge_from : loop->get_back_edges_from()) {
-      const auto incoming = phi.remove_incoming(back_edge_from);
-      corresponding_phi->add_incoming(back_edge_from, incoming);
-    }
-
-    phi.add_incoming(back_edge_block, corresponding_phi);
-
-    utils::simplify_phi(corresponding_phi, true);
-  }
-
-  return back_edge_block;
-}
 
 static Block* get_actual_loop_body(Function* function, const analysis::Loop* loop) {
   const auto header = loop->get_header();
@@ -113,12 +71,12 @@ get_header_instructions_that_escape_loop(const analysis::Loop* loop, Block* exit
 static bool rotate_loop(Function* function, const analysis::Loop* loop) {
   // Change loop from form:
   //   while (n) {
-  //     ..
+  //     ...
   //   }
   // to:
   //   if (n) {
   //     while (n) {
-  //       ..
+  //       ...
   //     }
   //   }
   // In short we will do this by cloning the header block and making all back edges point to the
@@ -160,12 +118,12 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
   const auto escaping_instructions = get_header_instructions_that_escape_loop(loop, exit_target);
 
   // We need single block that branches to the loop header. Create it if needed.
-  const auto back_edge_block = get_or_create_single_back_edge_block(function, loop);
+  const auto back_edge_block = utils::get_or_create_loop_single_back_edge_block(function, loop);
 
   std::vector<Phi*> phis;
   std::unordered_map<Instruction*, Instruction*> jump_back_mapping;
 
-  // Clone the loop header as it contains exit condition.
+  // Clone the loop header as it contains the exit condition.
   const auto jump_back_block = function->create_block();
   {
     jump_back_mapping.reserve(header->get_instruction_count());
@@ -190,6 +148,7 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
           if (it != jump_back_mapping.end()) {
             return it->second;
           }
+
           return nullptr;
         });
       }
@@ -204,10 +163,10 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
     return loop->contains_block(block) || block == back_edge_block || block == jump_back_block;
   };
 
-  // Make back edge jump to the `jump_back_block` instead of the header.
+  // Make the back edge jump to the `jump_back_block` instead of the header.
   back_edge_block->get_last_instruction()->replace_operands(header, jump_back_block);
 
-  // Merge values in actual loop body.
+  // Merge values in the actual loop body.
   for (const auto& [header_instruction, jump_back_instruction] : jump_back_mapping) {
     // Fixup Phi instructions in header and jump back blocks.
     if (const auto header_phi = cast<Phi>(header_instruction)) {

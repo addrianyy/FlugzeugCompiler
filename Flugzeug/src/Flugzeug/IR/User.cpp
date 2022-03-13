@@ -148,9 +148,9 @@ bool User::uses_value(Value* value) const {
   return false;
 }
 
-void User::replace_operands(Value* old_value, Value* new_value) {
+bool User::replace_operands(Value* old_value, Value* new_value) {
   if (old_value == new_value) {
-    return;
+    return true;
   }
 
   verify(old_value->is_same_type_as(new_value),
@@ -170,4 +170,6 @@ void User::replace_operands(Value* old_value, Value* new_value) {
   if (block && replace_count > 0) {
     deduplicate_phi_incoming_blocks(block, this);
   }
+
+  return replace_count > 0;
 }

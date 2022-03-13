@@ -74,7 +74,7 @@ public:
   void set_operand(size_t index, Value* operand);
 
   bool uses_value(Value* value) const;
-  void replace_operands(Value* old_value, Value* new_value);
+  bool replace_operands(Value* old_value, Value* new_value);
 
   template <typename Fn> bool transform_operands(Fn&& transform) {
     bool transformed_something = false;

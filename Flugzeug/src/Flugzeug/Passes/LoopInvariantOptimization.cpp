@@ -5,6 +5,7 @@
 #include <Flugzeug/IR/Instructions.hpp>
 
 #include <Flugzeug/Passes/Analysis/Loops.hpp>
+#include <Flugzeug/Passes/Utils/LoopTransforms.hpp>
 #include <Flugzeug/Passes/Utils/SimplifyPhi.hpp>
 
 using namespace flugzeug;
@@ -91,67 +92,6 @@ static std::vector<Instruction*> get_loop_invariants(Function* function,
 
   return invariants;
 }
-
-static std::unordered_set<Block*> get_entering_blocks(const analysis::Loop* loop) {
-  std::unordered_set<Block*> entering_blocks;
-
-  for (auto predecessor : loop->get_header()->predecessors()) {
-    if (!loop->contains_block(predecessor)) {
-      entering_blocks.insert(predecessor);
-    }
-  }
-
-  return entering_blocks;
-}
-
-static Block* get_or_create_loop_preheader(Function* function, const analysis::Loop* loop) {
-  const auto entering_blocks = get_entering_blocks(loop);
-
-  if (entering_blocks.size() == 1) {
-    return *entering_blocks.begin();
-  } else {
-    // This loop has multiple entry points. We will create a preheader that will become a new loop
-    // entry point. Every entrering block will branch to it.
-    const auto preheader = function->create_block();
-
-    // Make preheader branch to the loop.
-    preheader->push_instruction_back(new Branch(function->get_context(), loop->get_header()));
-
-    // Make every entering block branch to the preheader instead of the loop header.
-    for (Block* entering_block : entering_blocks) {
-      entering_block->get_last_instruction()->replace_operands(loop->get_header(), preheader);
-    }
-
-    // Fixup Phis in the loop header.
-    for (Phi& phi : loop->get_header()->instructions<Phi>()) {
-      // Every Phi in the loop header needs corresponding Phi in the preheader.
-      auto corresponding_phi = new Phi(function->get_context(), phi.get_type());
-      preheader->push_instruction_front(corresponding_phi);
-
-      // Copy incoming values for `entering_blocks` from Phi in the header to newly created Phi in
-      // the preheader.
-      for (auto incoming : phi) {
-        if (entering_blocks.contains(incoming.block)) {
-          corresponding_phi->add_incoming(incoming.block, incoming.value);
-        }
-      }
-
-      // As loop header isn't predecessed by `entering_blocks` anymore we need to remove Phi
-      // incoming values for them.
-      for (Block* entering_block : entering_blocks) {
-        phi.remove_incoming(entering_block);
-      }
-
-      phi.add_incoming(preheader, corresponding_phi);
-
-      // Simplify newly created Phi if possible.
-      utils::simplify_phi(corresponding_phi, true);
-    }
-
-    return preheader;
-  }
-}
-
 static bool optimize_invariants(Function* function, const analysis::Loop* loop) {
   const auto invariants = get_loop_invariants(function, loop);
   if (invariants.empty()) {
@@ -160,11 +100,11 @@ static bool optimize_invariants(Function* function, const analysis::Loop* loop) 
 
   // There needs to be a single block that jumps to this loop. We will get it or create it if there
   // are multiple entering blocks.
-  const auto header_predecessor = get_or_create_loop_preheader(function, loop);
+  const auto preheader = utils::get_or_create_loop_preheader(function, loop, true);
 
   // Move all invariants out of the loop.
   for (Instruction* invariant : invariants) {
-    invariant->move_before(header_predecessor->get_last_instruction());
+    invariant->move_before(preheader->get_last_instruction());
 
     if (const auto phi = cast<Phi>(invariant)) {
       verify(utils::simplify_phi(phi, true), "Failed to simplify Phi");

@@ -19,13 +19,19 @@ Module* bf::Compiler::compile_from_file(Context* context, const std::string& sou
   const auto module = context->create_module();
   const auto get_char = module->create_function(i8, "get_char", {});
   const auto put_char = module->create_function(void_ty, "put_char", {i8});
-  const auto main_func = module->create_function(void_ty, "main", {i8_ptr});
+  const auto zero_buffer = module->create_function(void_ty, "zero_buffer", {i8_ptr});
+  const auto main_func = module->create_function(void_ty, "main", {});
 
   InstructionInserter ins(main_func->create_block());
 
-  const auto buffer = main_func->get_parameter(0);
+  const auto buffer = ins.stack_alloc(i8, 30'000);
   const auto index = ins.stack_alloc(i64);
   ins.store(index, i64->get_zero());
+  ins.call(zero_buffer, {buffer});
+
+  for (size_t i = 0; i < 16; ++i) {
+    ins.store(ins.offset(buffer, i64->get_constant(i)), i8->get_zero());
+  }
 
   const auto get_pointer = [&]() { return ins.offset(buffer, ins.load(index)); };
 

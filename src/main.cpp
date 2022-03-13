@@ -9,7 +9,6 @@
 #include <Flugzeug/IR/InstructionInserter.hpp>
 #include <Flugzeug/IR/Module.hpp>
 
-#include <Flugzeug/Passes/Analysis/Loops.hpp>
 #include <Flugzeug/Passes/BlockInvariantPropagation.hpp>
 #include <Flugzeug/Passes/CFGSimplification.hpp>
 #include <Flugzeug/Passes/CallInlining.hpp>
@@ -23,6 +22,7 @@
 #include <Flugzeug/Passes/KnownBitsOptimization.hpp>
 #include <Flugzeug/Passes/LocalReordering.hpp>
 #include <Flugzeug/Passes/LoopInvariantOptimization.hpp>
+#include <Flugzeug/Passes/LoopMemoryExtraction.hpp>
 #include <Flugzeug/Passes/LoopRotation.hpp>
 #include <Flugzeug/Passes/LoopUnrolling.hpp>
 #include <Flugzeug/Passes/MemoryOptimization.hpp>
@@ -65,6 +65,7 @@ static void optimize_function(Function* f) {
       did_something |= opt::LoopRotation::run(f);
       did_something |= opt::LoopUnrolling::run(f);
       did_something |= opt::LoopInvariantOptimization::run(f);
+      did_something |= opt::LoopMemoryExtraction::run(f);
       did_something |= opt::CFGSimplification::run(f);
     }
     did_something |= opt::BlockInvariantPropagation::run(f);
@@ -91,7 +92,8 @@ int main() {
   Context context;
 
   const auto printing_method = IRPrintingMethod::Standard;
-  const auto source_path = "TestsTC/loops.tc";
+  //  const auto source_path = "TestsTC/loops_memory.tc";
+  const auto source_path = "TestsBF/test.bf";
 
   const auto module = compile_source(&context, source_path);
 

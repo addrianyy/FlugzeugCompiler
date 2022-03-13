@@ -1,0 +1,7 @@
+i32 test(i32* p, i32* z, i32 n) {
+    for (i32 i = 0; i < n; i += 1) {
+        *p += i;
+    }
+
+    return *p;
+}
