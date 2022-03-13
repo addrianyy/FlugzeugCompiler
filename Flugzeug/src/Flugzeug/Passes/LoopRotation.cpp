@@ -94,19 +94,16 @@ get_header_instructions_that_escape_loop(const analysis::Loop* loop, Block* exit
     }
 
     // Go through every instruction user to find if it's used outside the loop.
-    bool is_used_outside_loop = false;
-    for (Instruction& user : instruction.users<Instruction>()) {
-      // If this instruction is used as incoming value in the Phi that is in the exit target block
-      // then skip it - it's fine.
-      if (user.get_block() == exit_target && cast<Phi>(user)) {
-        continue;
-      }
+    const bool is_used_outside_loop =
+      any_of(instruction.users<Instruction>(), [&](Instruction& user) {
+        // If this instruction is used as incoming value in the Phi that is in the exit target block
+        // then skip it - it's fine.
+        if (user.get_block() == exit_target && cast<Phi>(user)) {
+          return false;
+        }
 
-      if (!loop->contains_block(user.get_block())) {
-        is_used_outside_loop = true;
-        break;
-      }
-    }
+        return !loop->contains_block(user.get_block());
+      });
 
     if (is_used_outside_loop) {
       escaping_instructions.insert(&instruction);

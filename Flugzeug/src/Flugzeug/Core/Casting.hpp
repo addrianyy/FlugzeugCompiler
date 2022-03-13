@@ -16,6 +16,8 @@ public:                                                                         
                                                                                                    \
 private:
 
+namespace flugzeug {
+
 template <typename To, typename From,
           typename std::enable_if_t<std::is_base_of_v<To, From>, int> = 0>
 inline To* cast(From* from) {
@@ -48,3 +50,5 @@ template <typename To, typename From> inline To* cast(From& from) { return cast<
 template <typename To, typename From> inline const To* cast(const From& from) {
   return cast<To>(&from);
 }
+
+} // namespace flugzeug

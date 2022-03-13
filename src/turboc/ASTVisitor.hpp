@@ -3,6 +3,8 @@
 
 #include <Flugzeug/Core/Error.hpp>
 
+using flugzeug::cast;
+
 namespace turboc {
 
 namespace detail {

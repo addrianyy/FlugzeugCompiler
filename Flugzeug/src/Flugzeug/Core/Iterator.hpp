@@ -2,6 +2,8 @@
 #include "Error.hpp"
 #include <type_traits>
 
+namespace flugzeug {
+
 namespace detail {
 
 template <typename T> class EarlyAdvancingIterator {
@@ -97,3 +99,35 @@ template <typename T>
 inline IteratorRange<typename T::const_reverse_iterator> reversed(const T& object) {
   return IteratorRange(object.rbegin(), object.rend());
 }
+
+template <typename R, typename Fn> bool all_of(R&& range, Fn predicate) {
+  for (auto&& element : range) {
+    if (!predicate(element)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+template <typename R, typename Fn> bool any_of(R&& range, Fn predicate) {
+  for (auto&& element : range) {
+    if (predicate(element)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+template <typename R, typename Fn> bool none_of(R&& range, Fn predicate) {
+  for (auto&& element : range) {
+    if (predicate(element)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+} // namespace flugzeug
