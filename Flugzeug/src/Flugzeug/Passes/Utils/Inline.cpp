@@ -110,7 +110,7 @@ void flugzeug::utils::inline_call(Call* call) {
 
   // Fixup operands.
   for (Block* block : inlined_function.get_blocks()) {
-    for (Instruction& instruction : dont_invalidate_current(*block)) {
+    for (Instruction& instruction : advance_early(*block)) {
       // Replace returns with branches to `return_block`.
       if (const auto ret = cast<Ret>(instruction)) {
         // Add return value for this return site to Phi incoming values.

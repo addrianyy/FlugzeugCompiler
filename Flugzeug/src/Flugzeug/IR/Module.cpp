@@ -39,9 +39,9 @@ void Module::print(IRPrintingMethod method) const {
 }
 
 void Module::destroy() {
-  for (Function& function : dont_invalidate_current(*this)) {
+  for (Function& function : advance_early(*this)) {
     // Remove all calls to this function.
-    for (Instruction& instruction : dont_invalidate_current(function.users<Instruction>())) {
+    for (Instruction& instruction : advance_early(function.users<Instruction>())) {
       instruction.destroy();
     }
 

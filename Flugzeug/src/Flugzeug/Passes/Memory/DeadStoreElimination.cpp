@@ -21,7 +21,7 @@ bool opt::memory::eliminate_dead_stores_local(Function* function,
   for (Block& block : *function) {
     stores.clear();
 
-    for (Store& store : dont_invalidate_current(block.instructions<Store>())) {
+    for (Store& store : advance_early(block.instructions<Store>())) {
       Store* previous_store = nullptr;
       {
         const auto it = stores.find(store.get_ptr());
@@ -162,7 +162,7 @@ bool opt::memory::eliminate_dead_stores_global(Function* function,
                                                const analysis::PointerAliasing& alias_analysis) {
   bool did_something = false;
 
-  for (Store& store : dont_invalidate_current(function->instructions<Store>())) {
+  for (Store& store : advance_early(function->instructions<Store>())) {
     // Remove this store if it's dead.
     if (is_store_dead(&store, alias_analysis)) {
       store.destroy();

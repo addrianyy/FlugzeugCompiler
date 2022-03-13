@@ -316,7 +316,7 @@ void Block::destroy() {
   // throw an error.
 
   // Remove all incoming values in Phis that use this block.
-  for (Phi& phi : dont_invalidate_current(users<Phi>())) {
+  for (Phi& phi : advance_early(users<Phi>())) {
     phi.remove_incoming(this);
   }
 
@@ -343,7 +343,7 @@ void Block::remove_incoming_block_from_phis(const Block* incoming, bool destroy_
     return;
   }
 
-  for (Phi& phi : dont_invalidate_current(instructions<Phi>())) {
+  for (Phi& phi : advance_early(instructions<Phi>())) {
     if (phi.remove_incoming_opt(incoming) && destroy_empty_phis && phi.is_empty()) {
       phi.destroy();
     }

@@ -32,7 +32,7 @@ static void convert_phi_to_memory(Phi* phi) {
 bool opt::PhiToMemory::run(Function* function) {
   bool did_something = false;
 
-  for (Phi& phi : dont_invalidate_current(function->instructions<Phi>())) {
+  for (Phi& phi : advance_early(function->instructions<Phi>())) {
     convert_phi_to_memory(&phi);
     did_something = true;
   }

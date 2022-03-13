@@ -35,7 +35,7 @@ bool opt::DeadCodeElimination::run(Function* function) {
   std::vector<Instruction*> worklist;
   bool did_something = false;
 
-  for (Instruction& instruction : dont_invalidate_current(function->instructions())) {
+  for (Instruction& instruction : advance_early(function->instructions())) {
     // Don't try to eliminate instructions that are already queued in worklist.
     const auto found = std::find(worklist.begin(), worklist.end(), &instruction);
     if (found == worklist.end()) {

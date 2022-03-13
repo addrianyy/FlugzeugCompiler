@@ -100,7 +100,7 @@ static bool deduplicate_block_local(Function* function) {
       value.clear();
     }
 
-    for (Instruction& instruction : dont_invalidate_current(block)) {
+    for (Instruction& instruction : advance_early(block)) {
       if (!can_be_deduplicated(&instruction)) {
         continue;
       }
@@ -168,7 +168,7 @@ static bool deduplicate_global(Function* function) {
   const DominatorTree dominator_tree(function);
   analysis::PathValidator path_validator;
 
-  for (Instruction& instruction : dont_invalidate_current(function->instructions())) {
+  for (Instruction& instruction : advance_early(function->instructions())) {
     if (!can_be_deduplicated(&instruction)) {
       continue;
     }

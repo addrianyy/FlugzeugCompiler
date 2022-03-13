@@ -117,7 +117,7 @@ public:
 bool opt::ConstPropagation::run(Function* function) {
   bool did_something = false;
 
-  for (Instruction& instruction : dont_invalidate_current(function->instructions())) {
+  for (Instruction& instruction : advance_early(function->instructions())) {
     Propagator propagator(instruction.get_type());
 
     if (const auto result = visitor::visit_instruction(&instruction, propagator)) {

@@ -12,7 +12,7 @@ static void destroy_dead_block(Block* block) {
   block->clear();
 
   // Remove branches to this block (they are in dead blocks anyway).
-  for (Instruction& instruction : dont_invalidate_current(block->users<Instruction>())) {
+  for (Instruction& instruction : advance_early(block->users<Instruction>())) {
     if (instruction.is_branching()) {
       // These branches are in dead blocks, so we can remove them.
       instruction.destroy();
@@ -29,7 +29,7 @@ bool opt::DeadBlockElimination::run(Function* function) {
 
   const bool dead_blocks_found = reachable_blocks.size() != function->get_block_count();
   if (dead_blocks_found) {
-    for (Block& block : dont_invalidate_current(*function)) {
+    for (Block& block : advance_early(*function)) {
       if (!reachable_blocks.contains(&block)) {
         destroy_dead_block(&block);
       }
@@ -41,7 +41,7 @@ bool opt::DeadBlockElimination::run(Function* function) {
         continue;
       }
 
-      for (Phi& phi : dont_invalidate_current(block.instructions<Phi>())) {
+      for (Phi& phi : advance_early(block.instructions<Phi>())) {
         utils::simplify_phi(&phi, true);
       }
     }

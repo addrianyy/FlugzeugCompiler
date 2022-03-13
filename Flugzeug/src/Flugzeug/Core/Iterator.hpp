@@ -1,9 +1,10 @@
 #pragma once
+#include "Error.hpp"
 #include <type_traits>
 
 namespace detail {
 
-template <typename T> class NonInvalidatingIterator {
+template <typename T> class EarlyAdvancingIterator {
   T current;
   T next;
 
@@ -22,15 +23,13 @@ public:
   using pointer = value_type*;
   using reference = value_type&;
 
-  explicit NonInvalidatingIterator(T current) : current(current), next(current) {}
+  explicit EarlyAdvancingIterator(T current) : current(current), next(current) {}
 
-  NonInvalidatingIterator& operator++() {
-    if (has_next) {
-      current = next;
-      has_next = false;
-    } else {
-      ++current;
-    }
+  EarlyAdvancingIterator& operator++() {
+    verify(has_next, "Invalid use of early-advancing iterator");
+
+    current = next;
+    has_next = false;
 
     return *this;
   }
@@ -45,8 +44,8 @@ public:
     return current.operator->();
   }
 
-  bool operator==(const NonInvalidatingIterator& rhs) const { return current == rhs.current; }
-  bool operator!=(const NonInvalidatingIterator& rhs) const { return current != rhs.current; }
+  bool operator==(const EarlyAdvancingIterator& rhs) const { return current == rhs.current; }
+  bool operator!=(const EarlyAdvancingIterator& rhs) const { return current != rhs.current; }
 };
 
 } // namespace detail
@@ -65,24 +64,23 @@ public:
 };
 
 template <typename T, typename std::enable_if_t<std::is_trivially_copyable_v<T>, int> = 0>
-inline IteratorRange<detail::NonInvalidatingIterator<typename T::iterator>>
-dont_invalidate_current(T object) {
-  return IteratorRange(detail::NonInvalidatingIterator(object.begin()),
-                       detail::NonInvalidatingIterator(object.end()));
+inline IteratorRange<detail::EarlyAdvancingIterator<typename T::iterator>> advance_early(T object) {
+  return IteratorRange(detail::EarlyAdvancingIterator(object.begin()),
+                       detail::EarlyAdvancingIterator(object.end()));
 }
 
 template <typename T, typename std::enable_if_t<!std::is_trivially_copyable_v<T>, int> = 0>
-inline IteratorRange<detail::NonInvalidatingIterator<typename T::iterator>>
-dont_invalidate_current(T& object) {
-  return IteratorRange(detail::NonInvalidatingIterator(object.begin()),
-                       detail::NonInvalidatingIterator(object.end()));
+inline IteratorRange<detail::EarlyAdvancingIterator<typename T::iterator>>
+advance_early(T& object) {
+  return IteratorRange(detail::EarlyAdvancingIterator(object.begin()),
+                       detail::EarlyAdvancingIterator(object.end()));
 }
 
 template <typename T>
-inline IteratorRange<detail::NonInvalidatingIterator<typename T::const_iterator>>
-dont_invalidate_current(const T& object) {
-  return IteratorRange(detail::NonInvalidatingIterator(object.begin()),
-                       detail::NonInvalidatingIterator(object.end()));
+inline IteratorRange<detail::EarlyAdvancingIterator<typename T::const_iterator>>
+advance_early(const T& object) {
+  return IteratorRange(detail::EarlyAdvancingIterator(object.begin()),
+                       detail::EarlyAdvancingIterator(object.end()));
 }
 
 template <typename T, typename std::enable_if_t<std::is_trivially_copyable_v<T>, int> = 0>

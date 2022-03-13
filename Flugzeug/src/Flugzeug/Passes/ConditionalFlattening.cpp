@@ -43,7 +43,7 @@ template <size_t N> static bool move_instructions(const std::array<Block*, N>& f
   for (Block* from_block : from) {
     // As we are moving to the beggining of `to` we need to iterate over instructions in reverse
     // order.
-    for (Instruction& instruction : dont_invalidate_current(reversed(*from_block))) {
+    for (Instruction& instruction : advance_early(reversed(*from_block))) {
       // Skip last instruction in the block (branch).
       if (&instruction == from_block->get_last_instruction()) {
         continue;
@@ -67,7 +67,7 @@ static void rewrite_phis_to_selects(Value* condition, Block* block, Block* on_tr
                                     Block* on_false) {
   verify(on_true != on_false, "Invalid blocks passed");
 
-  for (Phi& phi : dont_invalidate_current(block->instructions<Phi>())) {
+  for (Phi& phi : advance_early(block->instructions<Phi>())) {
     const auto true_value = phi.get_incoming_by_block(on_true);
     const auto false_value = phi.get_incoming_by_block(on_false);
     verify(true_value && false_value, "Invalid Phi incoming values");

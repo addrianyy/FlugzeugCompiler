@@ -95,7 +95,7 @@ static bool thread_jumps(Function* function) {
   }
 
   // Remove all intermediate blocks that aren't used anymore.
-  for (Block& block : dont_invalidate_current(*function)) {
+  for (Block& block : advance_early(*function)) {
     if (!block.is_entry_block() && block.predecessors().empty()) {
       block.clear_and_destroy();
     }
@@ -107,7 +107,7 @@ static bool thread_jumps(Function* function) {
 static bool merge_blocks(Function* function) {
   bool did_something = false;
 
-  for (Block& block : dont_invalidate_current(*function)) {
+  for (Block& block : advance_early(*function)) {
     const auto predecessor = block.get_single_predecessor();
     if (block.is_entry_block() || !predecessor || predecessor == &block) {
       continue;

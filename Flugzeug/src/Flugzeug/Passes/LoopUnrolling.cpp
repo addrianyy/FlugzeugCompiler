@@ -445,7 +445,7 @@ static void perform_unrolling(Function* function, const analysis::Loop* loop, Bl
 
     for (Block* block : unroll_data.get_blocks()) {
       // Fixup all copied instructions.
-      for (Instruction& instruction : dont_invalidate_current(*block)) {
+      for (Instruction& instruction : advance_early(*block)) {
         Phi* exit_phi = nullptr;
 
         // (Step 5) If this value escapes the loop then get corresponding Phi instruction in
@@ -560,7 +560,7 @@ static void perform_unrolling(Function* function, const analysis::Loop* loop, Bl
   loop->get_header()->remove_incoming_block_from_phis(back_edge_from, false);
 
   // Simplify Phis after calling `remove_incoming_block_from_phis`.
-  for (Phi& phi : dont_invalidate_current(loop->get_header()->instructions<Phi>())) {
+  for (Phi& phi : advance_early(loop->get_header()->instructions<Phi>())) {
     utils::simplify_phi(&phi, false);
   }
 }

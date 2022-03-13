@@ -64,7 +64,7 @@ static void optimize_stackalloc(StackAlloc* stackalloc) {
   for (Block* block : reachable) {
     Value* current_value = nullptr;
 
-    for (Instruction& instruction : dont_invalidate_current(*block)) {
+    for (Instruction& instruction : advance_early(*block)) {
       if (const auto load = cast<Load>(instruction)) {
         if (load->get_ptr() == stackalloc) {
           // Pointer wasn't written to in this block. We will need to take value from PHI

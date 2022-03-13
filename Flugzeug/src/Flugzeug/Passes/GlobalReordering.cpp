@@ -120,7 +120,7 @@ bool opt::GlobalReordering::run(Function* function) {
   std::unordered_set<Instruction*> users;
   std::unordered_set<Instruction*> reordered;
 
-  for (Instruction& instruction : dont_invalidate_current(function->instructions())) {
+  for (Instruction& instruction : advance_early(function->instructions())) {
     if (!can_be_reordered(&instruction) || reordered.contains(&instruction) ||
         loop_blocks.contains(instruction.get_block())) {
       continue;

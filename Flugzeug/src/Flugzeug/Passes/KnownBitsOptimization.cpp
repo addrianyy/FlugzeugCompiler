@@ -622,7 +622,7 @@ bool opt::KnownBitsOptimization::run(Function* function) {
   KnownBitsDatabase bits_database;
 
   for (Block* block : blocks) {
-    for (Instruction& instruction : dont_invalidate_current(*block)) {
+    for (Instruction& instruction : advance_early(*block)) {
       BitOptimizer optimizer(bits_database);
       const auto result = visitor::visit_instruction(&instruction, optimizer);
 

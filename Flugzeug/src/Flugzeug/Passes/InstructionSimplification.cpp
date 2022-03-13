@@ -744,7 +744,7 @@ public:
 bool opt::InstructionSimplification::run(Function* function) {
   bool did_something = false;
 
-  for (Instruction& instruction : dont_invalidate_current(function->instructions())) {
+  for (Instruction& instruction : advance_early(function->instructions())) {
     Simplifier simplifier(&instruction);
 
     // Simplify current instruction. If we have inserted new instruction than try to simplify it

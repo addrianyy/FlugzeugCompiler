@@ -42,7 +42,7 @@ bool opt::memory::eliminate_known_loads_local(Function* function,
   for (Block& block : *function) {
     stores.clear();
 
-    for (Instruction& instruction : dont_invalidate_current(block)) {
+    for (Instruction& instruction : advance_early(block)) {
 
       if (const auto store = cast<Store>(instruction)) {
         // The newest known value for the pointer is now defined by this store.
@@ -91,7 +91,7 @@ bool opt::memory::eliminate_known_loads_global(Function* function,
     stores_to_pointers[store.get_ptr()].push_back(&store);
   }
 
-  for (Load& load : dont_invalidate_current(function->instructions<Load>())) {
+  for (Load& load : advance_early(function->instructions<Load>())) {
     if (handle_out_of_bounds_stackalloc_load(&load, alias_analysis)) {
       did_something = true;
       continue;

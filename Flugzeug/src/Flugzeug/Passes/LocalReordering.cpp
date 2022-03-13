@@ -87,7 +87,7 @@ bool opt::LocalReordering::run(Function* function) {
   Reorderer reorderer;
   bool did_something = false;
 
-  for (Instruction& instruction : dont_invalidate_current(function->instructions())) {
+  for (Instruction& instruction : advance_early(function->instructions())) {
     const auto later_instruction = &instruction;
     const auto earlier_instruction = visitor::visit_instruction(later_instruction, reorderer);
     if (!earlier_instruction) {

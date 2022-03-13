@@ -289,10 +289,13 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
 
 static bool rotate_loop_or_sub_loops(Function* function, const analysis::Loop* loop) {
   // Try rotating one of the sub-loops.
+  bool rotated_subloop = false;
   for (const auto& sub_loop : loop->get_sub_loops()) {
-    if (rotate_loop_or_sub_loops(function, sub_loop.get())) {
-      return true;
-    }
+    rotated_subloop |= rotate_loop_or_sub_loops(function, sub_loop.get());
+  }
+
+  if (rotated_subloop) {
+    return true;
   }
 
   // If it didn't work then try rotating this loop.
