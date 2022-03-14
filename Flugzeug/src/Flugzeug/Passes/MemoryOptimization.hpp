@@ -1,17 +1,12 @@
 #pragma once
+#include "Pass.hpp"
 #include "Utils/OptimizationLocality.hpp"
 
-namespace flugzeug {
+namespace flugzeug::opt {
 
-class Function;
-
-namespace opt {
-
-class MemoryOptimization {
+class MemoryOptimization : public Pass<"MemoryOptimization"> {
 public:
   static bool run(Function* function, OptimizationLocality locality);
 };
 
-} // namespace opt
-
-} // namespace flugzeug
+} // namespace flugzeug::opt

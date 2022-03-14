@@ -1,4 +1,5 @@
 #pragma once
+#include <Flugzeug/Passes/Pass.hpp>
 
 namespace flugzeug {
 class Function;
@@ -6,7 +7,7 @@ class Function;
 
 namespace bf {
 
-class BrainfuckLoopOptimization {
+class BrainfuckLoopOptimization : public flugzeug::Pass<"BrainfuckLoopOptimization"> {
 public:
   static bool run(flugzeug::Function* function);
 };

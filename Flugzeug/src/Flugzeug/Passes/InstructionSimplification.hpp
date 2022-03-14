@@ -1,16 +1,11 @@
 #pragma once
+#include "Pass.hpp"
 
-namespace flugzeug {
+namespace flugzeug::opt {
 
-class Function;
-
-namespace opt {
-
-class InstructionSimplification {
+class InstructionSimplification : public Pass<"InstructionSimplification"> {
 public:
   static bool run(Function* function);
 };
 
-} // namespace opt
-
-} // namespace flugzeug
+} // namespace flugzeug::opt

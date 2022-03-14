@@ -1,20 +1,15 @@
 #pragma once
+#include "Pass.hpp"
 
-namespace flugzeug {
-
-class Function;
-
-namespace opt {
+namespace flugzeug::opt {
 
 enum class InliningStrategy {
   InlineEverything,
 };
 
-class CallInlining {
+class CallInlining : public Pass<"CallInlining"> {
 public:
   static bool run(Function* function, InliningStrategy strategy);
 };
 
-} // namespace opt
-
-} // namespace flugzeug
+} // namespace flugzeug::opt

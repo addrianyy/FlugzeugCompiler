@@ -52,9 +52,7 @@ static void optimize_function(Function* f) {
   constexpr bool enable_loop_optimizations = true;
   constexpr bool enable_brainfuck_optimizations = true;
 
-  while (true) {
-    FunctionPassRunner runner(f);
-
+  FunctionPassRunner::enter_optimization_loop(f, [&](FunctionPassRunner& runner) {
     runner.run<opt::CallInlining>(opt::InliningStrategy::InlineEverything);
     runner.run<opt::CFGSimplification>();
     runner.run<opt::MemoryToSSA>();
@@ -77,16 +75,10 @@ static void optimize_function(Function* f) {
     runner.run<opt::InstructionDeduplication>(opt::OptimizationLocality::Global);
     runner.run<opt::MemoryOptimization>(opt::OptimizationLocality::Global);
     runner.run<opt::GlobalReordering>();
-
     if (enable_brainfuck_optimizations) {
       runner.run<bf::BrainfuckLoopOptimization>();
     }
-
-    if (!runner.did_something()) {
-      f->reassign_display_indices();
-      break;
-    }
-  }
+  });
 }
 
 int main() {
@@ -99,7 +91,7 @@ int main() {
   Context context;
 
   const auto printing_method = IRPrintingMethod::Compact;
-  //  const auto source_path = "TestsTC/loops.tc";
+  //  const auto source_path = "TestsTC/loops_memory.tc";
   const auto source_path = "TestsBF/test.bf";
 
   const auto module = compile_source(&context, source_path);

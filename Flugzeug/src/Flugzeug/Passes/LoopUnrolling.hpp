@@ -1,16 +1,11 @@
 #pragma once
+#include "Pass.hpp"
 
-namespace flugzeug {
+namespace flugzeug::opt {
 
-class Function;
-
-namespace opt {
-
-class LoopUnrolling {
+class LoopUnrolling : public Pass<"LoopUnrolling"> {
 public:
   static bool run(Function* function);
 };
 
-} // namespace opt
-
-} // namespace flugzeug
+} // namespace flugzeug::opt

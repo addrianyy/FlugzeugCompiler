@@ -1,16 +1,11 @@
 #pragma once
+#include "Pass.hpp"
 
-namespace flugzeug {
+namespace flugzeug::opt {
 
-class Function;
-
-namespace opt {
-
-class LocalReordering {
+class LocalReordering : public Pass<"LocalReordering"> {
 public:
   static bool run(Function* function);
 };
 
-} // namespace opt
-
-} // namespace flugzeug
+} // namespace flugzeug::opt
