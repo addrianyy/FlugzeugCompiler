@@ -26,6 +26,7 @@
 #include <Flugzeug/Passes/LoopUnrolling.hpp>
 #include <Flugzeug/Passes/MemoryOptimization.hpp>
 #include <Flugzeug/Passes/MemoryToSSA.hpp>
+#include <Flugzeug/Passes/PassRunner.hpp>
 #include <Flugzeug/Passes/PhiMinimization.hpp>
 
 #include <bf/Compiler.hpp>
@@ -49,32 +50,32 @@ static void optimize_function(Function* f) {
   constexpr bool enable_loop_optimizations = true;
 
   while (true) {
-    bool did_something = false;
+    FunctionPassRunner runner(f);
 
-    did_something |= opt::CallInlining::run(f, opt::InliningStrategy::InlineEverything);
-    did_something |= opt::CFGSimplification::run(f);
-    did_something |= opt::MemoryToSSA::run(f);
-    did_something |= opt::PhiMinimization::run(f);
-    did_something |= opt::DeadCodeElimination::run(f);
-    did_something |= opt::ConstPropagation::run(f);
-    did_something |= opt::InstructionSimplification::run(f);
-    did_something |= opt::DeadBlockElimination::run(f);
-    did_something |= opt::LocalReordering::run(f);
+    runner.run<opt::CallInlining>(opt::InliningStrategy::InlineEverything);
+    runner.run<opt::CFGSimplification>();
+    runner.run<opt::MemoryToSSA>();
+    runner.run<opt::PhiMinimization>();
+    runner.run<opt::DeadCodeElimination>();
+    runner.run<opt::ConstPropagation>();
+    runner.run<opt::InstructionSimplification>();
+    runner.run<opt::DeadBlockElimination>();
+    runner.run<opt::LocalReordering>();
     if (enable_loop_optimizations) {
-      did_something |= opt::LoopRotation::run(f);
-      did_something |= opt::LoopUnrolling::run(f);
-      did_something |= opt::LoopInvariantOptimization::run(f);
-      did_something |= opt::LoopMemoryExtraction::run(f);
-      did_something |= opt::CFGSimplification::run(f);
+      runner.run<opt::LoopRotation>();
+      runner.run<opt::LoopUnrolling>();
+      runner.run<opt::LoopInvariantOptimization>();
+      runner.run<opt::LoopMemoryExtraction>();
+      runner.run<opt::CFGSimplification>();
     }
-    did_something |= opt::BlockInvariantPropagation::run(f);
-    did_something |= opt::ConditionalFlattening::run(f);
-    did_something |= opt::KnownBitsOptimization::run(f);
-    did_something |= opt::InstructionDeduplication::run(f, opt::OptimizationLocality::Global);
-    did_something |= opt::MemoryOptimization::run(f, opt::OptimizationLocality::Global);
-    did_something |= opt::GlobalReordering::run(f);
+    runner.run<opt::BlockInvariantPropagation>();
+    runner.run<opt::ConditionalFlattening>();
+    runner.run<opt::KnownBitsOptimization>();
+    runner.run<opt::InstructionDeduplication>(opt::OptimizationLocality::Global);
+    runner.run<opt::MemoryOptimization>(opt::OptimizationLocality::Global);
+    runner.run<opt::GlobalReordering>();
 
-    if (!did_something) {
+    if (!runner.did_something()) {
       f->reassign_display_indices();
       break;
     }

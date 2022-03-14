@@ -141,7 +141,7 @@ static bool optimize_loop(Function* function, const analysis::Loop* loop,
       if (!pointer) {
         continue;
       }
-    
+
       {
         const auto stackalloc = cast<StackAlloc>(pointer);
         if (stackalloc && stackalloc->get_size() == 1) {
