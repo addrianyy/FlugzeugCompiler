@@ -267,8 +267,8 @@ static bool optimize_loop_or_sub_loops(Function* function, const analysis::Loop*
   bool optimized_subloop = false;
 
   for (const auto& sub_loop : loop->get_sub_loops()) {
-    optimized_subloop |=
-      optimize_loop(function, sub_loop.get(), alias_analysis, dominator_tree, dfs_context);
+    optimized_subloop |= optimize_loop_or_sub_loops(function, sub_loop.get(), alias_analysis,
+                                                    dominator_tree, dfs_context);
   }
 
   return optimized_subloop;
