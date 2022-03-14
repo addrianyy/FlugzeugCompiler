@@ -48,37 +48,38 @@ static Module* compile_source(Context* context, const std::string& source_path) 
   }
 }
 
-static void optimize_function(Function* f) {
+static void optimize_function(Function* function, OptimizationStatistics* statistics = nullptr) {
   constexpr bool enable_loop_optimizations = true;
   constexpr bool enable_brainfuck_optimizations = true;
 
-  FunctionPassRunner::enter_optimization_loop(f, [&](FunctionPassRunner& runner) {
-    runner.run<opt::CallInlining>(opt::InliningStrategy::InlineEverything);
-    runner.run<opt::CFGSimplification>();
-    runner.run<opt::MemoryToSSA>();
-    runner.run<opt::PhiMinimization>();
-    runner.run<opt::DeadCodeElimination>();
-    runner.run<opt::ConstPropagation>();
-    runner.run<opt::InstructionSimplification>();
-    runner.run<opt::DeadBlockElimination>();
-    runner.run<opt::LocalReordering>();
-    if (enable_loop_optimizations) {
-      runner.run<opt::LoopRotation>();
-      runner.run<opt::LoopUnrolling>();
-      runner.run<opt::LoopInvariantOptimization>();
-      runner.run<opt::LoopMemoryExtraction>();
+  FunctionPassRunner::enter_optimization_loop(
+    function, statistics, [&](FunctionPassRunner& runner) {
+      runner.run<opt::CallInlining>(opt::InliningStrategy::InlineEverything);
       runner.run<opt::CFGSimplification>();
-    }
-    runner.run<opt::BlockInvariantPropagation>();
-    runner.run<opt::ConditionalFlattening>();
-    runner.run<opt::KnownBitsOptimization>();
-    runner.run<opt::InstructionDeduplication>(opt::OptimizationLocality::Global);
-    runner.run<opt::MemoryOptimization>(opt::OptimizationLocality::Global);
-    runner.run<opt::GlobalReordering>();
-    if (enable_brainfuck_optimizations) {
-      runner.run<bf::BrainfuckLoopOptimization>();
-    }
-  });
+      runner.run<opt::MemoryToSSA>();
+      runner.run<opt::PhiMinimization>();
+      runner.run<opt::DeadCodeElimination>();
+      runner.run<opt::ConstPropagation>();
+      runner.run<opt::InstructionSimplification>();
+      runner.run<opt::DeadBlockElimination>();
+      runner.run<opt::LocalReordering>();
+      if (enable_loop_optimizations) {
+        runner.run<opt::LoopRotation>();
+        runner.run<opt::LoopUnrolling>();
+        runner.run<opt::LoopInvariantOptimization>();
+        runner.run<opt::LoopMemoryExtraction>();
+        runner.run<opt::CFGSimplification>();
+      }
+      runner.run<opt::BlockInvariantPropagation>();
+      runner.run<opt::ConditionalFlattening>();
+      runner.run<opt::KnownBitsOptimization>();
+      runner.run<opt::InstructionDeduplication>(opt::OptimizationLocality::Global);
+      runner.run<opt::MemoryOptimization>(opt::OptimizationLocality::Global);
+      runner.run<opt::GlobalReordering>();
+      if (enable_brainfuck_optimizations) {
+        runner.run<bf::BrainfuckLoopOptimization>();
+      }
+    });
 }
 
 int main() {
@@ -89,6 +90,7 @@ int main() {
   std::filesystem::create_directory("TestResults/");
 
   Context context;
+  OptimizationStatistics opt_statistics;
 
   const auto printing_method = IRPrintingMethod::Compact;
   //  const auto source_path = "TestsTC/loops_memory.tc";
@@ -99,12 +101,16 @@ int main() {
   if (true) {
     const auto start = std::chrono::high_resolution_clock::now();
     for (Function& f : module->local_functions()) {
-      optimize_function(&f);
+      optimize_function(&f, &opt_statistics);
     }
     const auto end = std::chrono::high_resolution_clock::now();
 
     log_info("Optimized module in {}ms.",
              std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+  }
+
+  if (false) {
+    opt_statistics.show();
   }
 
   if (true) {
