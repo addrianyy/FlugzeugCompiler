@@ -1,7 +1,5 @@
 #include "Compiler.hpp"
 
-#include <fstream>
-
 #include <Flugzeug/Core/Files.hpp>
 #include <Flugzeug/IR/Function.hpp>
 #include <Flugzeug/IR/InstructionInserter.hpp>
