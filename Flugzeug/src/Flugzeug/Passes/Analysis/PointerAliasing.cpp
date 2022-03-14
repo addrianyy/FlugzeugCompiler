@@ -185,9 +185,9 @@ static void process_offset_instruction(
       other_offset = it->second;
     }
 
-    std::pair result = {other_offset->get_base(), index_add};
+    std::pair<const Value*, int64_t> result = {other_offset, index_add};
 
-    const auto it = constant_offset_db.find(other_offset->get_base());
+    const auto it = constant_offset_db.find(other_offset);
     if (it != constant_offset_db.end()) {
       const auto parent = it->second;
       result = {parent.first,

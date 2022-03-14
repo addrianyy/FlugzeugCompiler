@@ -141,6 +141,13 @@ static bool optimize_loop(Function* function, const analysis::Loop* loop,
       if (!pointer) {
         continue;
       }
+    
+      {
+        const auto stackalloc = cast<StackAlloc>(pointer);
+        if (stackalloc && stackalloc->get_size() == 1) {
+          continue;
+        }
+      }
 
       // If a pointer is an instruction then it must dominate this loop. Otherwise we cannot extract
       // it.
@@ -264,7 +271,7 @@ static bool optimize_loop_or_sub_loops(Function* function, const analysis::Loop*
       optimize_loop(function, sub_loop.get(), alias_analysis, dominator_tree, dfs_context);
   }
 
-  return false;
+  return optimized_subloop;
 }
 
 bool opt::LoopMemoryExtraction::run(Function* function) {

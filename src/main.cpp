@@ -6,7 +6,6 @@
 #include <Flugzeug/IR/DominatorTree.hpp>
 #include <Flugzeug/IR/FilePrinter.hpp>
 #include <Flugzeug/IR/Function.hpp>
-#include <Flugzeug/IR/InstructionInserter.hpp>
 #include <Flugzeug/IR/Module.hpp>
 
 #include <Flugzeug/Passes/BlockInvariantPropagation.hpp>
@@ -92,8 +91,8 @@ int main() {
   Context context;
 
   const auto printing_method = IRPrintingMethod::Standard;
-  //  const auto source_path = "TestsTC/loops_memory.tc";
-  const auto source_path = "TestsBF/test.bf";
+  const auto source_path = "TestsTC/loops.tc";
+  //  const auto source_path = "TestsBF/test.bf";
 
   const auto module = compile_source(&context, source_path);
 

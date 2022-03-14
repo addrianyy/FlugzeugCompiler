@@ -67,6 +67,15 @@ static OptimizationResult chain_commutative_expressions(BinaryInstr* binary) {
 static OptimizationResult simplify_arithmetic(BinaryInstr* binary) {
   {
     Value* a;
+
+    // a + (-a) => 0
+    if (match_pattern(binary, pat::add(pat::neg(pat::value(a)), pat::exact_ref(a)))) {
+      return binary->get_type()->get_zero();
+    }
+  }
+
+  {
+    Value* a;
     Value* b;
     Value* c;
     Value* common;
@@ -414,6 +423,11 @@ public:
         return lhs;
       }
 
+      if (rhs->is_all_ones()) {
+        // a * -1 == -a
+        return new UnaryInstr(context, UnaryOp::Neg, lhs);
+      }
+
       if (const auto multiplier_v = cast<Constant>(rhs)) {
         const auto multiplier = multiplier_v->get_constant_u();
         if (is_pow2(multiplier)) {
@@ -622,7 +636,14 @@ public:
 
     // Branch to whatever target we want when condition is undefined.
     if (cond_branch->get_cond()->is_undef()) {
-      return new Branch(context, false_target);
+      const auto block = cond_branch->get_block();
+      const auto other = cond_branch->get_true_target();
+
+      cond_branch->replace_with_instruction_and_destroy(new Branch(context, false_target));
+
+      block->on_removed_branch_to(other, true);
+
+      return OptimizationResult::changed();
     }
 
     // Change conditional branch to unconditional if both targets are the same.
