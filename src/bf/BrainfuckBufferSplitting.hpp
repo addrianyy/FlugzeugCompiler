@@ -7,7 +7,7 @@ class Function;
 
 namespace bf {
 
-class BrainfuckDeadBufferElimination : public flugzeug::Pass<"BrainfuckDeadBufferElimination"> {
+class BrainfuckBufferSplitting : public flugzeug::Pass<"BrainfuckBufferSplitting"> {
 public:
   static bool run(flugzeug::Function* function);
 };

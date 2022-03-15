@@ -29,7 +29,7 @@
 #include <Flugzeug/Passes/PassRunner.hpp>
 #include <Flugzeug/Passes/PhiMinimization.hpp>
 
-#include <bf/BrainfuckDeadBufferElimination.hpp>
+#include <bf/BrainfuckBufferSplitting.hpp>
 #include <bf/BrainfuckLoopOptimization.hpp>
 #include <bf/Compiler.hpp>
 
@@ -79,7 +79,7 @@ static void optimize_function(Function* function, OptimizationStatistics* statis
       runner.run<opt::GlobalReordering>();
       if (enable_brainfuck_optimizations) {
         runner.run<bf::BrainfuckLoopOptimization>();
-        runner.run<bf::BrainfuckDeadBufferElimination>();
+        runner.run<bf::BrainfuckBufferSplitting>();
       }
     });
 }
