@@ -39,7 +39,7 @@ static bool get_brainfuck_loop(Block* block, BrainfuckLoop& loop) {
     return false;
   }
 
-  if (loop.iteration_count->get_block() != block) {
+  if (loop.compare->get_block() != block || loop.iteration_count->get_block() != block) {
     return false;
   }
 
@@ -47,6 +47,8 @@ static bool get_brainfuck_loop(Block* block, BrainfuckLoop& loop) {
   if (!match_pattern(step, pat::add(pat::exact(loop.iteration_count), pat::negative_one()))) {
     return false;
   }
+
+  const auto loop_type = loop.iteration_count->get_type();
 
   const auto is_foreign = [&](Value* value) {
     if (const auto instruction = cast<Instruction>(value)) {
@@ -68,7 +70,8 @@ static bool get_brainfuck_loop(Block* block, BrainfuckLoop& loop) {
 
     Value* normal;
     Value* foreign;
-    if (!match_pattern(instruction, pat::add(pat::value(normal), pat::value(foreign)))) {
+    if (!match_pattern(instruction,
+                       pat::typed(loop_type, pat::add(pat::value(normal), pat::value(foreign))))) {
       return false;
     }
 
