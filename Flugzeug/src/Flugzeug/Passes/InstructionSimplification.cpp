@@ -121,28 +121,25 @@ static OptimizationResult simplify_bit_operations(BinaryInstr* binary) {
   return OptimizationResult::unchanged();
 }
 
-static OptimizationResult simplify_unneeded_select(Select* select) {
+static bool is_value_compared_to(Value* value, Value*& cmp_value, int64_t& cmp_constant) {
+  if (value == cmp_value) {
+    return true;
+  }
+
+  int64_t add_constant = 0;
+  if (match_pattern(value, pat::add(pat::exact(cmp_value), pat::constant_i(add_constant)))) {
+    cmp_constant = Constant::constrain_i(cmp_value->get_type(), cmp_constant + add_constant);
+    cmp_value = value;
+    return true;
+  }
+
+  return false;
+}
+
+static OptimizationResult simplify_selected_arithmetic_1(Value* cmp_value, int64_t cmp_constant,
+                                                         Value* on_constant,
+                                                         BinaryInstr* on_non_constant) {
   // (b != 0) ? (a - b) : a   =>   a - b
-
-  Value* cmp_value;
-  int64_t cmp_constant;
-  IntPredicate predicate;
-  if (!match_pattern(select->get_cond(), pat::compare_eq_or_ne(pat::constant_i(cmp_constant),
-                                                               predicate, pat::value(cmp_value)))) {
-    return OptimizationResult::unchanged();
-  }
-
-  const bool constant_equal = predicate == IntPredicate::Equal;
-
-  const auto on_constant = select->get_val(constant_equal);
-  if (on_constant == cmp_value) {
-    return OptimizationResult::unchanged();
-  }
-
-  const auto on_non_constant = cast<BinaryInstr>(select->get_val(!constant_equal));
-  if (!on_non_constant) {
-    return OptimizationResult::unchanged();
-  }
 
   const auto op = on_non_constant->get_op();
   const auto lhs = on_non_constant->get_lhs();
@@ -152,25 +149,12 @@ static OptimizationResult simplify_unneeded_select(Select* select) {
     return OptimizationResult::unchanged();
   }
 
-  // Handle things like that:
-  //   (v1 != 7) ? (v0 * (v1 + -6)) : v0
-  const auto extract = [&](Value* side) {
-    int64_t add_constant = 0;
-    if (match_pattern(side, pat::add(pat::exact_ref(cmp_value), pat::constant_i(add_constant)))) {
-      cmp_constant = Constant::constrain_i(cmp_value->get_type(), cmp_constant + add_constant);
-      cmp_value = side;
-      return true;
-    }
-
-    return false;
-  };
-
-  if (lhs == on_constant && rhs != cmp_value) {
-    if (!extract(rhs)) {
+  if (lhs == on_constant) {
+    if (!is_value_compared_to(rhs, cmp_value, cmp_constant)) {
       return OptimizationResult::unchanged();
     }
-  } else if (rhs == on_constant && lhs != cmp_value) {
-    if (!extract(lhs)) {
+  } else if (rhs == on_constant) {
+    if (!is_value_compared_to(lhs, cmp_value, cmp_constant)) {
       return OptimizationResult::unchanged();
     }
   }
@@ -231,6 +215,74 @@ static OptimizationResult simplify_unneeded_select(Select* select) {
   default:
     break;
   }
+
+  return OptimizationResult::unchanged();
+}
+
+static OptimizationResult simplify_selected_arithmetic_2(Value* cmp_value, int64_t cmp_constant,
+                                                         Value* on_constant_value,
+                                                         BinaryInstr* on_non_constant) {
+  // (b != 0) ? (a * b) : 0   =>   a * b
+
+  const auto on_constant_instruction = cast<Constant>(on_constant_value);
+  if (!on_constant_instruction) {
+    return OptimizationResult::unchanged();
+  }
+  const auto on_constant = on_constant_instruction->get_constant_i();
+
+  if (!is_value_compared_to(on_non_constant->get_lhs(), cmp_value, cmp_constant) &&
+      !is_value_compared_to(on_non_constant->get_rhs(), cmp_value, cmp_constant)) {
+    return OptimizationResult::unchanged();
+  }
+
+  switch (on_non_constant->get_op()) {
+  case BinaryOp::Mul:
+  case BinaryOp::And: {
+    if (cmp_constant == 0 && on_constant == 0) {
+      return on_non_constant;
+    }
+    break;
+  }
+
+  case BinaryOp::Or: {
+    if (cmp_constant == -1 && on_constant == -1) {
+      return on_non_constant;
+    }
+    break;
+  }
+
+  default:
+    break;
+  }
+
+  return OptimizationResult::unchanged();
+}
+
+static OptimizationResult simplify_selected_arithmetic(Select* select) {
+  // (b != 0) ? (a - b) : a   =>   a - b
+  // (b != 0) ? (a * b) : 0   =>   a * b
+
+  Value* cmp_value;
+  int64_t cmp_constant;
+  IntPredicate predicate;
+  if (!match_pattern(select->get_cond(), pat::compare_eq_or_ne(pat::constant_i(cmp_constant),
+                                                               predicate, pat::value(cmp_value)))) {
+    return OptimizationResult::unchanged();
+  }
+
+  const bool constant_equal = predicate == IntPredicate::Equal;
+
+  const auto on_constant = select->get_val(constant_equal);
+
+  const auto on_non_constant = cast<BinaryInstr>(select->get_val(!constant_equal));
+  if (!on_non_constant) {
+    return OptimizationResult::unchanged();
+  }
+
+  PROPAGATE_RESULT(
+    simplify_selected_arithmetic_1(cmp_value, cmp_constant, on_constant, on_non_constant));
+  PROPAGATE_RESULT(
+    simplify_selected_arithmetic_2(cmp_value, cmp_constant, on_constant, on_non_constant));
 
   return OptimizationResult::unchanged();
 }
@@ -769,7 +821,7 @@ public:
   }
 
   OptimizationResult visit_select(Argument<Select> select) {
-    PROPAGATE_RESULT(simplify_unneeded_select(select));
+    PROPAGATE_RESULT(simplify_selected_arithmetic(select));
 
     const auto true_val = select->get_true_val();
     const auto false_val = select->get_false_val();

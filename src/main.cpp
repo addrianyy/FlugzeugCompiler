@@ -95,8 +95,8 @@ int main() {
   OptimizationStatistics opt_statistics;
 
   const auto printing_method = IRPrintingMethod::Compact;
-  const auto source_path = "TestsTC/simplify.tc";
-  //  const auto source_path = "TestsBF/test.bf";
+  //  const auto source_path = "TestsTC/simplify.tc";
+  const auto source_path = "TestsBF/test.bf";
 
   const auto module = compile_source(&context, source_path);
 
