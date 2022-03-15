@@ -1,0 +1,11 @@
+i32 simplify(i32 x, i32 y) {
+    i32 result = 0;
+
+    if ((y - 6) != 1) {
+        result = x * (y - 6);
+    } else {
+        result = x;
+    }
+
+    return result;
+}

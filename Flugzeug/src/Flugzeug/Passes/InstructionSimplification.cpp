@@ -125,9 +125,9 @@ static OptimizationResult simplify_unneeded_select(Select* select) {
   // (b != 0) ? (a - b) : a   =>   a - b
 
   Value* cmp_value;
-  Constant* cmp_constant;
+  int64_t cmp_constant;
   IntPredicate predicate;
-  if (!match_pattern(select->get_cond(), pat::compare_eq_or_ne(pat::constant(cmp_constant),
+  if (!match_pattern(select->get_cond(), pat::compare_eq_or_ne(pat::constant_i(cmp_constant),
                                                                predicate, pat::value(cmp_value)))) {
     return OptimizationResult::unchanged();
   }
@@ -148,26 +148,49 @@ static OptimizationResult simplify_unneeded_select(Select* select) {
   const auto lhs = on_non_constant->get_lhs();
   const auto rhs = on_non_constant->get_rhs();
 
-  if (!((lhs == on_constant && rhs == cmp_value) || (rhs == on_constant && lhs == cmp_value))) {
+  if (lhs != on_constant && rhs != on_constant) {
     return OptimizationResult::unchanged();
+  }
+
+  // Handle things like that:
+  //   (v1 != 7) ? (v0 * (v1 + -6)) : v0
+  const auto extract = [&](Value* side) {
+    int64_t add_constant = 0;
+    if (match_pattern(side, pat::add(pat::exact_ref(cmp_value), pat::constant_i(add_constant)))) {
+      cmp_constant = Constant::constrain_i(cmp_value->get_type(), cmp_constant + add_constant);
+      cmp_value = side;
+      return true;
+    }
+
+    return false;
+  };
+
+  if (lhs == on_constant && rhs != cmp_value) {
+    if (!extract(rhs)) {
+      return OptimizationResult::unchanged();
+    }
+  } else if (rhs == on_constant && lhs != cmp_value) {
+    if (!extract(lhs)) {
+      return OptimizationResult::unchanged();
+    }
   }
 
   switch (op) {
   case BinaryOp::Add: {
-    if (cmp_constant->is_zero()) {
+    if (cmp_constant == 0) {
       return on_non_constant;
     }
     break;
   }
   case BinaryOp::Sub: {
-    if (cmp_constant->is_zero() && rhs == cmp_value) {
+    if (cmp_constant == 0 && rhs == cmp_value) {
       return on_non_constant;
     }
     break;
   }
 
   case BinaryOp::Mul: {
-    if (cmp_constant->is_one()) {
+    if (cmp_constant == 1) {
       return on_non_constant;
     }
     break;
@@ -175,7 +198,7 @@ static OptimizationResult simplify_unneeded_select(Select* select) {
 
   case BinaryOp::DivU:
   case BinaryOp::DivS: {
-    if (cmp_constant->is_one() && rhs == cmp_value) {
+    if (cmp_constant == 1 && rhs == cmp_value) {
       return on_non_constant;
     }
     break;
@@ -184,14 +207,14 @@ static OptimizationResult simplify_unneeded_select(Select* select) {
   case BinaryOp::Shr:
   case BinaryOp::Shl:
   case BinaryOp::Sar: {
-    if (cmp_constant->is_zero() && rhs == cmp_value) {
+    if (cmp_constant == 0 && rhs == cmp_value) {
       return on_non_constant;
     }
     break;
   }
 
   case BinaryOp::And: {
-    if (cmp_constant->is_all_ones()) {
+    if (cmp_constant == -1) {
       return on_non_constant;
     }
     break;
@@ -199,7 +222,7 @@ static OptimizationResult simplify_unneeded_select(Select* select) {
 
   case BinaryOp::Or: {
   case BinaryOp::Xor:
-    if (cmp_constant->is_zero()) {
+    if (cmp_constant == 0) {
       return on_non_constant;
     }
     break;
