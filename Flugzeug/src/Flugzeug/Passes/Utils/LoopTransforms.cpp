@@ -52,8 +52,7 @@ flugzeug::Block* utils::get_or_create_loop_preheader(Function* function, const a
     }
   }
 
-  if (entering_blocks.size() == 1 &&
-      (allow_conditional || cast<Branch>(*entering_blocks.begin()))) {
+  if (entering_blocks.size() == 1 && allow_conditional) {
     return *entering_blocks.begin();
   }
 

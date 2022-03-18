@@ -18,37 +18,39 @@ private:
 
 namespace flugzeug {
 
-template <typename To, typename From,
-          typename std::enable_if_t<std::is_base_of_v<To, From>, int> = 0>
-inline To* cast(From* from) {
-  return (To*)from;
-}
-template <typename To, typename From,
-          typename std::enable_if_t<std::is_base_of_v<To, From>, int> = 0>
-inline const To* cast(const From* from) {
-  return (const To*)from;
+template <typename To, typename From> To* cast(From* from) {
+  if constexpr (std::is_base_of_v<To, From>) {
+    // We are upcasting, it will always succeed.
+    return from;
+  } else if constexpr (!std::is_base_of_v<From, To>) {
+    // Pointer types are unrelated, the cast will always fail.
+    // TODO: Maybe add a warning here (?)
+    return nullptr;
+  } else {
+    if (!from) {
+      return nullptr;
+    }
+    return To::is_object_of_class(from) ? static_cast<To*>(from) : nullptr;
+  }
 }
 
-template <typename To, typename From,
-          typename std::enable_if_t<!std::is_base_of_v<To, From>, int> = 0>
-inline To* cast(From* from) {
-  if (!from) {
+template <typename To, typename From> const To* cast(const From* from) {
+  if constexpr (std::is_base_of_v<To, From>) {
+    // We are upcasting, it will always succeed.
+    return from;
+  } else if constexpr (!std::is_base_of_v<From, To>) {
+    // Pointer types are unrelated, the cast will always fail.
+    // TODO: Maybe add a warning here (?)
     return nullptr;
+  } else {
+    if (!from) {
+      return nullptr;
+    }
+    return To::is_object_of_class(from) ? static_cast<const To*>(from) : nullptr;
   }
-  return To::is_object_of_class(from) ? (To*)from : nullptr;
-}
-template <typename To, typename From,
-          typename std::enable_if_t<!std::is_base_of_v<To, From>, int> = 0>
-inline const To* cast(const From* from) {
-  if (!from) {
-    return nullptr;
-  }
-  return To::is_object_of_class(from) ? (const To*)from : nullptr;
 }
 
-template <typename To, typename From> inline To* cast(From& from) { return cast<To>(&from); }
-template <typename To, typename From> inline const To* cast(const From& from) {
-  return cast<To>(&from);
-}
+template <typename To, typename From> To* cast(From& from) { return cast<To>(&from); }
+template <typename To, typename From> const To* cast(const From& from) { return cast<To>(&from); }
 
 } // namespace flugzeug
