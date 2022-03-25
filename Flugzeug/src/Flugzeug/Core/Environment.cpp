@@ -1,7 +1,9 @@
 #include "Environment.hpp"
+#include "Error.hpp"
 #include "Platform.hpp"
 
 #ifdef PLATFORM_WINDOWS
+
 #include <Windows.h>
 
 namespace environment {
@@ -15,11 +17,16 @@ uint64_t get_tick_count() { return __rdtsc(); }
 #else
 
 namespace environment {
-uint32_t get_current_process_id() { fatal_error("TODO"); }
 
-uint32_t get_current_thread_id() { fatal_error("TODO"); }
+#include <unistd.h>
+#include <x86intrin.h>
 
-uint64_t get_tick_count() { fatal_error("TODO"); }
+uint32_t get_current_process_id() { return uint32_t(getpid()); }
+
+uint32_t get_current_thread_id() { return uint32_t(gettid()); }
+
+uint64_t get_tick_count() { return __rdtsc(); }
+
 } // namespace environment
 
 #endif

@@ -11,6 +11,7 @@ namespace flugzeug {
 class Function;
 class Constant;
 class Undef;
+class Module;
 
 class Context {
   friend class Function;

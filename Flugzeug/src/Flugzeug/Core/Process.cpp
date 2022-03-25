@@ -3,14 +3,14 @@
 #include "Platform.hpp"
 
 #include <fmt/core.h>
-#include <vector>
 
 #ifdef PLATFORM_WINDOWS
 #include <Windows.h>
+#include <vector>
 
 uint32_t run_process(const std::string& application, const std::string& command_line,
                      const std::string& process_stdin) {
-  std::string actual_command_line = fmt::format(R"("{}" {})", application, command_line);
+  const auto actual_command_line = fmt::format(R"("{}" {})", application, command_line);
 
   std::vector<char> command_line_buffer(actual_command_line.size() + 1);
   std::memcpy(command_line_buffer.data(), actual_command_line.c_str(),
@@ -58,10 +58,21 @@ uint32_t run_process(const std::string& application, const std::string& command_
 }
 
 #else
+#include <cstdio>
 
-bool run_process(const std::string& command_line, const std::string& process_stdin,
-                 std::string& process_stdout) {
-  fatal_error("`run_process` is not implemented yet on this platform.");
+uint32_t run_process(const std::string& application, const std::string& command_line,
+                     const std::string& process_stdin) {
+  const auto actual_command_line = fmt::format("{} {}", application, command_line);
+
+  const auto pipe = popen(actual_command_line.c_str(), "w");
+  verify(pipe, "Failed to start process `{}`", application);
+
+  verify(fwrite(process_stdin.c_str(), 1, process_stdin.size(), pipe) == process_stdin.size(),
+         "Failed to write to the stdin");
+  const auto exit_code = pclose(pipe);
+  verify(exit_code != -1, "Failed to wait for the process");
+
+  return uint32_t(exit_code);
 }
 
 #endif

@@ -19,7 +19,7 @@ public:
         specific_kind(specific_kind) {}
 
   template <typename T> bool match(T* m_value) {
-    const auto cast_instr = ::cast<Cast>(m_value);
+    const auto cast_instr = flugzeug::cast<Cast>(m_value);
     if (!cast_instr) {
       return false;
     }

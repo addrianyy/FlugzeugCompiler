@@ -12,7 +12,7 @@ public:
   explicit ValueBindingPattern(Class** bind_value) : bind_value(bind_value) {}
 
   template <typename T> bool match(T* m_value) {
-    const auto value = ::cast<std::remove_cv_t<Class>>(m_value);
+    const auto value = flugzeug::cast<std::remove_cv_t<Class>>(m_value);
     if (!value) {
       return false;
     }
@@ -36,7 +36,7 @@ public:
   explicit ConstantBindingPattern(Type& bind_value) : bind_constant(bind_value) {}
 
   template <typename T> bool match(T* m_value) {
-    const auto constant = ::cast<Constant>(m_value);
+    const auto constant = flugzeug::cast<Constant>(m_value);
     if (!constant) {
       return false;
     }
@@ -58,7 +58,7 @@ public:
   explicit ExactValuePattern(const TValue* exact_value) : exact_value(exact_value) {}
 
   template <typename T> bool match(T* m_value) {
-    const auto value = ::cast<std::remove_cv_t<TValue>>(m_value);
+    const auto value = flugzeug::cast<std::remove_cv_t<TValue>>(m_value);
     if (!value) {
       return false;
     }
@@ -74,7 +74,7 @@ public:
   explicit ExactValueRefPattern(TValue*& exact_value_ref) : exact_value_ref(exact_value_ref) {}
 
   template <typename T> bool match(T* m_value) {
-    const auto value = ::cast<std::remove_cv_t<TValue>>(m_value);
+    const auto value = flugzeug::cast<std::remove_cv_t<TValue>>(m_value);
     if (!value) {
       return false;
     }
@@ -94,7 +94,7 @@ public:
   explicit ExactConstantPattern(Type exact_constant) : exact_constant(exact_constant) {}
 
   template <typename T> bool match(T* m_value) {
-    const auto constant = ::cast<Constant>(m_value);
+    const auto constant = flugzeug::cast<Constant>(m_value);
     if (!constant) {
       return false;
     }
@@ -134,7 +134,7 @@ public:
       : bind_value(bind_value), pattern1(pattern1), pattern2(pattern2) {}
 
   template <typename T> bool match(T* m_value) {
-    const auto value = ::cast<std::remove_cv_t<Class>>(m_value);
+    const auto value = flugzeug::cast<std::remove_cv_t<Class>>(m_value);
     if (!value) {
       return false;
     }
@@ -162,7 +162,7 @@ public:
       : bind_value(bind_value), pattern1(pattern1), pattern2(pattern2) {}
 
   template <typename T> bool match(T* m_value) {
-    const auto value = ::cast<std::remove_cv_t<Class>>(m_value);
+    const auto value = flugzeug::cast<std::remove_cv_t<Class>>(m_value);
     if (!value) {
       return false;
     }

@@ -1,4 +1,3 @@
-#pragma once
 #include "DeadStoreElimination.hpp"
 
 #include <Flugzeug/IR/Block.hpp>

@@ -21,7 +21,7 @@ public:
         rhs_pattern(rhs), specific_pred(specific_pred) {}
 
   template <typename T> bool match(T* m_value) {
-    const auto cmp = ::cast<IntCompare>(m_value);
+    const auto cmp = flugzeug::cast<IntCompare>(m_value);
     if (!cmp) {
       return false;
     }

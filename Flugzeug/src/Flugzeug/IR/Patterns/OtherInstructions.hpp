@@ -16,7 +16,7 @@ public:
       : bind_instruction(bind_instruction), ptr(ptr) {}
 
   template <typename T> bool match(T* m_value) {
-    const auto load = ::cast<Load>(m_value);
+    const auto load = flugzeug::cast<Load>(m_value);
     if (!load) {
       return false;
     }
@@ -44,7 +44,7 @@ public:
       : bind_instruction(bind_instruction), ptr(ptr), value(value) {}
 
   template <typename T> bool match(T* m_value) {
-    const auto store = ::cast<Store>(m_value);
+    const auto store = flugzeug::cast<Store>(m_value);
     if (!store) {
       return false;
     }
@@ -71,7 +71,7 @@ public:
       : bind_instruction(bind_instruction), callee(callee) {}
 
   template <typename T> bool match(T* m_value) {
-    const auto call = ::cast<Call>(m_value);
+    const auto call = flugzeug::cast<Call>(m_value);
     if (!call) {
       return false;
     }
@@ -98,7 +98,7 @@ public:
       : bind_instruction(bind_instruction), target(target) {}
 
   template <typename T> bool match(T* m_value) {
-    const auto branch = ::cast<Branch>(m_value);
+    const auto branch = flugzeug::cast<Branch>(m_value);
     if (!branch) {
       return false;
     }
@@ -129,7 +129,7 @@ public:
       : bind_instruction(bind_instruction), cond(cond), on_true(on_true), on_false(on_false) {}
 
   template <typename T> bool match(T* m_value) {
-    const auto instruction = ::cast<std::remove_cv_t<TInstruction>>(m_value);
+    const auto instruction = flugzeug::cast<std::remove_cv_t<TInstruction>>(m_value);
     if (!instruction) {
       return false;
     }
@@ -163,7 +163,7 @@ public:
   explicit RetVoidPattern(TInstruction** bind_instruction) : bind_instruction(bind_instruction) {}
 
   template <typename T> bool match(T* m_value) {
-    const auto ret = ::cast<Ret>(m_value);
+    const auto ret = flugzeug::cast<Ret>(m_value);
     if (!ret || ret->get_val()) {
       return false;
     }
@@ -185,7 +185,7 @@ public:
       : bind_instruction(bind_instruction), value(value) {}
 
   template <typename T> bool match(T* m_value) {
-    const auto ret = ::cast<Ret>(m_value);
+    const auto ret = flugzeug::cast<Ret>(m_value);
     if (!ret || !ret->get_val()) {
       return false;
     }
@@ -213,7 +213,7 @@ public:
       : bind_instruction(bind_instruction), base(base), index(index) {}
 
   template <typename T> bool match(T* m_value) {
-    const auto offset = ::cast<Offset>(m_value);
+    const auto offset = flugzeug::cast<Offset>(m_value);
     if (!offset) {
       return false;
     }

@@ -1,4 +1,3 @@
-#pragma once
 #include "KnownLoadElimination.hpp"
 
 #include <Flugzeug/IR/Block.hpp>
