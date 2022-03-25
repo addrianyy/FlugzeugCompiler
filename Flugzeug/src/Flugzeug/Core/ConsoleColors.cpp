@@ -5,7 +5,7 @@
 #include <Windows.h>
 #endif
 
-void console_colors::ensure_initialized() {
+void flugzeug::console_colors::ensure_initialized() {
 #ifdef PLATFORM_WINDOWS
   static bool initialized_console = false;
   if (!initialized_console) {
@@ -31,12 +31,12 @@ void console_colors::ensure_initialized() {
 #endif
 }
 
-bool console_colors::are_allowed() {
+bool flugzeug::console_colors::are_allowed() {
   // TODO
   return true;
 }
 
-void console_colors::reset_color(std::ostream& stream) { stream << "\x1b[0m"; }
-void console_colors::set_color(std::ostream& stream, int color) {
+void flugzeug::console_colors::reset_color(std::ostream& stream) { stream << "\x1b[0m"; }
+void flugzeug::console_colors::set_color(std::ostream& stream, int color) {
   stream << "\x1b[1;" << color << "m";
 }

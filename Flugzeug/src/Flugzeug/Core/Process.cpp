@@ -8,8 +8,8 @@
 #include <Windows.h>
 #include <vector>
 
-uint32_t run_process(const std::string& application, const std::string& command_line,
-                     const std::string& process_stdin) {
+uint32_t flugzeug::run_process(const std::string& application, const std::string& command_line,
+                               const std::string& process_stdin) {
   const auto actual_command_line = fmt::format(R"("{}" {})", application, command_line);
 
   std::vector<char> command_line_buffer(actual_command_line.size() + 1);
@@ -57,11 +57,11 @@ uint32_t run_process(const std::string& application, const std::string& command_
   return exit_code;
 }
 
-#else
+#elif defined(PLATFORM_LINUX)
 #include <cstdio>
 
-uint32_t run_process(const std::string& application, const std::string& command_line,
-                     const std::string& process_stdin) {
+uint32_t flugzeug::run_process(const std::string& application, const std::string& command_line,
+                               const std::string& process_stdin) {
   const auto actual_command_line = fmt::format("{} {}", application, command_line);
 
   const auto pipe = popen(actual_command_line.c_str(), "w");
@@ -73,6 +73,13 @@ uint32_t run_process(const std::string& application, const std::string& command_
   verify(exit_code != -1, "Failed to wait for the process");
 
   return uint32_t(exit_code);
+}
+
+#else
+
+uint32_t flugzeug::run_process(const std::string& application, const std::string& command_line,
+                               const std::string& process_stdin) {
+  fatal_error("`run_process` is not implemented yet for this platform");
 }
 
 #endif

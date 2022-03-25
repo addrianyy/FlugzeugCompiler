@@ -23,8 +23,8 @@ struct MaybeSubLoopBackedge {
   bool in_subloop = false;
 };
 
-static std::vector<std::vector<Block*>> calculate_sccs(SccContext<Block*>& context,
-                                                       const std::unordered_set<Block*>& blocks) {
+static std::vector<std::vector<Block*>>
+calculate_block_sccs(SccContext<Block*>& context, const std::unordered_set<Block*>& blocks) {
   return calculate_sccs<Block*, true>(context, blocks,
                                       [](Block* block) { return block->successors(); });
 }
@@ -145,7 +145,7 @@ bool Loop::find_loops_in_scc(Function* function, const std::vector<Block*>& scc_
   // header from the block set we make original loop non strongly connected. This will allow us to
   // find smaller SCCs that are inside the loop.
   loop.blocks.erase(loop.header);
-  const auto sub_sccs = calculate_sccs(scc_context, loop.blocks);
+  const auto sub_sccs = calculate_block_sccs(scc_context, loop.blocks);
   loop.blocks.insert(loop.header);
 
   bool flattened = false;
@@ -226,7 +226,7 @@ flugzeug::analysis::analyze_function_loops(Function* function,
 
   // Calculate SCCs in the whole function. These contain potential loops (which may contain
   // sub-loops).
-  const auto sccs = calculate_sccs(scc_context, reachable_blocks);
+  const auto sccs = calculate_block_sccs(scc_context, reachable_blocks);
 
   // Find loops in the SCCs.
   for (const auto& scc : sccs) {

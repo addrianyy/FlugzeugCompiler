@@ -2,7 +2,10 @@
 #include "ClassTraits.hpp"
 #include "Error.hpp"
 #include "Iterator.hpp"
+
 #include <memory>
+
+namespace flugzeug {
 
 template <typename T, typename Owner> class IntrusiveNode;
 template <typename T, typename Owner> class IntrusiveLinkedList;
@@ -298,3 +301,5 @@ public:
   const_reverse_iterator rbegin() const { return const_reverse_iterator(last); }
   const_reverse_iterator rend() const { return const_reverse_iterator(nullptr); }
 };
+
+} // namespace flugzeug

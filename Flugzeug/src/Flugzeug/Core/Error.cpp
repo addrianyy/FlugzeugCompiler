@@ -1,6 +1,7 @@
 #include "Error.hpp"
 #include "Log.hpp"
 #include "Platform.hpp"
+
 #include <cstdlib>
 
 #undef fatal_error
@@ -13,8 +14,8 @@
 
 #endif
 
-[[noreturn]] void detail::error::fatal_error(const char* file, int line,
-                                             const std::string& message) {
+[[noreturn]] void flugzeug::detail::error::fatal_error(const char* file, int line,
+                                                       const std::string& message) {
   log_error("{}:{} => {}", file, line, message);
 
   // For debugger breakpoint:
@@ -31,11 +32,11 @@
   }
 #endif
 
-  std::exit(-1);
+  std::abort();
 }
 
-[[noreturn]] void detail::error::assert_fail(const char* file, int line,
-                                             const std::string& message) {
+[[noreturn]] void flugzeug::detail::error::assert_fail(const char* file, int line,
+                                                       const std::string& message) {
   if (message.empty()) {
     fatal_error(file, line, "Assertion failed.");
   } else {

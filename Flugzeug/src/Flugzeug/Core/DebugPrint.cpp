@@ -5,7 +5,7 @@
 
 #include <Windows.h>
 
-void debug_print(std::string_view string) {
+void flugzeug::debug_print(std::string_view string) {
   const std::string s = std::string(string);
   OutputDebugStringA(s.c_str());
 }
@@ -14,6 +14,6 @@ void debug_print(std::string_view string) {
 
 #include "Log.hpp"
 
-void debug_print(std::string_view string) { log_debug("{}", string); }
+void flugzeug::debug_print(std::string_view string) { log_debug("{}", string); }
 
 #endif

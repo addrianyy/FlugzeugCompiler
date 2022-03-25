@@ -2,7 +2,7 @@
 #include <fmt/core.h>
 #include <string>
 
-namespace detail::error {
+namespace flugzeug::detail::error {
 
 [[noreturn]] void fatal_error(const char* file, int line, const std::string& message);
 [[noreturn]] void assert_fail(const char* file, int line, const std::string& message);
@@ -21,12 +21,12 @@ inline void assert_fmt(const char* file, int line, bool value, fmt::format_strin
   }
 }
 
-} // namespace detail::error
+} // namespace flugzeug::detail::error
 
 #define fatal_error(format, ...)                                                                   \
-  ::detail::error::fatal_error_fmt(__FILE__, __LINE__, (format), ##__VA_ARGS__)
+  ::flugzeug::detail::error::fatal_error_fmt(__FILE__, __LINE__, (format), ##__VA_ARGS__)
 
 #define verify(value, format, ...)                                                                 \
-  ::detail::error::assert_fmt(__FILE__, __LINE__, !!(value), (format), ##__VA_ARGS__)
+  ::flugzeug::detail::error::assert_fmt(__FILE__, __LINE__, !!(value), (format), ##__VA_ARGS__)
 
 #define unreachable() fatal_error("Entered unreachable code.")

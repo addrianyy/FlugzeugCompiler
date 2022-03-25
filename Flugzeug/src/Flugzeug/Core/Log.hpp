@@ -9,7 +9,7 @@ enum class LogLevel {
   Error,
 };
 
-namespace detail::log {
+namespace flugzeug::detail::log {
 
 void log(const char* file, int line, LogLevel level, const std::string& message);
 
@@ -19,10 +19,10 @@ inline void log_fmt(const char* file, int line, LogLevel level, fmt::format_stri
   log(file, line, level, fmt::format(fmt, std::forward<Args>(args)...));
 }
 
-} // namespace detail::log
+} // namespace flugzeug::detail::log
 
 #define log_message(level, format, ...)                                                            \
-  ::detail::log::log_fmt(__FILE__, __LINE__, (level), (format), ##__VA_ARGS__)
+  ::flugzeug::detail::log::log_fmt(__FILE__, __LINE__, (level), (format), ##__VA_ARGS__)
 
 #define log_debug(format, ...) log_message(LogLevel::Debug, (format), ##__VA_ARGS__)
 #define log_info(format, ...) log_message(LogLevel::Info, (format), ##__VA_ARGS__)

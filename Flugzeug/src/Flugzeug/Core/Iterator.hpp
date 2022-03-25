@@ -1,5 +1,6 @@
 #pragma once
 #include "Error.hpp"
+
 #include <type_traits>
 
 namespace flugzeug {

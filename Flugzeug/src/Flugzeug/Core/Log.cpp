@@ -1,7 +1,8 @@
 #include "Log.hpp"
 #include <iostream>
 
-void detail::log::log(const char* file, int line, LogLevel level, const std::string& message) {
+void flugzeug::detail::log::log(const char* file, int line, LogLevel level,
+                                const std::string& message) {
   std::ostream& stream = level >= LogLevel::Warn ? std::cerr : std::cout;
   const char* header = nullptr;
 

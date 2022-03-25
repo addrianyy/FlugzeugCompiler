@@ -4,6 +4,8 @@
 #include <functional>
 #include <utility>
 
+namespace flugzeug {
+
 inline void hash_combine(std::size_t& seed) {}
 
 template <typename T, typename... Rest>
@@ -24,3 +26,5 @@ template <typename... Args> inline std::size_t hash_combine(Args... args) {
 
   return seed;
 }
+
+} // namespace flugzeug
