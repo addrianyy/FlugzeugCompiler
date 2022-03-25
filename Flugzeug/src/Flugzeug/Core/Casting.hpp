@@ -18,39 +18,35 @@ private:
 
 namespace flugzeug {
 
-template <typename To, typename From> To* cast(From* from) {
+namespace detail {
+template <typename To, typename From>
+using CastResult = std::conditional_t<std::is_const_v<From>, const To*, To*>;
+}
+
+template <typename To, typename From> detail::CastResult<To, From> relaxed_cast(From* from) {
   if constexpr (std::is_base_of_v<To, From>) {
     // We are upcasting, it will always succeed.
     return from;
   } else if constexpr (!std::is_base_of_v<From, To>) {
     // Pointer types are unrelated, the cast will always fail.
-    // TODO: Maybe add a warning here (?)
     return nullptr;
   } else {
     if (!from) {
       return nullptr;
     }
-    return To::is_object_of_class(from) ? static_cast<To*>(from) : nullptr;
+    return To::is_object_of_class(from) ? static_cast<detail::CastResult<To, From>>(from) : nullptr;
   }
 }
 
-template <typename To, typename From> const To* cast(const From* from) {
-  if constexpr (std::is_base_of_v<To, From>) {
-    // We are upcasting, it will always succeed.
-    return from;
-  } else if constexpr (!std::is_base_of_v<From, To>) {
-    // Pointer types are unrelated, the cast will always fail.
-    // TODO: Maybe add a warning here (?)
-    return nullptr;
-  } else {
-    if (!from) {
-      return nullptr;
-    }
-    return To::is_object_of_class(from) ? static_cast<const To*>(from) : nullptr;
-  }
+template <typename To, typename From> detail::CastResult<To, From> cast(From* from) {
+  static_assert(std::is_base_of_v<To, From> || std::is_base_of_v<From, To>,
+                "Casting between unrelated pointer types - it will always fail");
+
+  return relaxed_cast<To, From>(from);
 }
 
-template <typename To, typename From> To* cast(From& from) { return cast<To>(&from); }
-template <typename To, typename From> const To* cast(const From& from) { return cast<To>(&from); }
+template <typename To, typename From> detail::CastResult<To, From> cast(From& from) {
+  return cast<To, From>(&from);
+}
 
 } // namespace flugzeug

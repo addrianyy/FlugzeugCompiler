@@ -4,7 +4,7 @@
 using namespace turboc;
 
 static std::optional<uint64_t> evaluate_constant_expression(const Expr* expr) {
-  if (const auto number = cast<NumberExpr>(expr)) {
+  if (const auto number = fz::cast<NumberExpr>(expr)) {
     return number->get_value();
   }
 
@@ -399,7 +399,7 @@ IRGenerator::VisitResult IRGenerator::visit_if_stmt(Argument<IfStmt> if_stmt) {
 
 IRGenerator::VisitResult IRGenerator::visit_for_stmt(Argument<ForStmt> for_stmt) {
   const auto generate_statement_or_body = [this](const std::unique_ptr<Stmt>& stmt) -> bool {
-    if (const auto body = cast<BodyStmt>(stmt.get())) {
+    if (const auto body = fz::cast<BodyStmt>(stmt.get())) {
       return generate_body(body);
     } else {
       generate_statement(stmt.get());

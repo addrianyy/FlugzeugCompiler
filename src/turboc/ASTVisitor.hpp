@@ -3,8 +3,6 @@
 
 #include <Flugzeug/Core/Error.hpp>
 
-using flugzeug::cast;
-
 namespace turboc {
 
 namespace detail {
@@ -48,42 +46,46 @@ inline auto visit_statement(TStmt* stmt, TVisitor& visitor) {
   static_assert(std::is_base_of_v<ASTVisitor, VisitorType> ||
                   std::is_base_of_v<ConstASTVisitor, VisitorType>,
                 "Cannot visit using visitor that is not derived from ASTVisitor");
+  static_assert(std::is_base_of_v<Stmt, std::remove_cvref_t<TStmt>>,
+                "Cannot visit non-statement argument");
+
+  using flugzeug::relaxed_cast;
 
   switch (stmt->get_kind()) {
   case Stmt::Kind::Assign:
-    return visitor.visit_assign_stmt(cast<AssignStmt>(stmt));
+    return visitor.visit_assign_stmt(relaxed_cast<AssignStmt>(stmt));
   case Stmt::Kind::BinaryAssign:
-    return visitor.visit_binary_assign_stmt(cast<BinaryAssignStmt>(stmt));
+    return visitor.visit_binary_assign_stmt(relaxed_cast<BinaryAssignStmt>(stmt));
   case Stmt::Kind::Declare:
-    return visitor.visit_declare_stmt(cast<DeclareStmt>(stmt));
+    return visitor.visit_declare_stmt(relaxed_cast<DeclareStmt>(stmt));
   case Stmt::Kind::While:
-    return visitor.visit_while_stmt(cast<WhileStmt>(stmt));
+    return visitor.visit_while_stmt(relaxed_cast<WhileStmt>(stmt));
   case Stmt::Kind::If:
-    return visitor.visit_if_stmt(cast<IfStmt>(stmt));
+    return visitor.visit_if_stmt(relaxed_cast<IfStmt>(stmt));
   case Stmt::Kind::For:
-    return visitor.visit_for_stmt(cast<ForStmt>(stmt));
+    return visitor.visit_for_stmt(relaxed_cast<ForStmt>(stmt));
   case Stmt::Kind::Return:
-    return visitor.visit_return_stmt(cast<ReturnStmt>(stmt));
+    return visitor.visit_return_stmt(relaxed_cast<ReturnStmt>(stmt));
   case Stmt::Kind::Break:
-    return visitor.visit_break_stmt(cast<BreakStmt>(stmt));
+    return visitor.visit_break_stmt(relaxed_cast<BreakStmt>(stmt));
   case Stmt::Kind::Continue:
-    return visitor.visit_continue_stmt(cast<ContinueStmt>(stmt));
+    return visitor.visit_continue_stmt(relaxed_cast<ContinueStmt>(stmt));
   case Stmt::Kind::Body:
-    return visitor.visit_body_stmt(cast<BodyStmt>(stmt));
+    return visitor.visit_body_stmt(relaxed_cast<BodyStmt>(stmt));
   case Stmt::Kind::Variable:
-    return visitor.visit_variable_expr(cast<VariableExpr>(stmt));
+    return visitor.visit_variable_expr(relaxed_cast<VariableExpr>(stmt));
   case Stmt::Kind::Unary:
-    return visitor.visit_unary_expr(cast<UnaryExpr>(stmt));
+    return visitor.visit_unary_expr(relaxed_cast<UnaryExpr>(stmt));
   case Stmt::Kind::Binary:
-    return visitor.visit_binary_expr(cast<BinaryExpr>(stmt));
+    return visitor.visit_binary_expr(relaxed_cast<BinaryExpr>(stmt));
   case Stmt::Kind::Number:
-    return visitor.visit_number_expr(cast<NumberExpr>(stmt));
+    return visitor.visit_number_expr(relaxed_cast<NumberExpr>(stmt));
   case Stmt::Kind::Array:
-    return visitor.visit_array_expr(cast<ArrayExpr>(stmt));
+    return visitor.visit_array_expr(relaxed_cast<ArrayExpr>(stmt));
   case Stmt::Kind::Call:
-    return visitor.visit_call_expr(cast<CallExpr>(stmt));
+    return visitor.visit_call_expr(relaxed_cast<CallExpr>(stmt));
   case Stmt::Kind::Cast:
-    return visitor.visit_cast_expr(cast<CastExpr>(stmt));
+    return visitor.visit_cast_expr(relaxed_cast<CastExpr>(stmt));
   default:
     unreachable();
   }

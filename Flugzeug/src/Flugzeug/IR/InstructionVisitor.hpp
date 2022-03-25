@@ -41,36 +41,38 @@ inline auto visit_instruction(TInstruction* instruction, TVisitor& visitor) {
   static_assert(std::is_base_of_v<InstructionVisitor, VisitorType> ||
                   std::is_base_of_v<ConstInstructionVisitor, VisitorType>,
                 "Cannot visit using visitor that is not derived from InstructionVisitor");
+  static_assert(std::is_base_of_v<Instruction, std::remove_cvref_t<TInstruction>>,
+                "Cannot visit non-instruction argument");
 
   switch (instruction->get_kind()) {
   case Value::Kind::UnaryInstr:
-    return visitor.visit_unary_instr(cast<UnaryInstr>(instruction));
+    return visitor.visit_unary_instr(relaxed_cast<UnaryInstr>(instruction));
   case Value::Kind::BinaryInstr:
-    return visitor.visit_binary_instr(cast<BinaryInstr>(instruction));
+    return visitor.visit_binary_instr(relaxed_cast<BinaryInstr>(instruction));
   case Value::Kind::IntCompare:
-    return visitor.visit_int_compare(cast<IntCompare>(instruction));
+    return visitor.visit_int_compare(relaxed_cast<IntCompare>(instruction));
   case Value::Kind::Load:
-    return visitor.visit_load(cast<Load>(instruction));
+    return visitor.visit_load(relaxed_cast<Load>(instruction));
   case Value::Kind::Store:
-    return visitor.visit_store(cast<Store>(instruction));
+    return visitor.visit_store(relaxed_cast<Store>(instruction));
   case Value::Kind::Call:
-    return visitor.visit_call(cast<Call>(instruction));
+    return visitor.visit_call(relaxed_cast<Call>(instruction));
   case Value::Kind::Branch:
-    return visitor.visit_branch(cast<Branch>(instruction));
+    return visitor.visit_branch(relaxed_cast<Branch>(instruction));
   case Value::Kind::CondBranch:
-    return visitor.visit_cond_branch(cast<CondBranch>(instruction));
+    return visitor.visit_cond_branch(relaxed_cast<CondBranch>(instruction));
   case Value::Kind::StackAlloc:
-    return visitor.visit_stackalloc(cast<StackAlloc>(instruction));
+    return visitor.visit_stackalloc(relaxed_cast<StackAlloc>(instruction));
   case Value::Kind::Ret:
-    return visitor.visit_ret(cast<Ret>(instruction));
+    return visitor.visit_ret(relaxed_cast<Ret>(instruction));
   case Value::Kind::Offset:
-    return visitor.visit_offset(cast<Offset>(instruction));
+    return visitor.visit_offset(relaxed_cast<Offset>(instruction));
   case Value::Kind::Cast:
-    return visitor.visit_cast(cast<Cast>(instruction));
+    return visitor.visit_cast(relaxed_cast<Cast>(instruction));
   case Value::Kind::Select:
-    return visitor.visit_select(cast<Select>(instruction));
+    return visitor.visit_select(relaxed_cast<Select>(instruction));
   case Value::Kind::Phi:
-    return visitor.visit_phi(cast<Phi>(instruction));
+    return visitor.visit_phi(relaxed_cast<Phi>(instruction));
   default:
     unreachable();
   }
