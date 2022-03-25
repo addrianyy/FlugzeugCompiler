@@ -1,5 +1,7 @@
 #include "InstructionDeduplication.hpp"
 
+#include <Flugzeug/Core/TinyVector.hpp>
+
 #include <Flugzeug/IR/Block.hpp>
 #include <Flugzeug/IR/DominatorTree.hpp>
 #include <Flugzeug/IR/Function.hpp>
@@ -13,7 +15,7 @@
 
 using namespace flugzeug;
 
-using InstructionUniqueIdentifier = std::vector<uintptr_t>;
+using InstructionUniqueIdentifier = TinyVector<uintptr_t, 3>;
 
 struct InstructionUniqueIdentifierHash {
   size_t operator()(const InstructionUniqueIdentifier& identifier) const {
@@ -61,7 +63,6 @@ public:
 static InstructionUniqueIdentifier calculate_unique_identifier(const Instruction* instruction) {
   InstructionUniqueIdentifier identifier;
 
-  identifier.reserve(instruction->get_operand_count() + 1);
   for (const Value& operand : instruction->operands()) {
     identifier.push_back(uintptr_t(&operand));
   }

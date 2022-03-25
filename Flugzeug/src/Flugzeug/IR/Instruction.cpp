@@ -14,13 +14,13 @@ BlockTargets<TBlock> get_targets_generic(TInstruction* instruction) {
     const auto true_target = cond_branch->get_true_target();
     const auto false_target = cond_branch->get_false_target();
 
-    result.insert(true_target);
+    result.push_back(true_target);
 
     if (true_target != false_target) {
-      result.insert(false_target);
+      result.push_back(false_target);
     }
   } else if (const auto branch = cast<Branch>(instruction)) {
-    result.insert(branch->get_target());
+    result.push_back(branch->get_target());
   }
 
   return result;

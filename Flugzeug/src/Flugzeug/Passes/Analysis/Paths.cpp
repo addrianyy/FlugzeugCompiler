@@ -11,7 +11,7 @@ public:
   Children(Block* block, Block* barrier) {
     for (const auto successor : block->successors()) {
       if (successor != barrier) {
-        successors.insert(successor);
+        successors.push_back(successor);
       }
     }
   }

@@ -42,11 +42,13 @@ using namespace flugzeug;
 static Module* compile_source(Context* context, const std::string& source_path) {
   if (source_path.ends_with(".tc")) {
     return turboc::Compiler::compile_from_file(context, source_path);
-  } else if (source_path.ends_with(".bf")) {
-    return bf::Compiler::compile_from_file(context, source_path);
-  } else {
-    fatal_error("Unknown source file extension.");
   }
+
+  if (source_path.ends_with(".bf")) {
+    return bf::Compiler::compile_from_file(context, source_path);
+  }
+
+  fatal_error("Unknown source file extension.");
 }
 
 static void optimize_function(Function* function, OptimizationStatistics* statistics = nullptr) {
@@ -78,7 +80,9 @@ static void optimize_function(Function* function, OptimizationStatistics* statis
       runner.run<opt::MemoryOptimization>(opt::OptimizationLocality::Global);
       runner.run<opt::GlobalReordering>();
       if (enable_brainfuck_optimizations) {
-        runner.run<bf::BrainfuckLoopOptimization>();
+        if (enable_loop_optimizations) {
+          runner.run<bf::BrainfuckLoopOptimization>();
+        }
         runner.run<bf::BrainfuckBufferSplitting>();
       }
     });

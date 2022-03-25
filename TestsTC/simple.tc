@@ -15,3 +15,7 @@ i32 test_factorial() {
 i32 test_compare(i32 x) {
     return x - 5 > 3;
 }
+
+i32 xd(i32 x) {
+    return (x + 3) * (3 + x);
+}

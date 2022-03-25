@@ -150,7 +150,7 @@ void Function::reassign_display_indices() {
 }
 
 Block* Function::create_block() {
-  auto block = new Block(get_context());
+  const auto block = new Block(get_context());
   insert_block(block);
   return block;
 }

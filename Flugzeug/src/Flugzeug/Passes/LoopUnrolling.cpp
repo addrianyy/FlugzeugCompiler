@@ -373,13 +373,9 @@ static void perform_unrolling(Function* function, const analysis::Loop* loop, Bl
       }
 
       // Go through every value user to find if it's used outside the loop.
-      bool is_used_outside_loop = false;
-      for (Instruction& user : instruction.users<Instruction>()) {
-        if (!loop->contains_block(user.get_block())) {
-          is_used_outside_loop = true;
-          break;
-        }
-      }
+      const bool is_used_outside_loop =
+        any_of(instruction.users<Instruction>(),
+               [&](Instruction& user) { return !loop->contains_block(user.get_block()); });
 
       if (is_used_outside_loop) {
         // Before unrolling all instructions outside the loop used the last iteration value.
