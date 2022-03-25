@@ -3,30 +3,8 @@
 using namespace flugzeug;
 using namespace flugzeug::analysis;
 
-class Children {
-  BlockTargets<Block> successors;
-  size_t index = 0;
-
-public:
-  Children(Block* block, Block* barrier) {
-    for (const auto successor : block->successors()) {
-      if (successor != barrier) {
-        successors.push_back(successor);
-      }
-    }
-  }
-
-  std::optional<Block*> next() {
-    if (index >= successors.size()) {
-      return std::nullopt;
-    }
-
-    return successors[index++];
-  }
-};
-
-static bool can_reach(Block* from, Block* to, Block* barrier, std::unordered_set<Block*>& visited) {
-  std::vector<Block*> stack;
+static bool can_reach(Block* from, Block* to, Block* barrier, std::vector<Block*>& stack,
+                      std::unordered_set<Block*>& visited) {
   stack.push_back(from);
 
   while (!stack.empty()) {
@@ -54,84 +32,119 @@ static bool can_reach(Block* from, Block* to, Block* barrier, std::unordered_set
 }
 
 void analysis::get_blocks_inbetween(Block* from, Block* to, Block* barrier,
-                                    std::unordered_set<Block*>& blocks_inbetween) {
+                                    std::unordered_set<Block*>& blocks_inbetween,
+                                    PathAnalysisWorkData* work_data) {
   verify(from != barrier && to != barrier, "Invalid barrier block");
 
-  std::unordered_set<Block*> visited;
+  std::unordered_set<Block*> buffer_visited;
+  std::vector<Block*> buffer_path;
+  std::vector<detail::BlockChildren> buffer_stack;
+
+  std::unordered_set<Block*>* visited;
+  std::vector<Block*>* path;
+  std::vector<detail::BlockChildren>* stack;
+
+  if (work_data) {
+    visited = &work_data->visited;
+    path = &work_data->blocks;
+    stack = &work_data->children;
+
+    visited->clear();
+    path->clear();
+    stack->clear();
+  } else {
+    visited = &buffer_visited;
+    path = &buffer_path;
+    stack = &buffer_stack;
+  }
 
   // Fast case: if we cannot reach `to` from `from` we don't need to do anything.
-  if (!can_reach(from, to, barrier, visited)) {
+  if (!can_reach(from, to, barrier, *path, *visited)) {
     return;
   }
 
-  visited.clear();
+  visited->clear();
+  path->clear();
 
-  std::vector<Block*> path;
-  std::vector<Children> stack;
+  visited->insert(from);
+  path->emplace_back(from);
+  stack->emplace_back(from, barrier);
 
-  visited.insert(from);
-  path.emplace_back(from);
-  stack.emplace_back(from, barrier);
-
-  while (!stack.empty()) {
-    auto& children = stack.back();
+  while (!stack->empty()) {
+    auto& children = stack->back();
 
     if (const auto child = children.next()) {
       if (*child == to) {
-        for (const auto path_block : path) {
+        for (const auto path_block : *path) {
           blocks_inbetween.insert(path_block);
         }
 
         blocks_inbetween.insert(to);
-      } else if (!visited.contains(*child)) {
-        visited.insert(*child);
-        path.emplace_back(*child);
-        stack.emplace_back(*child, barrier);
+      } else if (!visited->contains(*child)) {
+        visited->insert(*child);
+        path->emplace_back(*child);
+        stack->emplace_back(*child, barrier);
       }
     } else {
-      visited.erase(path.back());
-      path.pop_back();
-      stack.pop_back();
+      visited->erase(path->back());
+      path->pop_back();
+      stack->pop_back();
     }
   }
 }
 
-std::unordered_set<Block*> analysis::get_blocks_inbetween(Block* from, Block* to, Block* barrier) {
+std::unordered_set<Block*> analysis::get_blocks_inbetween(Block* from, Block* to, Block* barrier,
+                                                          PathAnalysisWorkData* work_data) {
   std::unordered_set<Block*> blocks_inbetween;
-  get_blocks_inbetween(from, to, barrier, blocks_inbetween);
+  get_blocks_inbetween(from, to, barrier, blocks_inbetween, work_data);
   return blocks_inbetween;
 }
 
 void analysis::get_blocks_from_dominator_to_target(Block* dominator, Block* target,
-                                                   std::unordered_set<Block*>& blocks_inbetween) {
-  std::unordered_set<Block*> visited;
-  std::vector<Block*> stack;
+                                                   std::unordered_set<Block*>& blocks_inbetween,
+                                                   PathAnalysisWorkData* work_data) {
+  std::unordered_set<Block*> buffer_visited;
+  std::vector<Block*> buffer_stack;
+
+  std::unordered_set<Block*>* visited;
+  std::vector<Block*>* stack;
+
+  if (work_data) {
+    visited = &work_data->visited;
+    stack = &work_data->blocks;
+
+    visited->clear();
+    stack->clear();
+  } else {
+    visited = &buffer_visited;
+    stack = &buffer_stack;
+  }
 
   // Start traversing from the end of the path and go upwards.
-  stack.push_back(target);
+  stack->push_back(target);
 
-  while (!stack.empty()) {
-    const auto block = stack.back();
-    stack.pop_back();
+  while (!stack->empty()) {
+    const auto block = stack->back();
+    stack->pop_back();
 
-    if (!visited.insert(block).second) {
+    if (!visited->insert(block).second) {
       continue;
     }
 
     for (const auto predecessor : block->predecessors()) {
       // Because `dominator` dominates `target` block we must eventually hit `dominator` block
       // during traversal. In this case we shouldn't go up.
-      if (predecessor == dominator || visited.contains(predecessor)) {
+      if (predecessor == dominator || visited->contains(predecessor)) {
         continue;
       }
 
-      stack.push_back(predecessor);
+      stack->push_back(predecessor);
     }
   }
 
-  blocks_inbetween.reserve(blocks_inbetween.size() + visited.size() + 1);
+  blocks_inbetween.reserve(blocks_inbetween.size() + visited->size() + 1);
 
-  for (Block* block : visited) {
+  for (Block* block : *visited) {
     blocks_inbetween.insert(block);
   }
 
@@ -139,10 +152,11 @@ void analysis::get_blocks_from_dominator_to_target(Block* dominator, Block* targ
   blocks_inbetween.insert(dominator);
 }
 
-std::unordered_set<Block*> analysis::get_blocks_from_dominator_to_target(Block* dominator,
-                                                                         Block* target) {
+std::unordered_set<Block*>
+analysis::get_blocks_from_dominator_to_target(Block* dominator, Block* target,
+                                              PathAnalysisWorkData* work_data) {
   std::unordered_set<Block*> blocks_inbetween;
-  get_blocks_from_dominator_to_target(dominator, target, blocks_inbetween);
+  get_blocks_from_dominator_to_target(dominator, target, blocks_inbetween, work_data);
   return blocks_inbetween;
 }
 
@@ -170,7 +184,7 @@ bool PathValidator::get_blocks_to_check(const std::unordered_set<Block*>*& block
   }
 
   std::unordered_set<Block*> blocks;
-  get_blocks_from_dominator_to_target(start_block, end_block, blocks);
+  get_blocks_from_dominator_to_target(start_block, end_block, blocks, &work_data);
 
   // Remove `start` and `end` blocks as they will be only checked partially.
   blocks.erase(start_block);
@@ -186,7 +200,7 @@ bool PathValidator::get_blocks_to_check(const std::unordered_set<Block*>*& block
 
     // Get all blocks that take part in a cycle that allows `killee` to reach itself without hitting
     // `killer` (if such cycle exists).
-    get_blocks_inbetween(killee, killee, killer, blocks);
+    get_blocks_inbetween(killee, killee, killer, blocks, &work_data);
   }
 
   blocks_to_check = &cache.insert({cache_key, std::move(blocks)}).first->second;

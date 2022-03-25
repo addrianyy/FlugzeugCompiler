@@ -7,13 +7,57 @@
 
 namespace flugzeug::analysis {
 
+namespace detail {
+
+class BlockChildren {
+  BlockTargets<Block> successors;
+  size_t index = 0;
+
+public:
+  BlockChildren(Block* block, Block* barrier) {
+    for (const auto successor : block->successors()) {
+      if (successor != barrier) {
+        successors.push_back(successor);
+      }
+    }
+  }
+
+  std::optional<Block*> next() {
+    if (index >= successors.size()) {
+      return std::nullopt;
+    }
+
+    return successors[index++];
+  }
+};
+
+} // namespace detail
+
+class PathAnalysisWorkData {
+  friend void get_blocks_inbetween(Block* from, Block* to, Block* barrier,
+                                   std::unordered_set<Block*>& blocks_inbetween,
+                                   PathAnalysisWorkData* work_data);
+  friend void get_blocks_from_dominator_to_target(Block* dominator, Block* target,
+                                                  std::unordered_set<Block*>& blocks_inbetween,
+                                                  PathAnalysisWorkData* work_data);
+
+  std::unordered_set<Block*> visited;
+  std::vector<Block*> blocks;
+  std::vector<detail::BlockChildren> children;
+};
+
 void get_blocks_inbetween(Block* from, Block* to, Block* barrier,
-                          std::unordered_set<Block*>& blocks_inbetween);
-std::unordered_set<Block*> get_blocks_inbetween(Block* from, Block* to, Block* barrier);
+                          std::unordered_set<Block*>& blocks_inbetween,
+                          PathAnalysisWorkData* work_data = nullptr);
+std::unordered_set<Block*> get_blocks_inbetween(Block* from, Block* to, Block* barrier,
+                                                PathAnalysisWorkData* work_data = nullptr);
 
 void get_blocks_from_dominator_to_target(Block* dominator, Block* target,
-                                         std::unordered_set<Block*>& blocks_inbetween);
-std::unordered_set<Block*> get_blocks_from_dominator_to_target(Block* dominator, Block* target);
+                                         std::unordered_set<Block*>& blocks_inbetween,
+                                         PathAnalysisWorkData* work_data = nullptr);
+std::unordered_set<Block*>
+get_blocks_from_dominator_to_target(Block* dominator, Block* target,
+                                    PathAnalysisWorkData* work_data = nullptr);
 
 class PathValidator {
 public:
@@ -38,6 +82,8 @@ private:
   struct CacheKeyHash {
     size_t operator()(const CacheKey& p) const;
   };
+
+  PathAnalysisWorkData work_data;
 
   std::unordered_map<CacheKey, std::unordered_set<Block*>, CacheKeyHash> cache;
 
