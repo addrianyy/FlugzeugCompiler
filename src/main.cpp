@@ -11,6 +11,7 @@
 #include <Flugzeug/Passes/BlockInvariantPropagation.hpp>
 #include <Flugzeug/Passes/CFGSimplification.hpp>
 #include <Flugzeug/Passes/CallInlining.hpp>
+#include <Flugzeug/Passes/ConditionalCommonOperationExtraction.h>
 #include <Flugzeug/Passes/ConditionalFlattening.hpp>
 #include <Flugzeug/Passes/ConstPropagation.hpp>
 #include <Flugzeug/Passes/DeadBlockElimination.hpp>
@@ -52,7 +53,7 @@ static Module* compile_source(Context* context, const std::string& source_path) 
 }
 
 static void optimize_function(Function* function, OptimizationStatistics* statistics = nullptr) {
-  constexpr bool enable_loop_optimizations = false;
+  constexpr bool enable_loop_optimizations = true;
   constexpr bool enable_brainfuck_optimizations = true;
 
   FunctionPassRunner::enter_optimization_loop(
@@ -64,6 +65,7 @@ static void optimize_function(Function* function, OptimizationStatistics* statis
       runner.run<opt::DeadCodeElimination>();
       runner.run<opt::ConstPropagation>();
       runner.run<opt::InstructionSimplification>();
+      runner.run<opt::ConditionalCommonOperationExtraction>();
       runner.run<opt::DeadBlockElimination>();
       runner.run<opt::LocalReordering>();
       if (enable_loop_optimizations) {
@@ -99,8 +101,8 @@ int main() {
   OptimizationStatistics opt_statistics;
 
   const auto printing_method = IRPrintingMethod::Compact;
-  //  const auto source_path = "TestsTC/simple.tc";
-  const auto source_path = "TestsBF/mandel.bf";
+  const auto source_path = "TestsTC/extraction.tc";
+  //  const auto source_path = "TestsBF/test.bf";
 
   const auto module = compile_source(&context, source_path);
 
@@ -115,11 +117,11 @@ int main() {
              std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
   }
 
-  if (true) {
+  if (false) {
     opt_statistics.show();
   }
 
-  if (false) {
+  if (true) {
     for (Function& f : module->local_functions()) {
       f.generate_graph(fmt::format("Graphs/{}.svg", f.get_name()), printing_method);
     }
@@ -129,6 +131,6 @@ int main() {
   ConsolePrinter console_printer(ConsolePrinter::Variant::ColorfulIfSupported);
 
   module->validate(ValidationBehaviour::ErrorsAreFatal);
-  module->print(file_printer, printing_method);
+  module->print(console_printer, printing_method);
   module->destroy();
 }

@@ -603,6 +603,8 @@ public:
   void add_incoming(Block* block, Value* value);
   void add_incoming(const Incoming& incoming) { add_incoming(incoming.block, incoming.value); }
 
+  void replace_incoming_for_block(const Block* block, Value* new_incoming);
+
   bool replace_incoming_block_opt(const Block* old_incoming, Block* new_incoming);
   void replace_incoming_block(const Block* old_incoming, Block* new_incoming);
 

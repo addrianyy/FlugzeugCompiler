@@ -170,6 +170,12 @@ const Value* Phi::get_incoming_by_block(const Block* block) const {
   return get_operand(get_value_index(index));
 }
 
+void Phi::replace_incoming_for_block(const Block* block, Value* new_incoming) {
+  size_t index;
+  verify(index_for_block(block, index), "No incoming found for given block");
+  set_operand(get_value_index(index), new_incoming);
+}
+
 bool Phi::replace_incoming_block_opt(const Block* old_incoming, Block* new_incoming) {
   if (old_incoming == new_incoming) {
     return false;
