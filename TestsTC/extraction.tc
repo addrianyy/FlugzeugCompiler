@@ -9,3 +9,17 @@ i32 extraction(i32 condition, i32 x, i32 y, i32 z) {
 
     return result;
 }
+
+extern i32 function(i32 i);
+
+void test(i32 n) {
+    i32 z = 0;
+    for (i32 i = 0; i < n; z += 1) {
+        i32 result = function(i);
+        if (result == 0) {
+            i += 1;
+        } else {
+            i += 2;
+        }
+    }
+}

@@ -211,6 +211,10 @@ int64_t Constant::constrain_i(Type* type, int64_t value) {
   return result;
 }
 
+bool Value::is_used_only_by(const User* checked_user) const {
+  return all_of(users(), [checked_user](const User& user) { return checked_user == &user; });
+}
+
 std::string Value::format() const { return "v" + std::to_string(display_index); }
 
 std::string Constant::format() const {

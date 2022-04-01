@@ -100,7 +100,7 @@ int main() {
   Context context;
   OptimizationStatistics opt_statistics;
 
-  const auto printing_method = IRPrintingMethod::Compact;
+  const auto printing_method = IRPrintingMethod::Standard;
   const auto source_path = "TestsTC/extraction.tc";
   //  const auto source_path = "TestsBF/test.bf";
 

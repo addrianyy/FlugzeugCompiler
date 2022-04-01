@@ -4,12 +4,27 @@
 
 #include <Flugzeug/IR/Block.hpp>
 #include <Flugzeug/IR/Function.hpp>
+#include <Flugzeug/IR/Instructions.hpp>
 
 using namespace flugzeug;
 
+static bool is_dead_recursive_phi(Instruction* instruction) {
+  if (const auto phi = cast<Phi>(instruction)) {
+    // If all users of this Phi instruction are non-volatile and are used only by this Phi
+    // instruction we can safely remove it.
+    // Note that this will only handle the simplest cases.
+    return all_of(phi->users<Instruction>(), [&phi](Instruction& user) -> bool {
+      return !user.is_volatile() && user.is_used_only_by(phi);
+    });
+  } else {
+    return false;
+  }
+}
+
 static bool try_to_eliminate(Instruction* instruction, std::vector<Instruction*>& worklist) {
   // Skip instructions which cannot be eliminated.
-  if (instruction->is_used() || instruction->is_void() || instruction->is_volatile()) {
+  if (!is_dead_recursive_phi(instruction) &&
+      (instruction->is_used() || instruction->is_void() || instruction->is_volatile())) {
     return false;
   }
 

@@ -870,6 +870,38 @@ public:
       }
     }
 
+    {
+      Value* common;
+      Value* on_true_value;
+      Value* on_false_value;
+      BinaryInstr* on_true;
+      BinaryInstr* on_false;
+
+      //   select (a + X), (a + Y)
+      // =>
+      //   a + (select X, Y)
+      if (match_pattern(
+            select,
+            pat::select(
+              pat::value(), pat::binary(on_true, pat::value(common), pat::value(on_true_value)),
+              pat::binary(on_false, pat::exact_ref(common), pat::value(on_false_value))))) {
+        if (on_true->get_op() == on_false->get_op()) {
+          select->set_true_val(on_true_value);
+          select->set_false_val(on_false_value);
+
+          const auto new_binary = new BinaryInstr(context, common, on_true->get_op(), select);
+          new_binary->insert_after(select);
+          select->replace_uses_with_predicated(new_binary,
+                                               [&](User* user) { return user != new_binary; });
+
+          on_true->destroy_if_unused();
+          on_false->destroy_if_unused();
+
+          return OptimizationResult::changed();
+        }
+      }
+    }
+
     return OptimizationResult::unchanged();
   }
 
