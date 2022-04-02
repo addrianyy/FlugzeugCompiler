@@ -90,6 +90,8 @@ static void optimize_function(Function* function, OptimizationStatistics* statis
     });
 }
 
+#include <Flugzeug/CodeGeneration/RegAlloc/RegisterAllocation.hpp>
+
 int main() {
   std::filesystem::current_path("../");
   std::filesystem::remove_all("Graphs/");
@@ -126,6 +128,8 @@ int main() {
       f.generate_graph(fmt::format("Graphs/{}.svg", f.get_name()), printing_method);
     }
   }
+
+  allocate_registers(module->get_function("test"));
 
   FilePrinter file_printer("TestResults/result.flug");
   ConsolePrinter console_printer(ConsolePrinter::Variant::ColorfulIfSupported);
