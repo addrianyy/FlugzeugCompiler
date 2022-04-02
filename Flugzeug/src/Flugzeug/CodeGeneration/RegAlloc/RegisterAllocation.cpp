@@ -14,8 +14,6 @@
 
 using namespace flugzeug;
 
-using PhiMovesMap = std::unordered_map<Instruction*, Phi*>;
-
 template <typename Container, typename Fn> void for_each_erase(Container& container, Fn callback) {
   auto iterator = begin(container);
   while (iterator != end(container)) {
@@ -377,13 +375,13 @@ static void coalesce(OrderedInstructions& ordered_instructions) {
 
 static std::unordered_map<OrderedInstruction*, uint32_t>
 linear_scan_allocation(OrderedInstructions& ordered_instructions) {
-  /// Intervals which aren't processed yet.
+  // Intervals which aren't processed yet.
   std::vector<OrderedInstruction*> unhandled;
 
-  /// Intervals which overlap `current.start`.
+  // Intervals which overlap `current.start`.
   std::vector<OrderedInstruction*> active;
 
-  /// Intervals which have holes and `current.start` falls into one of them.
+  // Intervals which have holes and `current.start` falls into one of them.
   std::vector<OrderedInstruction*> inactive;
 
   std::unordered_map<OrderedInstruction*, uint32_t> registers;
@@ -449,7 +447,7 @@ linear_scan_allocation(OrderedInstructions& ordered_instructions) {
     // Check for inactive intervals that expired or become reactivated.
     for_each_erase(inactive, [&](OrderedInstruction* instruction) {
       const auto& instruction_li = instruction->get_live_interval();
-      const auto instruction_reg = registers[instruction];
+      const auto instruction_reg = get_register(instruction);
 
       if (instruction_li.ends_before(current_li)) {
         // `instruction` has already ended so we have fully handled it. The register it was using
@@ -471,7 +469,8 @@ linear_scan_allocation(OrderedInstructions& ordered_instructions) {
     tmp_free.clear();
     tmp_free.insert(begin(free), end(free));
 
-    // Make sure we don't use any register that is in `inactive` list and overlaps current interval.
+    // Make sure we don't use any register that is in `inactive` list and overlaps the current
+    // interval.
     for (const auto instruction : inactive) {
       if (LiveInterval::are_overlapping(instruction->get_live_interval(), current_li)) {
         tmp_free.erase(get_register(instruction));
@@ -511,6 +510,29 @@ debug_print_allocation(OrderedInstructions& ordered_instructions,
   log_debug("");
 }
 
+static void
+debug_verify_allocation(OrderedInstructions& ordered_instructions,
+                        const std::unordered_map<OrderedInstruction*, uint32_t>& allocation) {
+  for (OrderedInstruction& a : ordered_instructions.instructions()) {
+    if (!a.has_value() || a.is_joined()) {
+      continue;
+    }
+
+    for (OrderedInstruction& b : ordered_instructions.instructions()) {
+      if (&a == &b || &a > &b || !b.has_value() || b.is_joined()) {
+        continue;
+      }
+
+      const auto overlap =
+        LiveInterval::are_overlapping(a.get_live_interval(), b.get_live_interval());
+      if (overlap) {
+        verify(allocation.find(&a)->second != allocation.find(&b)->second,
+               "Instructions have overlapping intervals but the have assigned the same register");
+      }
+    }
+  }
+}
+
 AllocatedRegisters flugzeug::allocate_registers(Function* function) {
   prepare_function_for_regalloc(function);
 
@@ -525,6 +547,10 @@ AllocatedRegisters flugzeug::allocate_registers(Function* function) {
   coalesce(ordered_instructions);
 
   const auto allocation = linear_scan_allocation(ordered_instructions);
+
+  if (false) {
+    debug_verify_allocation(ordered_instructions, allocation);
+  }
 
   if (true) {
     ordered_instructions.debug_print();

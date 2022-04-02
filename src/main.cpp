@@ -133,10 +133,14 @@ int main() {
     allocate_registers(module->get_function("test"));
   }
 
-  FilePrinter file_printer("TestResults/result.flug");
-  ConsolePrinter console_printer(ConsolePrinter::Variant::ColorfulIfSupported);
-
   module->validate(ValidationBehaviour::ErrorsAreFatal);
-  module->print(console_printer, printing_method);
+
+  if (false) {
+    FilePrinter file_printer("TestResults/result.flug");
+    ConsolePrinter console_printer(ConsolePrinter::Variant::ColorfulIfSupported);
+
+    module->print(console_printer, printing_method);
+  }
+
   module->destroy();
 }
