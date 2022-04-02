@@ -16,6 +16,17 @@ using namespace flugzeug;
 
 using PhiMovesMap = std::unordered_map<Instruction*, Phi*>;
 
+template <typename Container, typename Fn> void for_each_erase(Container& container, Fn callback) {
+  auto iterator = begin(container);
+  while (iterator != end(container)) {
+    if (callback(*iterator)) {
+      iterator = container.erase(iterator);
+    } else {
+      ++iterator;
+    }
+  }
+}
+
 class BackEdges {
   const DominatorTree& dominator_tree;
 
@@ -351,7 +362,8 @@ static void coalesce(OrderedInstructions& ordered_instructions) {
 
   // Try to coalesce instruction result with first argument. This is done for speed.
   for (OrderedInstruction& instruction : ordered_instructions.instructions()) {
-    if (cast<Phi>(instruction.get()) || instruction.get()->get_operand_count() == 0) {
+    if (!instruction.has_value() || cast<Phi>(instruction.get()) ||
+        instruction.get()->get_operand_count() == 0) {
       continue;
     }
 
@@ -364,6 +376,126 @@ static void coalesce(OrderedInstructions& ordered_instructions) {
       }
     }
   }
+}
+
+static std::unordered_map<OrderedInstruction*, uint32_t>
+linear_scan_allocation(OrderedInstructions& ordered_instructions) {
+  std::vector<OrderedInstruction*> unhandled;
+  std::vector<OrderedInstruction*> active;
+  std::vector<OrderedInstruction*> inactive;
+  std::vector<OrderedInstruction*> handled;
+
+  std::unordered_map<OrderedInstruction*, uint32_t> registers;
+  const auto get_register = [&](OrderedInstruction* instruction) {
+    const auto it = registers.find(instruction);
+    verify(it != registers.end(), "Register is not assigned yet (?)");
+    return it->second;
+  };
+
+  std::unordered_set<uint32_t> free;
+  std::unordered_set<uint32_t> tmp_free;
+
+  uint32_t next_register_id = 0;
+
+  {
+    unhandled.reserve(ordered_instructions.instructions().size());
+
+    for (auto& instruction : ordered_instructions.instructions()) {
+      if (!instruction.has_value() || instruction.is_joined()) {
+        continue;
+      }
+
+      unhandled.push_back(&instruction);
+    }
+
+    std::sort(begin(unhandled), end(unhandled), [&](OrderedInstruction* a, OrderedInstruction* b) {
+      return a->get_live_interval().first_range_start() >
+             b->get_live_interval().first_range_start();
+    });
+  }
+
+  while (!unhandled.empty()) {
+    // Get unhandled instruction with the lowest starting point.
+    const auto current = unhandled.back();
+    const auto& current_li = current->get_live_interval();
+    unhandled.pop_back();
+
+    // Check for active intervals that expired.
+    for_each_erase(active, [&](OrderedInstruction* instruction) {
+      const auto& instruction_li = instruction->get_live_interval();
+      const auto instruction_reg = get_register(instruction);
+
+      if (instruction_li.last_range_end() <= current_li.last_range_end()) {
+        handled.push_back(instruction);
+        free.insert(instruction_reg);
+
+        return true;
+      } else if (!LiveInterval::are_overlapping(instruction_li, current_li)) {
+        inactive.push_back(instruction);
+        free.insert(instruction_reg);
+
+        return true;
+      }
+
+      return false;
+    });
+
+    // Check for inactive intervals that expired or become reactivated.
+    for_each_erase(inactive, [&](OrderedInstruction* instruction) {
+      const auto& instruction_li = instruction->get_live_interval();
+      const auto instruction_reg = registers[instruction];
+
+      if (instruction_li.last_range_end() <= current_li.last_range_end()) {
+        handled.push_back(instruction);
+
+        return true;
+      } else if (LiveInterval::are_overlapping(instruction_li, current_li)) {
+        active.push_back(instruction);
+        free.erase(instruction_reg);
+
+        return true;
+      }
+
+      return false;
+    });
+
+    // Collect available registers in `tmp_free`.
+    tmp_free.clear();
+    tmp_free.insert(begin(free), end(free));
+
+    for (const auto instruction : inactive) {
+      if (LiveInterval::are_overlapping(instruction->get_live_interval(), current_li)) {
+        tmp_free.erase(get_register(instruction));
+      }
+    }
+
+    uint32_t assigned_reg = 0;
+    if (tmp_free.empty()) {
+      assigned_reg = next_register_id++;
+    } else {
+      assigned_reg = *tmp_free.begin();
+      free.erase(assigned_reg);
+    }
+
+    registers[current] = assigned_reg;
+    active.push_back(current);
+  }
+
+  return registers;
+}
+
+static void
+debug_print_allocation(OrderedInstructions& ordered_instructions,
+                       const std::unordered_map<OrderedInstruction*, uint32_t>& allocation) {
+  DebugRepresentation dbg_repr(ordered_instructions);
+
+  log_debug("Register allocation:");
+
+  for (const auto [instruction, reg] : allocation) {
+    log_debug("{}: R{}", dbg_repr.format(instruction), reg);
+  }
+
+  log_debug("");
 }
 
 void flugzeug::allocate_registers(Function* function) {
@@ -379,9 +511,14 @@ void flugzeug::allocate_registers(Function* function) {
   build_live_intervals(ordered_instructions, toposort, back_edges);
   coalesce(ordered_instructions);
 
+  const auto allocation = linear_scan_allocation(ordered_instructions);
+
   ordered_instructions.debug_print();
   ordered_instructions.debug_print_intervals();
   ordered_instructions.debug_print_interference();
+
+  debug_print_allocation(ordered_instructions, allocation);
+
   function->debug_graph();
 
   std::exit(0);

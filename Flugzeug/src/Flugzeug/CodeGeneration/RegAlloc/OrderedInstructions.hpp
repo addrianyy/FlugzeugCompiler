@@ -1,4 +1,6 @@
 #pragma once
+#include "LiveInterval.hpp"
+
 #include <memory>
 #include <span>
 #include <unordered_map>
@@ -11,33 +13,23 @@ class Function;
 class Block;
 class Instruction;
 
+class OrderedInstructions;
+class OrderedInstruction;
+
+class DebugRepresentation {
+  std::unordered_map<class OrderedInstruction*, std::vector<OrderedInstruction*>> represents;
+
+public:
+  explicit DebugRepresentation(OrderedInstructions& ordered_instructions);
+
+  std::string format(OrderedInstruction* instruction) const;
+};
+
 struct BlockInstructionsRange {
   size_t first;
   size_t last;
 
   BlockInstructionsRange(class OrderedInstructions& ordered_instructions, Block* block);
-};
-
-struct Range {
-  size_t start;
-  size_t end;
-};
-
-class LiveInterval {
-  std::vector<Range> ranges;
-
-  explicit LiveInterval(std::vector<Range> ranges) : ranges(std::move(ranges)) {}
-
-public:
-  LiveInterval() = default;
-
-  std::span<const Range> get_ranges() const { return ranges; }
-
-  static bool are_overlapping(const LiveInterval& a, const LiveInterval& b);
-  static LiveInterval merge(const LiveInterval& a, const LiveInterval& b);
-
-  void clear();
-  void add(Range range);
 };
 
 class OrderedInstruction {
@@ -53,11 +45,11 @@ public:
   OrderedInstruction(size_t index, Instruction* instruction)
       : index(index), instruction(instruction) {}
 
-  bool has_value() const;
-  bool is_joined() const;
-
   size_t get_index() const { return index; }
   Instruction* get() const { return instruction; }
+
+  bool has_value() const;
+  bool is_joined() const;
 
   OrderedInstruction* get_representative();
   const LiveInterval& get_live_interval();
@@ -73,11 +65,11 @@ class OrderedInstructions {
   std::unordered_map<Instruction*, OrderedInstruction*> map;
 
 public:
+  explicit OrderedInstructions(const std::vector<Block*>& toposort);
+
   std::span<OrderedInstruction> instructions() {
     return {order.get(), order.get() + instruction_count};
   }
-
-  explicit OrderedInstructions(const std::vector<Block*>& toposort);
 
   OrderedInstruction* get(Instruction* instruction);
 
