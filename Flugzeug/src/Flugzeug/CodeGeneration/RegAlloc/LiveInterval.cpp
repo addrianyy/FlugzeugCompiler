@@ -1,14 +1,20 @@
 #include "LiveInterval.hpp"
 
 #include <Flugzeug/Core/Error.hpp>
+#include <Flugzeug/Core/Iterator.hpp>
 
 using namespace flugzeug;
 
 size_t LiveInterval::first_range_start() const { return ranges.front().start; }
 size_t LiveInterval::last_range_end() const { return ranges.back().end; }
 
-bool LiveInterval::ended_before(const LiveInterval& other) const {
+bool LiveInterval::ends_before(const LiveInterval& other) const {
   return last_range_end() <= other.first_range_start();
+}
+
+bool LiveInterval::overlaps_with(size_t other) const {
+  return any_of(ranges,
+                [other](const Range& range) { return other >= range.start && other < range.end; });
 }
 
 void LiveInterval::add(Range range) {

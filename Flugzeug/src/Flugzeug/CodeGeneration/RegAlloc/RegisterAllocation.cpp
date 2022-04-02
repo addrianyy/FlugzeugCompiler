@@ -380,10 +380,10 @@ linear_scan_allocation(OrderedInstructions& ordered_instructions) {
   /// Intervals which aren't processed yet.
   std::vector<OrderedInstruction*> unhandled;
 
-  /// Intervals which overlap `current`.
+  /// Intervals which overlap `current.start`.
   std::vector<OrderedInstruction*> active;
 
-  /// Intervals which have holes and `current` falls into one of them.
+  /// Intervals which have holes and `current.start` falls into one of them.
   std::vector<OrderedInstruction*> inactive;
 
   std::unordered_map<OrderedInstruction*, uint32_t> registers;
@@ -428,15 +428,15 @@ linear_scan_allocation(OrderedInstructions& ordered_instructions) {
       const auto& instruction_li = instruction->get_live_interval();
       const auto instruction_reg = get_register(instruction);
 
-      if (instruction_li.ended_before(current_li)) {
+      if (instruction_li.ends_before(current_li)) {
         // `instruction` has already ended so we have fully handled it. The register it was using is
         // now free.
         free.insert(instruction_reg);
 
         return true;
-      } else if (!LiveInterval::are_overlapping(instruction_li, current_li)) {
-        // `current` lies in the hole of `instruction`. `instruction` becomes inactive for now and
-        // its register is temporarily free.
+      } else if (!instruction_li.overlaps_with(current_li.first_range_start())) {
+        // `current.start` lies in the hole of `instruction`. `instruction` becomes inactive for now
+        // and its register is temporarily free.
         inactive.push_back(instruction);
         free.insert(instruction_reg);
 
@@ -451,13 +451,13 @@ linear_scan_allocation(OrderedInstructions& ordered_instructions) {
       const auto& instruction_li = instruction->get_live_interval();
       const auto instruction_reg = registers[instruction];
 
-      if (instruction_li.ended_before(current_li)) {
+      if (instruction_li.ends_before(current_li)) {
         // `instruction` has already ended so we have fully handled it. The register it was using
         // is already in the free set.
         return true;
-      } else if (LiveInterval::are_overlapping(instruction_li, current_li)) {
-        // `current` was in the hole of `instruction` before but now they overlap. Reactivate it:
-        // move `instruction` to the active list and mark its register as non-free.
+      } else if (instruction_li.overlaps_with(current_li.first_range_start())) {
+        // `current.start` was in the hole of `instruction` before but now they overlap. Reactivate
+        // it: move `instruction` to the active list and mark its register as non-free.
         active.push_back(instruction);
         free.erase(instruction_reg);
 
@@ -471,6 +471,7 @@ linear_scan_allocation(OrderedInstructions& ordered_instructions) {
     tmp_free.clear();
     tmp_free.insert(begin(free), end(free));
 
+    // Make sure we don't use any register that is in `inactive` list and overlaps current interval.
     for (const auto instruction : inactive) {
       if (LiveInterval::are_overlapping(instruction->get_live_interval(), current_li)) {
         tmp_free.erase(get_register(instruction));
