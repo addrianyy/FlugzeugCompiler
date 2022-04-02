@@ -30,6 +30,8 @@
 #include <Flugzeug/Passes/PassRunner.hpp>
 #include <Flugzeug/Passes/PhiMinimization.hpp>
 
+#include <Flugzeug/CodeGeneration/RegAlloc/RegisterAllocation.hpp>
+
 #include <bf/BrainfuckBufferSplitting.hpp>
 #include <bf/BrainfuckLoopOptimization.hpp>
 #include <bf/Compiler.hpp>
@@ -90,8 +92,6 @@ static void optimize_function(Function* function, OptimizationStatistics* statis
     });
 }
 
-#include <Flugzeug/CodeGeneration/RegAlloc/RegisterAllocation.hpp>
-
 int main() {
   std::filesystem::current_path("../");
   std::filesystem::remove_all("Graphs/");
@@ -129,7 +129,9 @@ int main() {
     }
   }
 
-  allocate_registers(module->get_function("test"));
+  if (true) {
+    allocate_registers(module->get_function("test"));
+  }
 
   FilePrinter file_printer("TestResults/result.flug");
   ConsolePrinter console_printer(ConsolePrinter::Variant::ColorfulIfSupported);

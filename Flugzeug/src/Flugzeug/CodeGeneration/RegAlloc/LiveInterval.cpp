@@ -7,6 +7,10 @@ using namespace flugzeug;
 size_t LiveInterval::first_range_start() const { return ranges.front().start; }
 size_t LiveInterval::last_range_end() const { return ranges.back().end; }
 
+bool LiveInterval::ended_before(const LiveInterval& other) const {
+  return last_range_end() <= other.first_range_start();
+}
+
 void LiveInterval::add(Range range) {
   if (ranges.empty()) {
     ranges.push_back(range);

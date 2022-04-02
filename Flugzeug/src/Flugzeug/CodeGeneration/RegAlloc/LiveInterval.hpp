@@ -22,6 +22,8 @@ public:
   size_t first_range_start() const;
   size_t last_range_end() const;
 
+  bool ended_before(const LiveInterval& other) const;
+
   static bool are_overlapping(const LiveInterval& a, const LiveInterval& b);
   static LiveInterval merge(const LiveInterval& a, const LiveInterval& b);
 

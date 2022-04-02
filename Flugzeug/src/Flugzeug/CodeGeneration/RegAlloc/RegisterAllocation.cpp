@@ -108,13 +108,11 @@ static bool split_critical_edges(Function* function) {
   return did_something;
 }
 
-static PhiMovesMap generate_phi_moves(Function* function) {
-  PhiMovesMap moves_map;
+static bool generate_phi_moves(Function* function) {
+  bool did_something = false;
 
   for (Block& block : *function) {
     for (Phi& phi : advance_early(block.instructions<Phi>())) {
-      moves_map.reserve(moves_map.size() + phi.get_incoming_count());
-
       for (const auto incoming : phi) {
         const auto move = new BinaryInstr(function->get_context(), incoming.value, BinaryOp::Add,
                                           incoming.value->get_type()->get_zero());
@@ -122,25 +120,24 @@ static PhiMovesMap generate_phi_moves(Function* function) {
 
         phi.replace_incoming_for_block(incoming.block, move);
 
-        moves_map.insert({move, &phi});
+        did_something = true;
       }
     }
   }
 
-  return moves_map;
+  return did_something;
 }
 
-static PhiMovesMap prepare_function_for_regalloc(Function* function) {
+static void prepare_function_for_regalloc(Function* function) {
   order_phis(function);
 
   const bool splitted = split_critical_edges(function);
-  auto phi_moves = generate_phi_moves(function);
+
+  generate_phi_moves(function);
 
   if (splitted) {
     opt::CFGSimplification::run(function);
   }
-
-  return std::move(phi_moves);
 }
 
 static std::vector<Block*> toposort_blocks(Function* function, const BackEdges& back_edges) {
@@ -380,10 +377,14 @@ static void coalesce(OrderedInstructions& ordered_instructions) {
 
 static std::unordered_map<OrderedInstruction*, uint32_t>
 linear_scan_allocation(OrderedInstructions& ordered_instructions) {
+  /// Intervals which aren't processed yet.
   std::vector<OrderedInstruction*> unhandled;
+
+  /// Intervals which overlap `current`.
   std::vector<OrderedInstruction*> active;
+
+  /// Intervals which have holes and `current` falls into one of them.
   std::vector<OrderedInstruction*> inactive;
-  std::vector<OrderedInstruction*> handled;
 
   std::unordered_map<OrderedInstruction*, uint32_t> registers;
   const auto get_register = [&](OrderedInstruction* instruction) {
@@ -397,6 +398,8 @@ linear_scan_allocation(OrderedInstructions& ordered_instructions) {
 
   uint32_t next_register_id = 0;
 
+  // Sort all representative instructions so the last instruction in the list will have lowest
+  // starting index.
   {
     unhandled.reserve(ordered_instructions.instructions().size());
 
@@ -425,12 +428,15 @@ linear_scan_allocation(OrderedInstructions& ordered_instructions) {
       const auto& instruction_li = instruction->get_live_interval();
       const auto instruction_reg = get_register(instruction);
 
-      if (instruction_li.last_range_end() <= current_li.last_range_end()) {
-        handled.push_back(instruction);
+      if (instruction_li.ended_before(current_li)) {
+        // `instruction` has already ended so we have fully handled it. The register it was using is
+        // now free.
         free.insert(instruction_reg);
 
         return true;
       } else if (!LiveInterval::are_overlapping(instruction_li, current_li)) {
+        // `current` lies in the hole of `instruction`. `instruction` becomes inactive for now and
+        // its register is temporarily free.
         inactive.push_back(instruction);
         free.insert(instruction_reg);
 
@@ -445,11 +451,13 @@ linear_scan_allocation(OrderedInstructions& ordered_instructions) {
       const auto& instruction_li = instruction->get_live_interval();
       const auto instruction_reg = registers[instruction];
 
-      if (instruction_li.last_range_end() <= current_li.last_range_end()) {
-        handled.push_back(instruction);
-
+      if (instruction_li.ended_before(current_li)) {
+        // `instruction` has already ended so we have fully handled it. The register it was using
+        // is already in the free set.
         return true;
       } else if (LiveInterval::are_overlapping(instruction_li, current_li)) {
+        // `current` was in the hole of `instruction` before but now they overlap. Reactivate it:
+        // move `instruction` to the active list and mark its register as non-free.
         active.push_back(instruction);
         free.erase(instruction_reg);
 
@@ -469,6 +477,8 @@ linear_scan_allocation(OrderedInstructions& ordered_instructions) {
       }
     }
 
+    // Assign register to `current`. If there isn't any free register we will create a new one. If
+    // there is one we will take the first one.
     uint32_t assigned_reg = 0;
     if (tmp_free.empty()) {
       assigned_reg = next_register_id++;
@@ -478,6 +488,8 @@ linear_scan_allocation(OrderedInstructions& ordered_instructions) {
     }
 
     registers[current] = assigned_reg;
+
+    // `current` is now an active interval.
     active.push_back(current);
   }
 
@@ -498,8 +510,8 @@ debug_print_allocation(OrderedInstructions& ordered_instructions,
   log_debug("");
 }
 
-void flugzeug::allocate_registers(Function* function) {
-  const auto phi_moves = prepare_function_for_regalloc(function);
+AllocatedRegisters flugzeug::allocate_registers(Function* function) {
+  prepare_function_for_regalloc(function);
 
   const DominatorTree dominator_tree(function);
   const BackEdges back_edges(dominator_tree);
@@ -513,13 +525,34 @@ void flugzeug::allocate_registers(Function* function) {
 
   const auto allocation = linear_scan_allocation(ordered_instructions);
 
-  ordered_instructions.debug_print();
-  ordered_instructions.debug_print_intervals();
-  ordered_instructions.debug_print_interference();
+  if (true) {
+    ordered_instructions.debug_print();
+    ordered_instructions.debug_print_intervals();
+    ordered_instructions.debug_print_interference();
 
-  debug_print_allocation(ordered_instructions, allocation);
+    debug_print_allocation(ordered_instructions, allocation);
+  }
 
-  function->debug_graph();
+  std::unordered_map<const Instruction*, uint32_t> registers;
+  registers.reserve(allocation.size());
 
-  std::exit(0);
+  for (OrderedInstruction& instruction : ordered_instructions.instructions()) {
+    if (!instruction.has_value()) {
+      continue;
+    }
+
+    const auto it = allocation.find(instruction.get_representative());
+    verify(it != allocation.end(), "Not all registers were assigned during register allocation");
+
+    registers.insert({instruction.get(), it->second});
+  }
+
+  return AllocatedRegisters(std::move(registers));
+}
+
+uint32_t AllocatedRegisters::get_register(const Instruction* instruction) const {
+  const auto it = registers.find(instruction);
+  verify(it == registers.end(), "No register was assigned to a given instruction");
+
+  return it->second;
 }
