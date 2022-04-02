@@ -191,11 +191,25 @@ static std::vector<Block*> toposort_blocks(Function* function, const BackEdges& 
   return sorted;
 }
 
-static void build_live_intervals(Function* function, OrderedInstructions& ordered_instructions,
+static void build_live_intervals(OrderedInstructions& ordered_instructions,
                                  const std::vector<Block*>& toposort, const BackEdges& back_edges) {
   // Map: block -> values which are live at the beginning of the block
   std::unordered_map<Block*, std::unordered_set<OrderedInstruction*>> live_in_blocks;
   live_in_blocks.reserve(toposort.size());
+
+  const auto process_successors_phis = [&](Block* block, Block* successor,
+                                           std::unordered_set<OrderedInstruction*>& live) {
+    for (Phi& phi : successor->instructions<Phi>()) {
+      const auto incoming = cast<Instruction>(phi.get_incoming_by_block(block));
+      verify(incoming, "Incoming value should be an instruction");
+
+      // Make sure that successor's Phi isn't in the live set.
+      live.erase(ordered_instructions.get(&phi));
+
+      // Incoming value must live till the end of this block.
+      live.insert(ordered_instructions.get(incoming));
+    }
+  };
 
   // Compute values which are live at the beginning of every block. We do this by iterating over
   // topological order in reverse. This means that when we process a given block all its successors
@@ -215,16 +229,7 @@ static void build_live_intervals(Function* function, OrderedInstructions& ordere
                "Successor block wasn't visited yet and it's not a back edge");
       }
 
-      for (Phi& phi : successor->instructions<Phi>()) {
-        const auto incoming = cast<Instruction>(phi.get_incoming_by_block(block));
-        verify(incoming, "Incoming value should be an instruction");
-
-        // Make sure that successor's Phi isn't in the live set.
-        live.erase(ordered_instructions.get(&phi));
-
-        // Incoming value must live till the end of this block.
-        live.insert(ordered_instructions.get(incoming));
-      }
+      process_successors_phis(block, successor, live);
     }
 
     // Add operands of the instructions in the block to the live list.
@@ -270,8 +275,8 @@ static void build_live_intervals(Function* function, OrderedInstructions& ordere
       //   [instruction.index, last_use)
       // otherwise we will add:
       //   [block.first_instruction, last_use)
-      instruction->get_live_interval().add(
-        created_in_block ? Range{index, last_use} : Range{instructions_range.first, last_use});
+      instruction->add_live_range(created_in_block ? Range{index, last_use}
+                                                   : Range{instructions_range.first, last_use});
     };
 
     live.clear();
@@ -285,16 +290,7 @@ static void build_live_intervals(Function* function, OrderedInstructions& ordere
         live.insert(begin(it->second), end(it->second));
       }
 
-      for (Phi& phi : successor->instructions<Phi>()) {
-        const auto incoming = cast<Instruction>(phi.get_incoming_by_block(block));
-        verify(incoming, "Incoming should be an instruction");
-
-        // Make sure that successor's Phi isn't in the live set.
-        live.erase(ordered_instructions.get(&phi));
-
-        // Incoming value must live till the end of this block.
-        live.insert(ordered_instructions.get(incoming));
-      }
+      process_successors_phis(block, successor, live);
     }
 
     // All values which are live at the beginning of the successors must live till the end of this
@@ -336,8 +332,42 @@ static void build_live_intervals(Function* function, OrderedInstructions& ordere
   }
 }
 
+static void coalesce(OrderedInstructions& ordered_instructions) {
+  // Make sure that all incoming values and Phis are mapped to the same register. It is required for
+  // correctness.
+  for (OrderedInstruction& instruction : ordered_instructions.instructions()) {
+    const auto phi = cast<Phi>(instruction.get());
+    if (!phi) {
+      continue;
+    }
+
+    for (const auto incoming : *phi) {
+      const auto incoming_instruction = cast<Instruction>(incoming.value);
+      verify(incoming_instruction, "Phi incoming values should be instructions");
+      verify(ordered_instructions.get(incoming_instruction)->join_to(&instruction),
+             "Failed to coalesce Phi incoming values");
+    }
+  }
+
+  // Try to coalesce instruction result with first argument. This is done for speed.
+  for (OrderedInstruction& instruction : ordered_instructions.instructions()) {
+    if (cast<Phi>(instruction.get()) || instruction.get()->get_operand_count() == 0) {
+      continue;
+    }
+
+    const auto operand = cast<Instruction>(instruction.get()->get_operand(0));
+    if (operand) {
+      const auto result = instruction.join_to(ordered_instructions.get(operand));
+
+      if (false) {
+        log_debug("Joining {} with {}: {}", instruction.get()->format(), operand->format(), result);
+      }
+    }
+  }
+}
+
 void flugzeug::allocate_registers(Function* function) {
-  prepare_function_for_regalloc(function);
+  const auto phi_moves = prepare_function_for_regalloc(function);
 
   const DominatorTree dominator_tree(function);
   const BackEdges back_edges(dominator_tree);
@@ -346,10 +376,12 @@ void flugzeug::allocate_registers(Function* function) {
 
   OrderedInstructions ordered_instructions(toposort);
 
-  build_live_intervals(function, ordered_instructions, toposort, back_edges);
+  build_live_intervals(ordered_instructions, toposort, back_edges);
+  coalesce(ordered_instructions);
 
   ordered_instructions.debug_print();
   ordered_instructions.debug_print_intervals();
+  ordered_instructions.debug_print_interference();
   function->debug_graph();
 
   std::exit(0);

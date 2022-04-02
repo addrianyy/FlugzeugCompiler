@@ -26,9 +26,17 @@ struct Range {
 class LiveInterval {
   std::vector<Range> ranges;
 
+  explicit LiveInterval(std::vector<Range> ranges) : ranges(std::move(ranges)) {}
+
 public:
+  LiveInterval() = default;
+
   std::span<const Range> get_ranges() const { return ranges; }
 
+  static bool are_overlapping(const LiveInterval& a, const LiveInterval& b);
+  static LiveInterval merge(const LiveInterval& a, const LiveInterval& b);
+
+  void clear();
   void add(Range range);
 };
 
@@ -37,6 +45,7 @@ class OrderedInstruction {
   Instruction* instruction = nullptr;
 
   LiveInterval live_interval;
+  OrderedInstruction* representative = nullptr;
 
 public:
   OrderedInstruction() = default;
@@ -45,11 +54,16 @@ public:
       : index(index), instruction(instruction) {}
 
   bool has_value() const;
+  bool is_joined() const;
 
   size_t get_index() const { return index; }
   Instruction* get() const { return instruction; }
 
-  LiveInterval& get_live_interval() { return live_interval; }
+  OrderedInstruction* get_representative();
+  const LiveInterval& get_live_interval();
+
+  void add_live_range(Range range);
+  bool join_to(OrderedInstruction* other);
 };
 
 class OrderedInstructions {
@@ -69,6 +83,7 @@ public:
 
   void debug_print();
   void debug_print_intervals();
+  void debug_print_interference();
 };
 
 } // namespace flugzeug
