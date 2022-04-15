@@ -51,10 +51,7 @@ static Block* thread_jump(Block* block, Block* target, bool* did_something) {
 
     if (!do_phis_depend_on_predecessors(actual_target, block, target)) {
       for (Phi& phi : actual_target->instructions<Phi>()) {
-        phi.replace_incoming_block(target, block);
-
-        // Target block is still a predecessor so we need to keep incoming value for it.
-        phi.add_incoming(target, phi.get_type()->get_undef());
+        phi.add_incoming(block, phi.get_incoming_by_block(target));
       }
 
       *did_something = true;

@@ -721,11 +721,9 @@ public:
       Constant* compared_to;
       BinaryInstr* add;
 
-      const auto pat1 = pat::add(add, pat::constant(add_const), pat::value(add_unknown));
-      const auto pat2 = pat::constant(compared_to);
+      const auto added = pat::add(add, pat::constant(add_const), pat::value(add_unknown));
 
-      if (match_pattern(int_compare,
-                        pat::either(pat::compare(pat1, pat2), pat::compare(pat2, pat1)))) {
+      if (match_pattern(int_compare, pat::compare_eq_or_ne(added, pat::constant(compared_to)))) {
         const auto new_constant = compared_to->get_type()->get_constant(
           compared_to->get_constant_u() - add_const->get_constant_u());
 
