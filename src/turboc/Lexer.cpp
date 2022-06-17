@@ -3,6 +3,7 @@
 #include <Flugzeug/Core/Error.hpp>
 #include <Flugzeug/Core/Files.hpp>
 
+#include <algorithm>
 #include <array>
 #include <fstream>
 #include <iostream>
