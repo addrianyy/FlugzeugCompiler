@@ -11,7 +11,7 @@
 #include <Flugzeug/Passes/BlockInvariantPropagation.hpp>
 #include <Flugzeug/Passes/CFGSimplification.hpp>
 #include <Flugzeug/Passes/CallInlining.hpp>
-#include <Flugzeug/Passes/ConditionalCommonOperationExtraction.h>
+#include <Flugzeug/Passes/ConditionalCommonOperationExtraction.hpp>
 #include <Flugzeug/Passes/ConditionalFlattening.hpp>
 #include <Flugzeug/Passes/ConstPropagation.hpp>
 #include <Flugzeug/Passes/DeadBlockElimination.hpp>
@@ -103,7 +103,7 @@ int main() {
   OptimizationStatistics opt_statistics;
 
   const auto printing_method = IRPrintingMethod::Standard;
-  const auto source_path = "TestsTC/extraction.tc";
+  const auto source_path = "TestsTC/main.tc";
   //  const auto source_path = "TestsBF/test.bf";
 
   const auto module = compile_source(&context, source_path);
@@ -129,11 +129,12 @@ int main() {
     }
   }
 
-  if (true) {
+  if (false) {
     allocate_registers(module->get_function("test"));
   }
 
   module->validate(ValidationBehaviour::ErrorsAreFatal);
+  module->print(printing_method);
 
   if (false) {
     FilePrinter file_printer("TestResults/result.flug");

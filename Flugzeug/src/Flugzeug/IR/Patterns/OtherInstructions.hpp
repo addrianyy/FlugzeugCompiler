@@ -135,7 +135,7 @@ public:
     }
 
     bool matched;
-    if constexpr (std::is_same_v<Instruction, CondBranch>) {
+    if constexpr (std::is_same_v<TInstruction, CondBranch>) {
       matched = cond.match(instruction->get_cond()) &&
                 on_true.match(instruction->get_true_target()) &&
                 on_false.match(instruction->get_false_target());

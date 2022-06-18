@@ -118,6 +118,18 @@ static OptimizationResult simplify_bit_operations(BinaryInstr* binary) {
     }
   }
 
+  {
+    Value* x;
+    Value* y;
+    Value* z;
+
+    // (x ^ y) ^ y => x
+    if (match_pattern(binary, pat::xor_(pat::xor_(pat::value(x), pat::value(y)),
+                                        pat::either(z, pat::exact_ref(x), pat::exact_ref(y))))) {
+      return z == x ? y : x;
+    }
+  }
+
   return OptimizationResult::unchanged();
 }
 

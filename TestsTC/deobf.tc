@@ -1,0 +1,25 @@
+extern void print(u8* x);
+
+void print_num(u32 num) {
+    u8 buffer[256];
+    i64 i = 255;
+
+    buffer[i] = 0;
+    i -= 1;
+
+    if (num == 0) {
+        buffer[i] = 48u8;
+        i -= 1;
+    }
+
+    while (num > 0) {
+        u8 char = (num % 10u8) + 48u8;
+
+        buffer[i] = char;
+        i -= 1;
+
+        num /= 10u8;
+    }
+
+    print(&buffer[i + 1]);
+}

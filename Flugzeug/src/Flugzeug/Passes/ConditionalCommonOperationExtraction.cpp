@@ -1,4 +1,4 @@
-#include "ConditionalCommonOperationExtraction.h"
+#include "ConditionalCommonOperationExtraction.hpp"
 
 #include <Flugzeug/IR/Function.hpp>
 #include <Flugzeug/IR/Instructions.hpp>
