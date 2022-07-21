@@ -1,0 +1,23 @@
+target_sources(Compiler PRIVATE
+    AST.cpp
+    AST.hpp
+    ASTPrinter.cpp
+    ASTPrinter.hpp
+    ASTVisitor.cpp
+    ASTVisitor.hpp
+    Compiler.cpp
+    Compiler.hpp
+    Conversion.cpp
+    Conversion.hpp
+    Function.cpp
+    Function.hpp
+    IRGenerator.cpp
+    IRGenerator.hpp
+    Lexer.cpp
+    Lexer.hpp
+    Parser.cpp
+    Parser.hpp
+    PrintToken.cpp
+    Type.cpp
+    Type.hpp
+)

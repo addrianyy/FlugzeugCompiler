@@ -1,0 +1,40 @@
+add_subdirectory(Internal)
+add_subdirectory(Parser)
+add_subdirectory(Patterns)
+
+target_sources(Flugzeug PRIVATE
+    Block.cpp
+    Block.hpp
+    ConsolePrinter.cpp
+    ConsolePrinter.hpp
+    Context.cpp
+    Context.hpp
+    DominatorTree.cpp
+    DominatorTree.hpp
+    FilePrinter.cpp
+    FilePrinter.hpp
+    Function.cpp
+    Function.hpp
+    Instruction.cpp
+    Instruction.hpp
+    InstructionInserter.cpp
+    InstructionInserter.hpp
+    Instructions.cpp
+    Instructions.hpp
+    InstructionVisitor.cpp
+    InstructionVisitor.hpp
+    IRPrinter.cpp
+    IRPrinter.hpp
+    Module.cpp
+    Module.hpp
+    Patterns.cpp
+    Patterns.hpp
+    Type.cpp
+    Type.hpp
+    User.cpp
+    User.hpp
+    Validator.cpp
+    Validator.hpp
+    Value.cpp
+    Value.hpp
+)

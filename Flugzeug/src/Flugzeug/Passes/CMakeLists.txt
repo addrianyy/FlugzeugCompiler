@@ -1,0 +1,52 @@
+add_subdirectory(Analysis)
+add_subdirectory(Memory)
+add_subdirectory(Utils)
+
+target_sources(Flugzeug PRIVATE
+    BlockInvariantPropagation.cpp
+    BlockInvariantPropagation.hpp
+    CallInlining.cpp
+    CallInlining.hpp
+    CFGSimplification.cpp
+    CFGSimplification.hpp
+    ConditionalCommonOperationExtraction.cpp
+    ConditionalCommonOperationExtraction.hpp
+    ConditionalFlattening.cpp
+    ConditionalFlattening.hpp
+    ConstPropagation.cpp
+    ConstPropagation.hpp
+    DeadBlockElimination.cpp
+    DeadBlockElimination.hpp
+    DeadCodeElimination.cpp
+    DeadCodeElimination.hpp
+    GlobalReordering.cpp
+    GlobalReordering.hpp
+    InstructionDeduplication.cpp
+    InstructionDeduplication.hpp
+    InstructionSimplification.cpp
+    InstructionSimplification.hpp
+    KnownBitsOptimization.cpp
+    KnownBitsOptimization.hpp
+    LocalReordering.cpp
+    LocalReordering.hpp
+    LoopInvariantOptimization.cpp
+    LoopInvariantOptimization.hpp
+    LoopMemoryExtraction.cpp
+    LoopMemoryExtraction.hpp
+    LoopRotation.cpp
+    LoopRotation.hpp
+    LoopUnrolling.cpp
+    LoopUnrolling.hpp
+    MemoryOptimization.cpp
+    MemoryOptimization.hpp
+    MemoryToSSA.cpp
+    MemoryToSSA.hpp
+    Pass.cpp
+    Pass.hpp
+    PassRunner.cpp
+    PassRunner.hpp
+    PhiMinimization.cpp
+    PhiMinimization.hpp
+    PhiToMemory.cpp
+    PhiToMemory.hpp
+)
