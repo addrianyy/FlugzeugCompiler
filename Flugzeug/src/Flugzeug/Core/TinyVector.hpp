@@ -30,7 +30,7 @@ public:
   bool empty() const { return size_ == 0; }
 
   operator std::span<T>() { return std::span<T>(data, size_); }
-  operator std::span<T>() const { return std::span<T>(data, size_); }
+  operator std::span<const T>() const { return std::span<const T>(data, size_); }
 
   template <size_t OtherCapacity> bool operator==(const TinyVector<T, OtherCapacity>& other) const {
     if (other.size() != size()) {

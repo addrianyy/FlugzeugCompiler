@@ -1,7 +1,6 @@
 #pragma once
 #include "ClassTraits.hpp"
 #include "Error.hpp"
-#include "Iterator.hpp"
 
 #include <memory>
 
