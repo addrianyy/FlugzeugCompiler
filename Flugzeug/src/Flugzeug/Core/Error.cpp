@@ -32,7 +32,7 @@
   }
 #endif
 
-  std::abort();
+  std::exit(1);
 }
 
 [[noreturn]] void flugzeug::detail::error::assert_fail(const char* file, int line,

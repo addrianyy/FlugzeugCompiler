@@ -274,13 +274,17 @@ class Validator : public ConstInstructionVisitor {
       } else if (const auto block = cast<Block>(operand)) {
         validation_check(blocks.contains(block), "Instruction uses block outside of the function");
       } else if (const auto other = cast<Instruction>(operand)) {
-        verify(other->get_block(), "Using uninserted instruction as operand");
+        const auto is_inserted = other->get_block();
+        validation_check(is_inserted, "Using uninserted instruction as operand");
 
         if (!phi) {
           validation_check(instruction != other,
                            "Self references are only allowed in Phi instructions");
-          validation_check(other->dominates(instruction, dominator_tree),
-                           "`{}` doesn't dominate this instruction", Format(other));
+
+          if (is_inserted) {
+            validation_check(other->dominates(instruction, dominator_tree),
+                             "`{}` doesn't dominate this instruction", Format(other));
+          }
         }
 
         if (const auto other_phi = cast<Phi>(other)) {
@@ -306,11 +310,14 @@ class Validator : public ConstInstructionVisitor {
         }
 
         if (const auto incoming_instruction = cast<Instruction>(incoming.value)) {
-          // Simulate usage at the end of predecessor.
-          validation_check(
-            incoming_instruction->dominates(incoming.block->get_last_instruction(), dominator_tree),
-            "Phi has incoming value `{}` which doesn't dominate the last instruction of `{}`",
-            Format(incoming.value), Format(incoming.block));
+          if (incoming_instruction->get_block()) {
+            // Simulate usage at the end of predecessor.
+            validation_check(
+              incoming_instruction->dominates(incoming.block->get_last_instruction(),
+                                              dominator_tree),
+              "Phi has incoming value `{}` which doesn't dominate the last instruction of `{}`",
+              Format(incoming.value), Format(incoming.block));
+          }
         }
       }
     }

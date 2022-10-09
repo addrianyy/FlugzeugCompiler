@@ -10,11 +10,19 @@ using namespace flugzeug;
 
 constexpr size_t flattening_instruction_treshold = 4;
 
-static bool is_instruction_movable(Instruction* instruction) {
+static bool can_speculate_instruction(Instruction* instruction) {
   return !instruction->is_volatile() && !cast<Load>(instruction);
 }
 
-template <size_t N> static bool move_instructions(const std::array<Block*, N>& from, Block* to) {
+struct SkewedConditional {
+  Block* skew;
+  Block* exit;
+  Block* true_block;
+  Block* false_block;
+};
+
+template <size_t N>
+static bool speculate_instructions(const std::array<Block*, N>& from, Block* to) {
   size_t total_instructions = 0;
 
   // Count all instructions in the `from` blocks and make sure that they all are movable.
@@ -28,8 +36,13 @@ template <size_t N> static bool move_instructions(const std::array<Block*, N>& f
         continue;
       }
 
+      // All Phis will be simplified so they don't count here.
+      if (cast<Phi>(&instruction)) {
+        total_instructions--;
+      }
+
       // Make sure that the instruction is movable.
-      if (!is_instruction_movable(&instruction)) {
+      if (!can_speculate_instruction(&instruction)) {
         return false;
       }
     }
@@ -39,11 +52,9 @@ template <size_t N> static bool move_instructions(const std::array<Block*, N>& f
     return false;
   }
 
-  // Copy instructions from `from` blocks to the beginning of `to` block.
+  // Copy instructions from `from` blocks to the end of `to` block.
   for (Block* from_block : from) {
-    // As we are moving to the beggining of `to` we need to iterate over instructions in reverse
-    // order.
-    for (Instruction& instruction : advance_early(reversed(*from_block))) {
+    for (Instruction& instruction : advance_early(*from_block)) {
       // Skip last instruction in the block (branch).
       if (&instruction == from_block->get_last_instruction()) {
         continue;
@@ -52,9 +63,10 @@ template <size_t N> static bool move_instructions(const std::array<Block*, N>& f
       // All Phis must be simplificable (block has only one predecessor).
       if (const auto phi = cast<Phi>(instruction)) {
         verify(utils::simplify_phi(phi, false), "Failed to simplify Phi");
+        continue;
       }
 
-      instruction.move_before(to->get_first_instruction());
+      instruction.move_before(to->get_last_instruction());
     }
 
     from_block->clear();
@@ -63,28 +75,45 @@ template <size_t N> static bool move_instructions(const std::array<Block*, N>& f
   return true;
 }
 
-static void rewrite_phis_to_selects(Value* condition, Block* block, Block* on_true,
-                                    Block* on_false) {
-  verify(on_true != on_false, "Invalid blocks passed");
+template <size_t N>
+static bool flatten(const std::array<Block*, N>& speculated_blocks, CondBranch* cond_branch,
+                    Block* true_block, Block* false_block, Block* exit) {
+  const auto block = cond_branch->get_block();
 
-  for (Phi& phi : advance_early(block->instructions<Phi>())) {
-    const auto true_value = phi.get_incoming_by_block(on_true);
-    const auto false_value = phi.get_incoming_by_block(on_false);
-    verify(true_value && false_value, "Invalid Phi incoming values");
-
-    phi.replace_with_instruction_and_destroy(
-      new Select(block->get_context(), condition, true_value, false_value));
+  // All speculated blocks must have only `block` as predecessor.
+  for (const auto speculated : speculated_blocks) {
+    if (speculated->get_single_predecessor() != block) {
+      return false;
+    }
   }
+
+  if (!speculate_instructions(speculated_blocks, block)) {
+    return false;
+  }
+
+  for (auto& phi : exit->instructions<Phi>()) {
+    const auto true_value = phi.remove_incoming(true_block);
+    const auto false_value = phi.remove_incoming(false_block);
+
+    const auto select =
+      new Select(block->get_context(), cond_branch->get_cond(), true_value, false_value);
+    select->insert_before(cond_branch);
+
+    phi.add_incoming(block, select);
+  }
+
+  // Make `block` branch directly to `exit`.
+  cond_branch->replace_with_instruction_and_destroy(new Branch(block->get_context(), exit));
+
+  // Destroy speculated blocks.
+  for (const auto speculated : speculated_blocks) {
+    speculated->destroy();
+  }
+
+  return true;
 }
 
-struct SkewedConditional {
-  Block* skew;
-  Block* exit;
-  Block* true_block;
-  Block* false_block;
-};
-
-static bool flatten_block(Block* block) {
+static bool try_flatten_block(Block* block) {
   const auto cond_branch = cast<CondBranch>(block->get_last_instruction());
   if (!cond_branch) {
     return false;
@@ -110,42 +139,27 @@ static bool flatten_block(Block* block) {
   // A - `block`
   // B - `skew`
   // D - `exit`
-  std::optional<SkewedConditional> skewed;
-  if (on_false_exit == on_true) {
-    skewed = SkewedConditional{
-      .skew = on_false, .exit = on_true, .true_block = block, .false_block = on_false};
-  } else if (on_true_exit == on_false) {
-    skewed = SkewedConditional{
-      .skew = on_true, .exit = on_false, .true_block = on_true, .false_block = block};
-  }
-  if (skewed) {
-    // `skew` should be only reachable from `block` and `exit` should be
-    // reachable from `block` and `skew`.
-    if (skewed->skew->get_single_predecessor() != block ||
-        skewed->exit->predecessors().size() != 2) {
-      return false;
+  {
+    std::optional<SkewedConditional> skewed;
+    if (on_false_exit == on_true) {
+      skewed = SkewedConditional{
+        .skew = on_false,
+        .exit = on_true,
+        .true_block = block,
+        .false_block = on_false,
+      };
+    } else if (on_true_exit == on_false) {
+      skewed = SkewedConditional{
+        .skew = on_true,
+        .exit = on_false,
+        .true_block = on_true,
+        .false_block = block,
+      };
     }
-
-    // Skip loops.
-    if (skewed->skew == skewed->exit || skewed->skew == block || skewed->exit == block) {
-      return false;
+    if (skewed) {
+      return flatten(std::array{skewed->skew}, cond_branch, skewed->true_block, skewed->false_block,
+                     skewed->exit);
     }
-
-    // Try to move every instruction from `skew` to `exit`.
-    if (!move_instructions(std::array{skewed->skew}, skewed->exit)) {
-      return false;
-    }
-
-    rewrite_phis_to_selects(cond_branch->get_cond(), skewed->exit, skewed->true_block,
-                            skewed->false_block);
-
-    // Make `block` branch directly to `exit`.
-    block->get_last_instruction()->replace_with_instruction_and_destroy(
-      new Branch(block->get_context(), skewed->exit));
-
-    skewed->skew->destroy();
-
-    return true;
   }
 
   // Symmetric case:
@@ -164,41 +178,9 @@ static bool flatten_block(Block* block) {
   if (!on_true_exit || !on_false_exit || on_true_exit != on_false_exit) {
     return false;
   }
-
   const auto exit = on_true_exit;
 
-  // Skip loops.
-  if (exit == block || exit == on_true || exit == on_false) {
-    return false;
-  }
-
-  // We cannot optimize this branch if `on_true` or `on_false` block is
-  // reachable from somewhere else then from `block`.
-  if (on_true->get_single_predecessor() != block || on_false->get_single_predecessor() != block) {
-    return false;
-  }
-
-  // We cannot optimize this branch if `exit` can be reached from
-  // somewhere else then `on_true` or `on_false`.
-  if (exit->predecessors().size() != 2) {
-    return false;
-  }
-
-  // Try to move every instruction from `on_true` and `on_false` to `exit`.
-  if (!move_instructions(std::array{on_true, on_false}, exit)) {
-    return false;
-  }
-
-  rewrite_phis_to_selects(cond_branch->get_cond(), exit, on_true, on_false);
-
-  // Make `block` branch directly to `exit`.
-  block->get_last_instruction()->replace_with_instruction_and_destroy(
-    new Branch(block->get_context(), exit));
-
-  on_true->destroy();
-  on_false->destroy();
-
-  return true;
+  return flatten(std::array{on_true, on_false}, cond_branch, on_true, on_false, exit);
 }
 
 bool opt::ConditionalFlattening::run(Function* function) {
@@ -208,7 +190,7 @@ bool opt::ConditionalFlattening::run(Function* function) {
     bool did_something_this_iteration = false;
 
     for (Block& block : *function) {
-      if (flatten_block(&block)) {
+      if (try_flatten_block(&block)) {
         did_something_this_iteration = true;
         did_something = true;
         break;

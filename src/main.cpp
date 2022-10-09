@@ -59,7 +59,7 @@ static void optimize_function(Function* function, OptimizationStatistics* statis
   constexpr bool enable_brainfuck_optimizations = true;
 
   FunctionPassRunner::enter_optimization_loop(
-    function, statistics, [&](FunctionPassRunner& runner) {
+    function, statistics, true, [&](FunctionPassRunner& runner) {
       runner.run<opt::CallInlining>(opt::InliningStrategy::InlineEverything);
       runner.run<opt::CFGSimplification>();
       runner.run<opt::MemoryToSSA>();
@@ -103,7 +103,7 @@ int main() {
   OptimizationStatistics opt_statistics;
 
   const auto printing_method = IRPrintingMethod::Standard;
-  const auto source_path = "TestsTC/main.tc";
+  const auto source_path = "TestsTC/branches.tc";
   //  const auto source_path = "TestsBF/test.bf";
 
   const auto module = compile_source(&context, source_path);
