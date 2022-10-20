@@ -78,6 +78,11 @@ public:
   const T* begin() const { return data(); }
   const T* end() const { return data() + size_; }
 
+  T& front() { return data()[0]; }
+  T& back() { return data()[size_ - 1]; }
+  const T& front() const { return data()[0]; }
+  const T& back() const { return data()[size_ - 1]; }
+
   T& operator[](size_t index) { return data()[index]; }
   const T& operator[](size_t index) const { return data()[index]; }
 
@@ -91,9 +96,11 @@ public:
     size_++;
   }
 
-  template <typename... Args> void emplace_back(Args&&... args) {
+  template <typename... Args> T& emplace_back(Args&&... args) {
     new (free_element()) T(std::forward<Args>(args)...);
     size_++;
+
+    return back();
   }
 
   void pop_back() {

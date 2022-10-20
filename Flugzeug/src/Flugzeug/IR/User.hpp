@@ -1,6 +1,7 @@
 #pragma once
 #include "Internal/Use.hpp"
 #include "Value.hpp"
+#include <Flugzeug/Core/SmallVector.hpp>
 
 #include <Flugzeug/Core/ClassTraits.hpp>
 #include <Flugzeug/Core/Iterator.hpp>
@@ -16,11 +17,13 @@ class User : public Value {
 
   friend class Value;
 
-  constexpr static size_t static_use_count = 3;
+  constexpr static size_t expected_operand_count = 4;
+
+  constexpr static size_t static_use_count = expected_operand_count;
   detail::Use static_uses[static_use_count]{};
 
-  std::vector<Value*> used_operands;
-  std::vector<detail::Use*> uses_for_operands;
+  SmallVector<Value*, expected_operand_count> used_operands;
+  SmallVector<detail::Use*, expected_operand_count> uses_for_operands;
 
   template <typename TOperand> class OperandIteratorInternal {
     TOperand* const* current;

@@ -1,8 +1,12 @@
 #include "Log.hpp"
+#include "ConsoleColors.hpp"
+
 #include <iostream>
 
 void flugzeug::detail::log::log(const char* file, int line, LogLevel level,
                                 const std::string& message) {
+  console_colors::ensure_initialized();
+
   std::ostream& stream = level >= LogLevel::Warn ? std::cerr : std::cout;
   const char* header = nullptr;
 

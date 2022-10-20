@@ -1,6 +1,7 @@
 #include "Error.hpp"
 #include "Log.hpp"
 #include "Platform.hpp"
+#include "ConsoleColors.hpp"
 
 #include <cstdlib>
 
@@ -16,6 +17,8 @@
 
 [[noreturn]] void flugzeug::detail::error::fatal_error(const char* file, int line,
                                                        const std::string& message) {
+  console_colors::ensure_initialized();
+
   log_error("{}:{} => {}", file, line, message);
 
   // For debugger breakpoint:
