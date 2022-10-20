@@ -27,6 +27,6 @@ target_sources(Flugzeug PRIVATE
     Process.hpp
     StringifyEnum.cpp
     StringifyEnum.hpp
-    TinyVector.cpp
-    TinyVector.hpp
+	StaticVector.cpp
+	StaticVector.hpp
 )

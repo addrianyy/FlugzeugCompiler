@@ -1,0 +1,120 @@
+#pragma once
+#include <memory>
+#include <span>
+#include <type_traits>
+
+#include "Error.hpp"
+
+template <typename T, size_t N> class StaticVector {
+  static_assert(N > 0, "Empty StaticVector is not supported");
+
+  using StorageT = std::aligned_storage_t<sizeof(T), alignof(T)>;
+
+  StorageT storage[N];
+  size_t size_ = 0;
+
+  StorageT* free_element() {
+    if (size_ >= N) {
+      fatal_error("StaticVector is already full");
+    }
+
+    return &storage[size_];
+  }
+
+  void move_from(StaticVector&& other) noexcept {
+    std::uninitialized_copy(std::make_move_iterator(other.begin()),
+                            std::make_move_iterator(other.end()), begin());
+    size_ = other.size_;
+    other.size_ = 0;
+  }
+
+  void copy_from(const StaticVector& other) noexcept {
+    std::uninitialized_copy(other.begin(), other.end(), begin());
+    size_ = other.size_;
+  }
+
+public:
+  StaticVector() = default;
+  ~StaticVector() { clear(); }
+
+  StaticVector(StaticVector&& other) noexcept { move_from(std::move(other)); }
+
+  StaticVector(const StaticVector& other) { copy_from(other); }
+
+  StaticVector& operator=(StaticVector&& other) noexcept {
+    if (other != this) {
+      clear();
+      move_from(std::move(other));
+    }
+    return *this;
+  }
+
+  StaticVector& operator=(const StaticVector& other) {
+    if (other != this) {
+      clear();
+      copy_from(other);
+    }
+    return *this;
+  }
+
+  void clear() {
+    while (size_ > 0) {
+      (*this)[--size_].~T();
+    }
+  }
+
+  size_t size() const { return size_; }
+  bool empty() const { return size_ == 0; }
+
+  T* data() { return reinterpret_cast<T*>(storage); }
+  const T* data() const { return reinterpret_cast<const T*>(storage); }
+
+  operator std::span<T>() { return std::span<T>(data(), size_); }
+  operator std::span<const T>() const { return std::span<const T>(data(), size_); }
+
+  T* begin() { return data(); }
+  T* end() { return data() + size_; }
+  const T* begin() const { return data(); }
+  const T* end() const { return data() + size_; }
+
+  T& operator[](size_t index) { return data()[index]; }
+  const T& operator[](size_t index) const { return data()[index]; }
+
+  void push_back(T&& value) {
+    new (free_element()) T(std::move(value));
+    size_++;
+  }
+
+  void push_back(const T& value) {
+    new (free_element()) T(value);
+    size_++;
+  }
+
+  template <typename... Args> void emplace_back(Args&&... args) {
+    new (free_element()) T(std::forward<Args>(args)...);
+    size_++;
+  }
+
+  void pop_back() {
+    size_--;
+    end().~T();
+  }
+
+  template <size_t OtherN> bool operator==(const StaticVector<T, OtherN>& other) const {
+    if (other.size() != size()) {
+      return false;
+    }
+
+    for (size_t i = 0; i < size(); ++i) {
+      if ((*this)[i] != other[i]) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  template <size_t OtherN> bool operator!=(const StaticVector<T, OtherN>& other) const {
+    return !(this == other);
+  }
+};

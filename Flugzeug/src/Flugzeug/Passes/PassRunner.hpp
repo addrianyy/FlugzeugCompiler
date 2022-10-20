@@ -5,7 +5,6 @@
 
 #include <chrono>
 #include <unordered_map>
-#include <utility>
 
 namespace flugzeug {
 
@@ -86,7 +85,7 @@ public:
       validate();
     }
 
-    return did_something_;
+    return success;
   }
 
   bool did_something() const { return did_something_; }

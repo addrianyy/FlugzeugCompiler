@@ -1,6 +1,6 @@
 #include "InstructionDeduplication.hpp"
 
-#include <Flugzeug/Core/TinyVector.hpp>
+#include <Flugzeug/Core/StaticVector.hpp>
 
 #include <Flugzeug/IR/Block.hpp>
 #include <Flugzeug/IR/DominatorTree.hpp>
@@ -15,7 +15,7 @@
 
 using namespace flugzeug;
 
-using InstructionUniqueIdentifier = TinyVector<uintptr_t, 3>;
+using InstructionUniqueIdentifier = StaticVector<uintptr_t, 3>;
 
 struct InstructionUniqueIdentifierHash {
   size_t operator()(const InstructionUniqueIdentifier& identifier) const {

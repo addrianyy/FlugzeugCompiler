@@ -40,7 +40,7 @@ static std::vector<const Block*> traverse_dfs_postorder(const Block* entry_block
   return result;
 }
 
-size_t intersect(const std::vector<size_t>& dominators, size_t finger1, size_t finger2) {
+static size_t intersect(const std::vector<size_t>& dominators, size_t finger1, size_t finger2) {
   while (true) {
     if (finger1 < finger2) {
       finger1 = dominators[finger1];

@@ -4,7 +4,7 @@
 
 #include <Flugzeug/Core/HashCombine.hpp>
 #include <Flugzeug/Core/IntrusiveLinkedList.hpp>
-#include <Flugzeug/Core/TinyVector.hpp>
+#include <Flugzeug/Core/StaticVector.hpp>
 
 #include <unordered_set>
 
@@ -14,7 +14,7 @@ class Block;
 class IRPrinter;
 class DominatorTree;
 
-template <typename TBlock> using BlockTargets = TinyVector<TBlock*, 2>;
+template <typename TBlock> using BlockTargets = StaticVector<TBlock*, 2>;
 
 class Instruction : public User, public IntrusiveNode<Instruction, Block> {
   DEFINE_INSTANCEOF_RANGE(Value, Value::Kind::InstructionBegin, Value::Kind::InstructionEnd)
