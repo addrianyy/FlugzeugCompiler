@@ -5,6 +5,8 @@
 
 #include "Error.hpp"
 
+namespace flugzeug {
+
 template <typename T, size_t N> class StaticVector {
   static_assert(N > 0, "Empty StaticVector is not supported");
 
@@ -38,7 +40,6 @@ public:
   ~StaticVector() { clear(); }
 
   StaticVector(StaticVector&& other) noexcept { move_from(std::move(other)); }
-
   StaticVector(const StaticVector& other) { copy_from(other); }
 
   StaticVector& operator=(StaticVector&& other) noexcept {
@@ -118,3 +119,5 @@ public:
     return !(this == other);
   }
 };
+
+} // namespace flugzeug
