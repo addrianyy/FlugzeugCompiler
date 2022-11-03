@@ -42,60 +42,60 @@ Module* bf::Compiler::compile_from_file(Context* context, const std::string& sou
 
   for (char c : source) {
     switch (c) {
-    case '<':
-    case '>': {
-      const auto amount = i64->get_constant(c == '>' ? 1 : -1);
-      ins.store(index, ins.add(ins.load(index), amount));
-      break;
-    }
+      case '<':
+      case '>': {
+        const auto amount = i64->get_constant(c == '>' ? 1 : -1);
+        ins.store(index, ins.add(ins.load(index), amount));
+        break;
+      }
 
-    case '+':
-    case '-': {
-      const auto pointer = get_pointer();
-      const auto amount = i8->get_constant(c == '+' ? 1 : -1);
-      ins.store(pointer, ins.add(ins.load(pointer), amount));
-      break;
-    }
+      case '+':
+      case '-': {
+        const auto pointer = get_pointer();
+        const auto amount = i8->get_constant(c == '+' ? 1 : -1);
+        ins.store(pointer, ins.add(ins.load(pointer), amount));
+        break;
+      }
 
-    case ',': {
-      ins.store(get_pointer(), ins.call(get_char, {}));
-      break;
-    }
+      case ',': {
+        ins.store(get_pointer(), ins.call(get_char, {}));
+        break;
+      }
 
-    case '.': {
-      ins.call(put_char, {ins.load(get_pointer())});
-      break;
-    }
+      case '.': {
+        ins.call(put_char, {ins.load(get_pointer())});
+        break;
+      }
 
-    case '[': {
-      const auto header = main_func->create_block();
-      const auto body = main_func->create_block();
-      const auto after = main_func->create_block();
+      case '[': {
+        const auto header = main_func->create_block();
+        const auto body = main_func->create_block();
+        const auto after = main_func->create_block();
 
-      ins.branch(header);
+        ins.branch(header);
 
-      ins.set_insertion_block(header);
-      ins.cond_branch(ins.compare_ne(ins.load(get_pointer()), i8->get_zero()), body, after);
+        ins.set_insertion_block(header);
+        ins.cond_branch(ins.compare_ne(ins.load(get_pointer()), i8->get_zero()), body, after);
 
-      ins.set_insertion_block(body);
+        ins.set_insertion_block(body);
 
-      loops.push_back({header, body, after});
+        loops.push_back({header, body, after});
 
-      break;
-    }
+        break;
+      }
 
-    case ']': {
-      const auto loop = loops.back();
-      loops.pop_back();
+      case ']': {
+        const auto loop = loops.back();
+        loops.pop_back();
 
-      ins.branch(loop.header);
-      ins.set_insertion_block(loop.after);
+        ins.branch(loop.header);
+        ins.set_insertion_block(loop.after);
 
-      break;
-    }
+        break;
+      }
 
-    default:
-      break;
+      default:
+        break;
     }
   }
 

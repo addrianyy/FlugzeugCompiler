@@ -1,7 +1,7 @@
 #include "Error.hpp"
+#include "ConsoleColors.hpp"
 #include "Log.hpp"
 #include "Platform.hpp"
-#include "ConsoleColors.hpp"
 
 #include <cstdlib>
 
@@ -15,7 +15,8 @@
 
 #endif
 
-[[noreturn]] void flugzeug::detail::error::fatal_error(const char* file, int line,
+[[noreturn]] void flugzeug::detail::error::fatal_error(const char* file,
+                                                       int line,
                                                        const std::string& message) {
   console_colors::ensure_initialized();
 
@@ -38,7 +39,8 @@
   std::exit(1);
 }
 
-[[noreturn]] void flugzeug::detail::error::assert_fail(const char* file, int line,
+[[noreturn]] void flugzeug::detail::error::assert_fail(const char* file,
+                                                       int line,
                                                        const std::string& message) {
   if (message.empty()) {
     fatal_error(file, line, "Assertion failed.");

@@ -12,7 +12,8 @@ class Module {
 
   using FunctionList = IntrusiveLinkedList<Function, Module>;
 
-  template <typename TIterator, bool Extern> class FunctionFilteringIterator {
+  template <typename TIterator, bool Extern>
+  class FunctionFilteringIterator {
     TIterator iterator;
 
     void skip_non_matching_functions() {
@@ -25,7 +26,7 @@ class Module {
       }
     }
 
-  public:
+   public:
     using iterator_category = std::forward_iterator_tag;
     using difference_type = std::ptrdiff_t;
     using value_type = typename TIterator::value_type;
@@ -67,7 +68,7 @@ class Module {
 
   explicit Module(Context* context);
 
-public:
+ public:
   CLASS_NON_MOVABLE_NON_COPYABLE(Module)
 
   ~Module();
@@ -80,13 +81,14 @@ public:
   size_t get_function_count() const { return function_list.get_size(); }
   bool is_empty() const { return function_list.is_empty(); }
 
-  std::unordered_map<const Function*, ValidationResults>
-  validate(ValidationBehaviour behaviour) const;
+  std::unordered_map<const Function*, ValidationResults> validate(
+    ValidationBehaviour behaviour) const;
 
   Context* get_context() { return context; }
   const Context* get_context() const { return context; }
 
-  Function* create_function(Type* return_type, std::string name,
+  Function* create_function(Type* return_type,
+                            std::string name,
                             const std::vector<Type*>& arguments);
 
   Function* get_function(std::string_view name);
@@ -122,4 +124,4 @@ public:
   }
 };
 
-} // namespace flugzeug
+}  // namespace flugzeug

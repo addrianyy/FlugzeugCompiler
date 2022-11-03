@@ -10,7 +10,7 @@ class Instruction;
 class AllocatedRegisters {
   std::unordered_map<const Instruction*, uint32_t> registers;
 
-public:
+ public:
   explicit AllocatedRegisters(std::unordered_map<const Instruction*, uint32_t> registers)
       : registers(std::move(registers)) {}
 
@@ -19,4 +19,4 @@ public:
 
 AllocatedRegisters allocate_registers(Function* function);
 
-} // namespace flugzeug
+}  // namespace flugzeug

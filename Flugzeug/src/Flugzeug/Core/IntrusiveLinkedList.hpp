@@ -6,10 +6,13 @@
 
 namespace flugzeug {
 
-template <typename T, typename Owner> class IntrusiveNode;
-template <typename T, typename Owner> class IntrusiveLinkedList;
+template <typename T, typename Owner>
+class IntrusiveNode;
+template <typename T, typename Owner>
+class IntrusiveLinkedList;
 
-template <typename T, typename Owner> class IntrusiveNode {
+template <typename T, typename Owner>
+class IntrusiveNode {
   friend class IntrusiveLinkedList<T, Owner>;
 
   Owner* owner = nullptr;
@@ -23,7 +26,7 @@ template <typename T, typename Owner> class IntrusiveNode {
 
   T* to_underlying() { return static_cast<T*>(this); }
 
-public:
+ public:
   CLASS_NON_MOVABLE_NON_COPYABLE(IntrusiveNode);
 
   IntrusiveNode() = default;
@@ -38,7 +41,7 @@ public:
   const T* get_previous() const { return static_cast<const T*>(previous); }
   const T* get_next() const { return static_cast<const T*>(next); }
 
-protected:
+ protected:
   void insert_before(T* before) { before->get_list().insert_before(to_underlying(), before); }
   void insert_after(T* after) { after->get_list().insert_after(to_underlying(), after); }
 
@@ -76,11 +79,13 @@ protected:
   }
 };
 
-template <typename T, typename Owner> class IntrusiveLinkedList {
-  template <typename TValue, typename TNode, bool Reversed> class IteratorInternal {
+template <typename T, typename Owner>
+class IntrusiveLinkedList {
+  template <typename TValue, typename TNode, bool Reversed>
+  class IteratorInternal {
     TNode* node;
 
-  public:
+   public:
     using iterator_category = std::bidirectional_iterator_tag;
     using difference_type = std::ptrdiff_t;
     using value_type = TValue;
@@ -141,7 +146,7 @@ template <typename T, typename Owner> class IntrusiveLinkedList {
     owner->on_added_node(static_cast<T*>(node));
   }
 
-public:
+ public:
   CLASS_NON_MOVABLE_NON_COPYABLE(IntrusiveLinkedList);
 
   explicit IntrusiveLinkedList(Owner* owner) : owner(owner) {}
@@ -301,4 +306,4 @@ public:
   const_reverse_iterator rend() const { return const_reverse_iterator(nullptr); }
 };
 
-} // namespace flugzeug
+}  // namespace flugzeug

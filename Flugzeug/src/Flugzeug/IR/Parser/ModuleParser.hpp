@@ -7,4 +7,4 @@ class Module;
 
 void parse_to_module(std::string source, Module* module);
 
-} // namespace flugzeug
+}  // namespace flugzeug

@@ -9,4 +9,4 @@ bool are_allowed();
 void reset_color(std::ostream& stream);
 void set_color(std::ostream& stream, int color);
 
-} // namespace flugzeug::console_colors
+}  // namespace flugzeug::console_colors

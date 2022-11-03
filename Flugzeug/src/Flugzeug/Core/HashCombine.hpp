@@ -20,11 +20,12 @@ inline void hash_combine(std::size_t& seed, const T& v, Rest... rest) {
   hash_combine(seed, rest...);
 }
 
-template <typename... Args> inline std::size_t hash_combine(Args... args) {
+template <typename... Args>
+inline std::size_t hash_combine(Args... args) {
   std::size_t seed = 0;
   hash_combine(seed, args...);
 
   return seed;
 }
 
-} // namespace flugzeug
+}  // namespace flugzeug

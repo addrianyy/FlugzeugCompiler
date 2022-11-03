@@ -4,15 +4,15 @@ using namespace flugzeug;
 
 static bool is_type_keyword(Token::Keyword keyword) {
   switch (keyword) {
-  case Token::Keyword::Void:
-  case Token::Keyword::I1:
-  case Token::Keyword::I8:
-  case Token::Keyword::I16:
-  case Token::Keyword::I32:
-  case Token::Keyword::I64:
-    return true;
-  default:
-    return false;
+    case Token::Keyword::Void:
+    case Token::Keyword::I1:
+    case Token::Keyword::I8:
+    case Token::Keyword::I16:
+    case Token::Keyword::I32:
+    case Token::Keyword::I64:
+      return true;
+    default:
+      return false;
   }
 }
 
@@ -116,44 +116,44 @@ std::unique_ptr<PRInstruction> Parser::parse_void_instruction() {
   instruction->kind_kw = keyword;
 
   switch (keyword) {
-  case Token::Keyword::Store: {
-    instruction->add_operand(parse_value_operand());
-    lexer.consume_expect(Token::Kind::Comma);
-    instruction->add_operand(parse_value_operand());
-    break;
-  }
-
-  case Token::Keyword::Call: {
-    parse_call_instruction(instruction.get());
-    break;
-  }
-
-  case Token::Keyword::Branch: {
-    instruction->add_operand(parse_block_operand());
-    break;
-  }
-
-  case Token::Keyword::Bcond: {
-    instruction->add_operand(parse_value_operand());
-    lexer.consume_expect(Token::Kind::Comma);
-    instruction->add_operand(parse_block_operand());
-    lexer.consume_expect(Token::Kind::Comma);
-    instruction->add_operand(parse_block_operand());
-    break;
-  }
-
-  case Token::Keyword::Ret: {
-    if (lexer.current_token().is_keyword(Token::Keyword::Void)) {
-      lexer.consume_token();
-    } else {
+    case Token::Keyword::Store: {
       instruction->add_operand(parse_value_operand());
+      lexer.consume_expect(Token::Kind::Comma);
+      instruction->add_operand(parse_value_operand());
+      break;
     }
-    break;
-  }
 
-  default: {
-    fatal_error("Failed to parse void instruction: {}", Token::stringify_keyword(keyword));
-  }
+    case Token::Keyword::Call: {
+      parse_call_instruction(instruction.get());
+      break;
+    }
+
+    case Token::Keyword::Branch: {
+      instruction->add_operand(parse_block_operand());
+      break;
+    }
+
+    case Token::Keyword::Bcond: {
+      instruction->add_operand(parse_value_operand());
+      lexer.consume_expect(Token::Kind::Comma);
+      instruction->add_operand(parse_block_operand());
+      lexer.consume_expect(Token::Kind::Comma);
+      instruction->add_operand(parse_block_operand());
+      break;
+    }
+
+    case Token::Keyword::Ret: {
+      if (lexer.current_token().is_keyword(Token::Keyword::Void)) {
+        lexer.consume_token();
+      } else {
+        instruction->add_operand(parse_value_operand());
+      }
+      break;
+    }
+
+    default: {
+      fatal_error("Failed to parse void instruction: {}", Token::stringify_keyword(keyword));
+    }
   }
 
   return instruction;
@@ -199,60 +199,60 @@ std::unique_ptr<PRInstruction> Parser::parse_nonvoid_instruction(std::string_vie
   }
 
   switch (keyword) {
-  case Token::Keyword::Cmp: {
-    instruction->specific_keyword = lexer.consume_keyword();
-    parse_two_operands(true);
-    break;
-  }
-
-  case Token::Keyword::Load: {
-    instruction->specific_type = parse_type();
-    lexer.consume_expect(Token::Kind::Comma);
-    instruction->add_operand(parse_value_operand());
-    break;
-  }
-
-  case Token::Keyword::Call: {
-    parse_call_instruction(instruction.get());
-    break;
-  }
-
-  case Token::Keyword::Stackalloc: {
-    instruction->specific_type = parse_type();
-    instruction->specific_size = 1;
-
-    if (lexer.current_token().is(Token::Kind::Comma)) {
-      lexer.consume_token();
-      instruction->specific_size = lexer.consume_token().get_literal();
+    case Token::Keyword::Cmp: {
+      instruction->specific_keyword = lexer.consume_keyword();
+      parse_two_operands(true);
+      break;
     }
-    break;
-  }
 
-  case Token::Keyword::Offset: {
-    parse_two_operands(false);
-    break;
-  }
+    case Token::Keyword::Load: {
+      instruction->specific_type = parse_type();
+      lexer.consume_expect(Token::Kind::Comma);
+      instruction->add_operand(parse_value_operand());
+      break;
+    }
 
-  case Token::Keyword::Select: {
-    instruction->add_operand(parse_value_operand());
-    lexer.consume_expect(Token::Kind::Comma);
-    parse_two_operands(true);
-    break;
-  }
+    case Token::Keyword::Call: {
+      parse_call_instruction(instruction.get());
+      break;
+    }
 
-  case Token::Keyword::Phi: {
-    instruction->specific_type = parse_type();
-    parse_argument_list(Token::Kind::BracketOpen, Token::Kind::BracketClose, [&]() {
-      instruction->add_operand(parse_block_operand());
-      lexer.consume_expect(Token::Kind::Colon);
-      instruction->add_operand(parse_value_operand_with_type(instruction->specific_type));
-    });
-    break;
-  }
+    case Token::Keyword::Stackalloc: {
+      instruction->specific_type = parse_type();
+      instruction->specific_size = 1;
 
-  default: {
-    fatal_error("Failed to parse non-void instruction: {}", Token::stringify_keyword(keyword));
-  }
+      if (lexer.current_token().is(Token::Kind::Comma)) {
+        lexer.consume_token();
+        instruction->specific_size = lexer.consume_token().get_literal();
+      }
+      break;
+    }
+
+    case Token::Keyword::Offset: {
+      parse_two_operands(false);
+      break;
+    }
+
+    case Token::Keyword::Select: {
+      instruction->add_operand(parse_value_operand());
+      lexer.consume_expect(Token::Kind::Comma);
+      parse_two_operands(true);
+      break;
+    }
+
+    case Token::Keyword::Phi: {
+      instruction->specific_type = parse_type();
+      parse_argument_list(Token::Kind::BracketOpen, Token::Kind::BracketClose, [&]() {
+        instruction->add_operand(parse_block_operand());
+        lexer.consume_expect(Token::Kind::Colon);
+        instruction->add_operand(parse_value_operand_with_type(instruction->specific_type));
+      });
+      break;
+    }
+
+    default: {
+      fatal_error("Failed to parse non-void instruction: {}", Token::stringify_keyword(keyword));
+    }
   }
 
   return instruction;

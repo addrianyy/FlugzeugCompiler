@@ -48,7 +48,9 @@ void IRGenerator::Variables::clear() {
   scopes.clear();
 }
 
-void IRGenerator::Variables::enter_scope() { scopes.emplace_back(); }
+void IRGenerator::Variables::enter_scope() {
+  scopes.emplace_back();
+}
 
 void IRGenerator::Variables::exit_scope() {
   const auto last_scope = std::move(scopes.back());
@@ -82,32 +84,32 @@ fz::Type* IRGenerator::convert_type(Type type) {
   fz::Type* base = nullptr;
 
   switch (type.get_kind()) {
-  case Type::Kind::U8:
-  case Type::Kind::I8:
-    base = context->get_i8_ty();
-    break;
+    case Type::Kind::U8:
+    case Type::Kind::I8:
+      base = context->get_i8_ty();
+      break;
 
-  case Type::Kind::U16:
-  case Type::Kind::I16:
-    base = context->get_i16_ty();
-    break;
+    case Type::Kind::U16:
+    case Type::Kind::I16:
+      base = context->get_i16_ty();
+      break;
 
-  case Type::Kind::U32:
-  case Type::Kind::I32:
-    base = context->get_i32_ty();
-    break;
+    case Type::Kind::U32:
+    case Type::Kind::I32:
+      base = context->get_i32_ty();
+      break;
 
-  case Type::Kind::I64:
-  case Type::Kind::U64:
-    base = context->get_i64_ty();
-    break;
+    case Type::Kind::I64:
+    case Type::Kind::U64:
+      base = context->get_i64_ty();
+      break;
 
-  case Type::Kind::Void:
-    base = context->get_void_ty();
-    break;
+    case Type::Kind::Void:
+      base = context->get_void_ty();
+      break;
 
-  default:
-    unreachable();
+    default:
+      unreachable();
   }
 
   if (type.get_indirection() > 0) {
@@ -159,8 +161,9 @@ fz::Value* IRGenerator::implicit_cast(const CodegenValue& value, Type wanted_typ
   return extracted;
 }
 
-std::pair<IRGenerator::CodegenValue, IRGenerator::CodegenValue>
-IRGenerator::implcit_cast_binary(CodegenValue left, CodegenValue right) {
+std::pair<IRGenerator::CodegenValue, IRGenerator::CodegenValue> IRGenerator::implcit_cast_binary(
+  CodegenValue left,
+  CodegenValue right) {
   if (left.get_type() == right.get_type()) {
     return {left, right};
   }
@@ -224,7 +227,8 @@ IRGenerator::implcit_cast_binary(CodegenValue left, CodegenValue right) {
   return {cast_single(left, left_type), cast_single(right, right_type)};
 }
 
-IRGenerator::CodegenValue IRGenerator::generate_binary_op(CodegenValue left, BinaryOp op,
+IRGenerator::CodegenValue IRGenerator::generate_binary_op(CodegenValue left,
+                                                          BinaryOp op,
                                                           CodegenValue right) {
   const auto one_pointer = left.get_type().is_pointer() ^ right.get_type().is_pointer();
 
@@ -247,37 +251,37 @@ IRGenerator::CodegenValue IRGenerator::generate_binary_op(CodegenValue left, Bin
   }
 
   switch (op) {
-  case BinaryOp::Equal:
-  case BinaryOp::NotEqual:
-  case BinaryOp::Gt:
-  case BinaryOp::Gte:
-  case BinaryOp::Lt:
-  case BinaryOp::Lte: {
-    const auto [new_left, new_right] = implcit_cast_binary(left, right);
-    const auto predicate = convert_to_ir_int_predicate(op, new_left.get_type().is_signed());
+    case BinaryOp::Equal:
+    case BinaryOp::NotEqual:
+    case BinaryOp::Gt:
+    case BinaryOp::Gte:
+    case BinaryOp::Lt:
+    case BinaryOp::Lte: {
+      const auto [new_left, new_right] = implcit_cast_binary(left, right);
+      const auto predicate = convert_to_ir_int_predicate(op, new_left.get_type().is_signed());
 
-    const auto zero = context->get_i8_ty()->get_zero();
-    const auto one = context->get_i8_ty()->get_one();
+      const auto zero = context->get_i8_ty()->get_zero();
+      const auto one = context->get_i8_ty()->get_one();
 
-    const auto result_i1 =
-      inserter.int_compare(extract_value(new_left), predicate, extract_value(new_right));
-    const auto result = inserter.select(result_i1, one, zero);
+      const auto result_i1 =
+        inserter.int_compare(extract_value(new_left), predicate, extract_value(new_right));
+      const auto result = inserter.select(result_i1, one, zero);
 
-    return CodegenValue::rvalue(Type(Type::Kind::U8), result);
-  }
+      return CodegenValue::rvalue(Type(Type::Kind::U8), result);
+    }
 
-  default: {
-    verify(left.get_type().is_arithmetic() && right.get_type().is_arithmetic(),
-           "Binary operation operands must be arthmetic");
+    default: {
+      verify(left.get_type().is_arithmetic() && right.get_type().is_arithmetic(),
+             "Binary operation operands must be arthmetic");
 
-    const auto [new_left, new_right] = implcit_cast_binary(left, right);
-    const auto ir_op = convert_to_ir_binary_op(op, new_left.get_type().is_signed());
+      const auto [new_left, new_right] = implcit_cast_binary(left, right);
+      const auto ir_op = convert_to_ir_binary_op(op, new_left.get_type().is_signed());
 
-    const auto result =
-      inserter.binary_instr(extract_value(new_left), ir_op, extract_value(new_right));
+      const auto result =
+        inserter.binary_instr(extract_value(new_left), ir_op, extract_value(new_right));
 
-    return CodegenValue::rvalue(new_left.get_type(), result);
-  }
+      return CodegenValue::rvalue(new_left.get_type(), result);
+    }
   }
 }
 
@@ -299,8 +303,8 @@ IRGenerator::VisitResult IRGenerator::visit_assign_stmt(Argument<AssignStmt> ass
   return std::nullopt;
 }
 
-IRGenerator::VisitResult
-IRGenerator::visit_binary_assign_stmt(Argument<BinaryAssignStmt> binary_assign_stmt) {
+IRGenerator::VisitResult IRGenerator::visit_binary_assign_stmt(
+  Argument<BinaryAssignStmt> binary_assign_stmt) {
   const auto variable = generate_nonvoid_expression(binary_assign_stmt->get_variable());
   const auto value = generate_nonvoid_expression(binary_assign_stmt->get_value());
 
@@ -486,29 +490,29 @@ IRGenerator::VisitResult IRGenerator::visit_unary_expr(Argument<UnaryExpr> unary
   const auto value = generate_nonvoid_expression(unary_expr->get_value());
 
   switch (unary_expr->get_op()) {
-  case UnaryOp::Neg:
-  case UnaryOp::Not: {
-    verify(value.get_type().is_arithmetic(),
-           "Unary operator can be only applied on arithmetic type");
+    case UnaryOp::Neg:
+    case UnaryOp::Not: {
+      verify(value.get_type().is_arithmetic(),
+             "Unary operator can be only applied on arithmetic type");
 
-    const auto ir_op = unary_expr->get_op() == UnaryOp::Neg ? fz::UnaryOp::Neg : fz::UnaryOp::Not;
-    const auto result = inserter.unary_instr(ir_op, extract_value(value));
+      const auto ir_op = unary_expr->get_op() == UnaryOp::Neg ? fz::UnaryOp::Neg : fz::UnaryOp::Not;
+      const auto result = inserter.unary_instr(ir_op, extract_value(value));
 
-    return CodegenValue::rvalue(value.get_type(), result);
-  }
+      return CodegenValue::rvalue(value.get_type(), result);
+    }
 
-  case UnaryOp::Ref: {
-    verify(value.is_lvalue(), "Cannot get address of rvalue");
-    return CodegenValue::rvalue(value.get_type().add_pointer(), value.get_raw_value());
-  }
+    case UnaryOp::Ref: {
+      verify(value.is_lvalue(), "Cannot get address of rvalue");
+      return CodegenValue::rvalue(value.get_type().add_pointer(), value.get_raw_value());
+    }
 
-  case UnaryOp::Deref: {
-    const auto new_type = value.get_type().strip_pointer();
-    return CodegenValue::lvalue(new_type, extract_value(value));
-  }
+    case UnaryOp::Deref: {
+      const auto new_type = value.get_type().strip_pointer();
+      return CodegenValue::lvalue(new_type, extract_value(value));
+    }
 
-  default:
-    unreachable();
+    default:
+      unreachable();
   }
 }
 
@@ -609,7 +613,9 @@ std::optional<IRGenerator::CodegenValue> IRGenerator::generate_expression(const 
   return visitor::visit_statement(expr, *this);
 }
 
-void IRGenerator::generate_statement(const Stmt* stmt) { visitor::visit_statement(stmt, *this); }
+void IRGenerator::generate_statement(const Stmt* stmt) {
+  visitor::visit_statement(stmt, *this);
+}
 
 bool IRGenerator::generate_body(const BodyStmt* body) {
   variables.enter_scope();

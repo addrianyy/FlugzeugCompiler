@@ -25,7 +25,7 @@ struct KnownBits {
 class KnownBitsDatabase {
   std::unordered_map<Value*, KnownBits> known_bits;
 
-public:
+ public:
   KnownBits get(Value* value) {
     const auto type_bitmask = value->get_type()->get_bit_mask();
 
@@ -172,7 +172,7 @@ static KnownBits neg(const KnownBits& bits, Type* type) {
   return computed;
 }
 
-} // namespace bitops
+}  // namespace bitops
 
 enum class BitOptimizationResult {
   CalculatedBits,
@@ -182,7 +182,7 @@ enum class BitOptimizationResult {
 };
 
 class BitOptimizer : InstructionVisitor {
-public:
+ public:
   KnownBitsDatabase& bits_database;
 
   explicit BitOptimizer(KnownBitsDatabase& bits_database) : bits_database(bits_database) {}
@@ -191,17 +191,17 @@ public:
     KnownBits computed{};
 
     switch (unary->get_op()) {
-    case UnaryOp::Not: {
-      // Invert all known bits.
-      computed = bits_database.get(unary->get_val());
-      computed.value = ~computed.value & computed.mask;
-      break;
-    }
+      case UnaryOp::Not: {
+        // Invert all known bits.
+        computed = bits_database.get(unary->get_val());
+        computed.value = ~computed.value & computed.mask;
+        break;
+      }
 
-    case UnaryOp::Neg: {
-      computed = bitops::neg(bits_database.get(unary->get_val()), unary->get_type());
-      break;
-    }
+      case UnaryOp::Neg: {
+        computed = bitops::neg(bits_database.get(unary->get_val()), unary->get_type());
+        break;
+      }
     }
 
     bits_database.set(unary, computed);
@@ -219,211 +219,211 @@ public:
     KnownBits computed{};
 
     switch (op) {
-    case BinaryOp::Or:
-    case BinaryOp::And:
-    case BinaryOp::Xor: {
-      // Get common `known` and `mask` for two operands.
-      auto mask = a.mask & b.mask;
-      auto value = utils::evaluate_binary_instr(type, a.value, op, b.value) & mask;
+      case BinaryOp::Or:
+      case BinaryOp::And:
+      case BinaryOp::Xor: {
+        // Get common `known` and `mask` for two operands.
+        auto mask = a.mask & b.mask;
+        auto value = utils::evaluate_binary_instr(type, a.value, op, b.value) & mask;
 
-      // `and` and `or` can give us more information about known bits.
-      if (op != BinaryOp::Xor) {
-        // Check every bit.
-        for (size_t i = 0; i < type->get_bit_size(); ++i) {
-          const uint64_t m = uint64_t(1) << i;
+        // `and` and `or` can give us more information about known bits.
+        if (op != BinaryOp::Xor) {
+          // Check every bit.
+          for (size_t i = 0; i < type->get_bit_size(); ++i) {
+            const uint64_t m = uint64_t(1) << i;
 
-          switch (op) {
-          case BinaryOp::Or: {
-            // If this bit is one in at least one operand then destination will be one too.
-            const auto a_one = (a.value & m) != 0 && (a.mask & m) != 0;
-            const auto b_one = (b.value & m) != 0 && (b.mask & m) != 0;
+            switch (op) {
+              case BinaryOp::Or: {
+                // If this bit is one in at least one operand then destination will be one too.
+                const auto a_one = (a.value & m) != 0 && (a.mask & m) != 0;
+                const auto b_one = (b.value & m) != 0 && (b.mask & m) != 0;
 
-            if (a_one || b_one) {
-              mask |= m;
-              value |= m;
-            }
+                if (a_one || b_one) {
+                  mask |= m;
+                  value |= m;
+                }
 
-            break;
-          }
-
-          case BinaryOp::And: {
-            // If this bit is zero in at least one operand then destination will be zero too.
-            const auto a_zero = (a.value & m) == 0 && (a.mask & m) != 0;
-            const auto b_zero = (b.value & m) == 0 && (b.mask & m) != 0;
-
-            if (a_zero || b_zero) {
-              mask |= m;
-              value &= ~m;
-            }
-
-            break;
-          }
-
-          default:
-            unreachable();
-          }
-        }
-
-        // If one operand is constant maybe we can prove that this operation is unneccesary.
-        if (a.mask == type->get_bit_mask() || b.mask == type->get_bit_mask()) {
-          uint64_t known_value = 0;
-          Value* partial_value = nullptr;
-          KnownBits partial_bits;
-
-          // Get fully known value and partially known value.
-          if (a.mask == type->get_bit_mask()) {
-            known_value = a.value;
-            partial_value = binary->get_rhs();
-            partial_bits = b;
-          } else if (b.mask == type->get_bit_mask()) {
-            known_value = b.value;
-            partial_value = binary->get_lhs();
-            partial_bits = a;
-          } else {
-            unreachable();
-          }
-
-          bool can_be_optimized = false;
-
-          // Check if this operation can affect the result. If it can't, optimize it out.
-          switch (op) {
-          case BinaryOp::Or: {
-            // 1. Make sure that all 1 bits in `value` are known.
-            // 2. Make sure that or doesn't affect known bits.
-            if (((~partial_bits.mask & known_value) & type->get_bit_mask()) == 0 &&
-                (partial_bits.value | known_value) == partial_bits.value) {
-              can_be_optimized = true;
-            }
-            break;
-          }
-
-          case BinaryOp::And: {
-            // 1. Make sure that all 0 bits in `value` are known.
-            // 2. Make sure that and doesn't affect known bits.
-            if (((~partial_bits.mask & ~known_value) & type->get_bit_mask()) == 0 &&
-                (partial_bits.value & known_value) == partial_bits.value) {
-              can_be_optimized = true;
-            }
-            break;
-          }
-
-          default:
-            unreachable();
-          }
-
-          if (can_be_optimized) {
-            binary->replace_uses_with_and_destroy(partial_value);
-            return BitOptimizationResult::DestroyedInstruction;
-          }
-        }
-      }
-
-      computed.mask = mask;
-      computed.value = value;
-
-      break;
-    }
-
-    case BinaryOp::Shl:
-    case BinaryOp::Shr:
-    case BinaryOp::Sar: {
-      const auto shift_amount_constant = cast<Constant>(binary->get_rhs());
-      if (shift_amount_constant) {
-        const auto shift_amount = shift_amount_constant->get_constant_u();
-
-        auto mask = a.mask;
-        auto value = a.value;
-
-        // Shift known bits by the specified amount.
-        switch (op) {
-        case BinaryOp::Shl: {
-          mask <<= shift_amount;
-          value <<= shift_amount;
-          break;
-        }
-
-        case BinaryOp::Shr:
-        case BinaryOp::Sar: {
-          mask >>= shift_amount;
-          value >>= shift_amount;
-          break;
-        }
-
-        default:
-          unreachable();
-        }
-
-        // Clear out of bounds bits.
-        mask &= type->get_bit_mask();
-        value &= type->get_bit_mask();
-
-        if (shift_amount != 0) {
-          // Some bits after shifting may become known. Calculate mask of shifted out bits.
-          uint64_t left_shift_amount_mask = 0;
-          for (size_t i = 0; i < shift_amount; ++i) {
-            left_shift_amount_mask = uint64_t(1) << i;
-          }
-          const uint64_t right_shift_amount_mask = left_shift_amount_mask
-                                                   << (type->get_bit_size() - shift_amount);
-
-          switch (op) {
-          case BinaryOp::Shl: {
-            // All shifted out bits become zero.
-            mask |= left_shift_amount_mask;
-            value &= ~left_shift_amount_mask;
-            break;
-          }
-
-          case BinaryOp::Shr: {
-            // All shifted bits become zero.
-            mask |= right_shift_amount_mask;
-            value &= ~right_shift_amount_mask;
-            break;
-          }
-
-          case BinaryOp::Sar: {
-            // Bits become known only if `a` sign bit is known.
-            const auto sign = a.sign(type);
-            if (sign) {
-              mask |= right_shift_amount_mask;
-
-              // All shifted bits become equal to the sign of `a`.
-              if (*sign) {
-                value |= right_shift_amount_mask;
-              } else {
-                value &= ~right_shift_amount_mask;
+                break;
               }
-            }
 
-            break;
+              case BinaryOp::And: {
+                // If this bit is zero in at least one operand then destination will be zero too.
+                const auto a_zero = (a.value & m) == 0 && (a.mask & m) != 0;
+                const auto b_zero = (b.value & m) == 0 && (b.mask & m) != 0;
+
+                if (a_zero || b_zero) {
+                  mask |= m;
+                  value &= ~m;
+                }
+
+                break;
+              }
+
+              default:
+                unreachable();
+            }
           }
 
-          default:
-            unreachable();
+          // If one operand is constant maybe we can prove that this operation is unneccesary.
+          if (a.mask == type->get_bit_mask() || b.mask == type->get_bit_mask()) {
+            uint64_t known_value = 0;
+            Value* partial_value = nullptr;
+            KnownBits partial_bits;
+
+            // Get fully known value and partially known value.
+            if (a.mask == type->get_bit_mask()) {
+              known_value = a.value;
+              partial_value = binary->get_rhs();
+              partial_bits = b;
+            } else if (b.mask == type->get_bit_mask()) {
+              known_value = b.value;
+              partial_value = binary->get_lhs();
+              partial_bits = a;
+            } else {
+              unreachable();
+            }
+
+            bool can_be_optimized = false;
+
+            // Check if this operation can affect the result. If it can't, optimize it out.
+            switch (op) {
+              case BinaryOp::Or: {
+                // 1. Make sure that all 1 bits in `value` are known.
+                // 2. Make sure that or doesn't affect known bits.
+                if (((~partial_bits.mask & known_value) & type->get_bit_mask()) == 0 &&
+                    (partial_bits.value | known_value) == partial_bits.value) {
+                  can_be_optimized = true;
+                }
+                break;
+              }
+
+              case BinaryOp::And: {
+                // 1. Make sure that all 0 bits in `value` are known.
+                // 2. Make sure that and doesn't affect known bits.
+                if (((~partial_bits.mask & ~known_value) & type->get_bit_mask()) == 0 &&
+                    (partial_bits.value & known_value) == partial_bits.value) {
+                  can_be_optimized = true;
+                }
+                break;
+              }
+
+              default:
+                unreachable();
+            }
+
+            if (can_be_optimized) {
+              binary->replace_uses_with_and_destroy(partial_value);
+              return BitOptimizationResult::DestroyedInstruction;
+            }
           }
         }
 
         computed.mask = mask;
         computed.value = value;
+
+        break;
       }
 
-      break;
-    }
+      case BinaryOp::Shl:
+      case BinaryOp::Shr:
+      case BinaryOp::Sar: {
+        const auto shift_amount_constant = cast<Constant>(binary->get_rhs());
+        if (shift_amount_constant) {
+          const auto shift_amount = shift_amount_constant->get_constant_u();
 
-    case BinaryOp::Add:
-    case BinaryOp::Sub: {
-      if (op == BinaryOp::Sub) {
-        // x - y => x + (-y)
-        b = bitops::neg(b, type);
+          auto mask = a.mask;
+          auto value = a.value;
+
+          // Shift known bits by the specified amount.
+          switch (op) {
+            case BinaryOp::Shl: {
+              mask <<= shift_amount;
+              value <<= shift_amount;
+              break;
+            }
+
+            case BinaryOp::Shr:
+            case BinaryOp::Sar: {
+              mask >>= shift_amount;
+              value >>= shift_amount;
+              break;
+            }
+
+            default:
+              unreachable();
+          }
+
+          // Clear out of bounds bits.
+          mask &= type->get_bit_mask();
+          value &= type->get_bit_mask();
+
+          if (shift_amount != 0) {
+            // Some bits after shifting may become known. Calculate mask of shifted out bits.
+            uint64_t left_shift_amount_mask = 0;
+            for (size_t i = 0; i < shift_amount; ++i) {
+              left_shift_amount_mask = uint64_t(1) << i;
+            }
+            const uint64_t right_shift_amount_mask = left_shift_amount_mask
+                                                     << (type->get_bit_size() - shift_amount);
+
+            switch (op) {
+              case BinaryOp::Shl: {
+                // All shifted out bits become zero.
+                mask |= left_shift_amount_mask;
+                value &= ~left_shift_amount_mask;
+                break;
+              }
+
+              case BinaryOp::Shr: {
+                // All shifted bits become zero.
+                mask |= right_shift_amount_mask;
+                value &= ~right_shift_amount_mask;
+                break;
+              }
+
+              case BinaryOp::Sar: {
+                // Bits become known only if `a` sign bit is known.
+                const auto sign = a.sign(type);
+                if (sign) {
+                  mask |= right_shift_amount_mask;
+
+                  // All shifted bits become equal to the sign of `a`.
+                  if (*sign) {
+                    value |= right_shift_amount_mask;
+                  } else {
+                    value &= ~right_shift_amount_mask;
+                  }
+                }
+
+                break;
+              }
+
+              default:
+                unreachable();
+            }
+          }
+
+          computed.mask = mask;
+          computed.value = value;
+        }
+
+        break;
       }
 
-      computed = bitops::add(a, b, type);
+      case BinaryOp::Add:
+      case BinaryOp::Sub: {
+        if (op == BinaryOp::Sub) {
+          // x - y => x + (-y)
+          b = bitops::neg(b, type);
+        }
 
-      break;
-    }
+        computed = bitops::add(a, b, type);
 
-    default:
-      return BitOptimizationResult::Unchanged;
+        break;
+      }
+
+      default:
+        return BitOptimizationResult::Unchanged;
     }
 
     bits_database.set(binary, computed);
@@ -463,67 +463,67 @@ public:
 
     // Try to resolve `cmp` result using known bits.
     switch (pred) {
-    case IntPredicate::Equal:
-    case IntPredicate::NotEqual: {
-      // Quickly prove inequality by comparing operands known bits.
-      const auto common_mask = a.mask & b.mask;
-      const auto not_equal = (a.value & common_mask) != (b.value & common_mask);
+      case IntPredicate::Equal:
+      case IntPredicate::NotEqual: {
+        // Quickly prove inequality by comparing operands known bits.
+        const auto common_mask = a.mask & b.mask;
+        const auto not_equal = (a.value & common_mask) != (b.value & common_mask);
 
-      // We can only prove inequality, we don't know if values
-      // are equal.
-      if (not_equal) {
-        if (pred == IntPredicate::Equal) {
-          result = false;
-        } else {
-          result = true;
+        // We can only prove inequality, we don't know if values
+        // are equal.
+        if (not_equal) {
+          if (pred == IntPredicate::Equal) {
+            result = false;
+          } else {
+            result = true;
+          }
         }
+
+        break;
       }
 
-      break;
-    }
-
-    case IntPredicate::GtS:
-    case IntPredicate::GteS:
-    case IntPredicate::LtS:
-    case IntPredicate::LteS: {
-      if (pred == IntPredicate::LtS || pred == IntPredicate::LteS) {
-        std::swap(a, b);
-      }
-
-      const auto a_sign = a.sign(type);
-      const auto b_sign = b.sign(type);
-
-      if (a_sign && b_sign) {
-        if (*a_sign != *b_sign) {
-          // If `b` is negative than `a` is positive and `a` is always > and >= `b`.
-          result = *b_sign;
-        } else if (!*a_sign) {
-          // Compare positive integers.
-          result = bitops::compare_greater(a, b, type);
-        } else {
-          // Fake positive integers. Because of how `compare_greater` works it shouldn't affect
-          // the results.
-          a.value = ~a.value & a.mask;
-          b.value = ~b.value & b.mask;
-
-          result = bitops::compare_greater(a, b, type);
+      case IntPredicate::GtS:
+      case IntPredicate::GteS:
+      case IntPredicate::LtS:
+      case IntPredicate::LteS: {
+        if (pred == IntPredicate::LtS || pred == IntPredicate::LteS) {
+          std::swap(a, b);
         }
+
+        const auto a_sign = a.sign(type);
+        const auto b_sign = b.sign(type);
+
+        if (a_sign && b_sign) {
+          if (*a_sign != *b_sign) {
+            // If `b` is negative than `a` is positive and `a` is always > and >= `b`.
+            result = *b_sign;
+          } else if (!*a_sign) {
+            // Compare positive integers.
+            result = bitops::compare_greater(a, b, type);
+          } else {
+            // Fake positive integers. Because of how `compare_greater` works it shouldn't affect
+            // the results.
+            a.value = ~a.value & a.mask;
+            b.value = ~b.value & b.mask;
+
+            result = bitops::compare_greater(a, b, type);
+          }
+        }
+
+        break;
       }
 
-      break;
-    }
+      case IntPredicate::GtU:
+      case IntPredicate::GteU: {
+        result = bitops::compare_greater(a, b, type);
+        break;
+      }
 
-    case IntPredicate::GtU:
-    case IntPredicate::GteU: {
-      result = bitops::compare_greater(a, b, type);
-      break;
-    }
-
-    case IntPredicate::LtU:
-    case IntPredicate::LteU: {
-      result = bitops::compare_greater(b, a, type);
-      break;
-    }
+      case IntPredicate::LtU:
+      case IntPredicate::LteU: {
+        result = bitops::compare_greater(b, a, type);
+        break;
+      }
     }
 
     // If comparison result is constant then replace `cmp` with that constant.
@@ -547,44 +547,44 @@ public:
     KnownBits computed{};
 
     switch (cast_instr->get_cast_kind()) {
-    case CastKind::Truncate:
-    case CastKind::Bitcast: {
-      // Just carry over previous known value and mask off truncated part.
-      computed = input;
-      computed.mask &= output_bitmask;
-      computed.value &= output_bitmask;
-      break;
-    }
-
-    case CastKind::SignExtend:
-    case CastKind::ZeroExtend: {
-      std::optional<bool> extension_bit;
-
-      // Try to get the value of extension bit.
-      if (cast_instr->get_cast_kind() == CastKind::SignExtend) {
-        extension_bit = input.sign(input_type);
-      } else {
-        extension_bit = false;
+      case CastKind::Truncate:
+      case CastKind::Bitcast: {
+        // Just carry over previous known value and mask off truncated part.
+        computed = input;
+        computed.mask &= output_bitmask;
+        computed.value &= output_bitmask;
+        break;
       }
 
-      if (extension_bit) {
-        // Calculate mask of all bits that will be set to `extension_bit`.
-        const uint64_t extension_mask = output_bitmask & ~input_bitmask;
+      case CastKind::SignExtend:
+      case CastKind::ZeroExtend: {
+        std::optional<bool> extension_bit;
 
-        computed.mask |= extension_mask;
-
-        if (*extension_bit) {
-          computed.value |= extension_mask;
+        // Try to get the value of extension bit.
+        if (cast_instr->get_cast_kind() == CastKind::SignExtend) {
+          extension_bit = input.sign(input_type);
         } else {
-          computed.value &= ~extension_mask;
+          extension_bit = false;
         }
+
+        if (extension_bit) {
+          // Calculate mask of all bits that will be set to `extension_bit`.
+          const uint64_t extension_mask = output_bitmask & ~input_bitmask;
+
+          computed.mask |= extension_mask;
+
+          if (*extension_bit) {
+            computed.value |= extension_mask;
+          } else {
+            computed.value &= ~extension_mask;
+          }
+        }
+
+        computed.value |= input.value;
+        computed.mask |= input.mask;
+
+        break;
       }
-
-      computed.value |= input.value;
-      computed.mask |= input.mask;
-
-      break;
-    }
     }
 
     bits_database.set(cast_instr, computed);
@@ -627,28 +627,28 @@ bool opt::KnownBitsOptimization::run(Function* function) {
       const auto result = visitor::visit_instruction(&instruction, optimizer);
 
       switch (result) {
-      case BitOptimizationResult::CalculatedBits:
-      case BitOptimizationResult::ModifiedInstruction: {
-        const auto bits = bits_database.get(&instruction);
+        case BitOptimizationResult::CalculatedBits:
+        case BitOptimizationResult::ModifiedInstruction: {
+          const auto bits = bits_database.get(&instruction);
 
-        if (bits.mask == instruction.get_type()->get_bit_mask()) {
-          instruction.replace_uses_with_constant_and_destroy(bits.value);
-          did_something = true;
+          if (bits.mask == instruction.get_type()->get_bit_mask()) {
+            instruction.replace_uses_with_constant_and_destroy(bits.value);
+            did_something = true;
+          }
+
+          if (result == BitOptimizationResult::ModifiedInstruction) {
+            did_something = true;
+          }
+
+          break;
         }
 
-        if (result == BitOptimizationResult::ModifiedInstruction) {
+        case BitOptimizationResult::DestroyedInstruction:
           did_something = true;
-        }
+          break;
 
-        break;
-      }
-
-      case BitOptimizationResult::DestroyedInstruction:
-        did_something = true;
-        break;
-
-      case BitOptimizationResult::Unchanged:
-        break;
+        case BitOptimizationResult::Unchanged:
+          break;
       }
     }
   }

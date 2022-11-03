@@ -7,32 +7,32 @@ using namespace turboc;
 
 int32_t turboc::get_binary_op_precedence(BinaryOp op) {
   switch (op) {
-  case BinaryOp::Mul:
-  case BinaryOp::Mod:
-  case BinaryOp::Div:
-    return 60;
-  case BinaryOp::Add:
-  case BinaryOp::Sub:
-    return 50;
-  case BinaryOp::Shl:
-  case BinaryOp::Shr:
-    return 40;
-  case BinaryOp::Gt:
-  case BinaryOp::Lt:
-  case BinaryOp::Gte:
-  case BinaryOp::Lte:
-    return 35;
-  case BinaryOp::Equal:
-  case BinaryOp::NotEqual:
-    return 33;
-  case BinaryOp::And:
-    return 30;
-  case BinaryOp::Xor:
-    return 20;
-  case BinaryOp::Or:
-    return 10;
-  default:
-    unreachable();
+    case BinaryOp::Mul:
+    case BinaryOp::Mod:
+    case BinaryOp::Div:
+      return 60;
+    case BinaryOp::Add:
+    case BinaryOp::Sub:
+      return 50;
+    case BinaryOp::Shl:
+    case BinaryOp::Shr:
+      return 40;
+    case BinaryOp::Gt:
+    case BinaryOp::Lt:
+    case BinaryOp::Gte:
+    case BinaryOp::Lte:
+      return 35;
+    case BinaryOp::Equal:
+    case BinaryOp::NotEqual:
+      return 33;
+    case BinaryOp::And:
+      return 30;
+    case BinaryOp::Xor:
+      return 20;
+    case BinaryOp::Or:
+      return 10;
+    default:
+      unreachable();
   }
 }
 void AssignStmt::print(ASTPrinter& printer) const {
@@ -112,9 +112,13 @@ void ReturnStmt::print(ASTPrinter& printer) const {
   printer.end_structure();
 }
 
-void BreakStmt::print(ASTPrinter& printer) const { printer.simple_structure("BreakStmt"); }
+void BreakStmt::print(ASTPrinter& printer) const {
+  printer.simple_structure("BreakStmt");
+}
 
-void ContinueStmt::print(ASTPrinter& printer) const { printer.simple_structure("ContinueStmt"); }
+void ContinueStmt::print(ASTPrinter& printer) const {
+  printer.simple_structure("ContinueStmt");
+}
 
 void BodyStmt::print(ASTPrinter& printer) const {
   printer.begin_structure("BodyStmt");

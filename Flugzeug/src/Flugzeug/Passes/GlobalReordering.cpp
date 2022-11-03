@@ -14,12 +14,12 @@ static bool can_be_reordered(const Instruction* instruction) {
   }
 
   switch (instruction->get_kind()) {
-  case Value::Kind::Load:
-  case Value::Kind::Phi:
-    return false;
+    case Value::Kind::Load:
+    case Value::Kind::Phi:
+      return false;
 
-  default:
-    return true;
+    default:
+      return true;
   }
 }
 
@@ -46,7 +46,8 @@ static bool do_users_allow_reordering(Instruction* instruction,
   return true;
 }
 
-Instruction* find_best_user(Instruction* instruction, const std::unordered_set<Instruction*>& users,
+Instruction* find_best_user(Instruction* instruction,
+                            const std::unordered_set<Instruction*>& users,
                             const DominatorTree& dominator_tree,
                             analysis::PathValidator& path_validator) {
   const auto check_user = [&](Instruction* best_user,

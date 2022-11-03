@@ -8,8 +8,8 @@ enum class InliningStrategy {
 };
 
 class CallInlining : public Pass<"CallInlining"> {
-public:
+ public:
   static bool run(Function* function, InliningStrategy strategy);
 };
 
-} // namespace flugzeug::opt
+}  // namespace flugzeug::opt

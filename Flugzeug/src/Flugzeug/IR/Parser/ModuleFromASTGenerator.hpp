@@ -38,10 +38,10 @@ class ModuleFromASTGenerator {
 
   void generate_function_body();
 
-public:
+ public:
   ModuleFromASTGenerator(Module* module, std::vector<std::unique_ptr<PRFunction>> parsed_functions);
 
   void generate();
 };
 
-} // namespace flugzeug
+}  // namespace flugzeug

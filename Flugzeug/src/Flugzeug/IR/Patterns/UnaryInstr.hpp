@@ -12,13 +12,18 @@ class UnaryPattern {
   ValuePattern value_pattern;
   UnaryOp specific_op;
 
-public:
-  UnaryPattern(TInstruction** bind_instruction, UnaryOp* bind_op, ValuePattern value_pattern,
+ public:
+  UnaryPattern(TInstruction** bind_instruction,
+               UnaryOp* bind_op,
+               ValuePattern value_pattern,
                UnaryOp specific_op = UnaryOp::Neg)
-      : bind_instruction(bind_instruction), bind_op(bind_op), value_pattern(value_pattern),
+      : bind_instruction(bind_instruction),
+        bind_op(bind_op),
+        value_pattern(value_pattern),
         specific_op(specific_op) {}
 
-  template <typename T> bool match(T* m_value) {
+  template <typename T>
+  bool match(T* m_value) {
     const auto unary = flugzeug::cast<UnaryInstr>(m_value);
     if (!unary) {
       return false;
@@ -46,18 +51,19 @@ public:
   }
 };
 
-} // namespace detail
+}  // namespace detail
 
-#define IMPLEMENT_SPECIFIC_UNARY_PATTERN(name, op)                                                 \
-  template <typename TInstruction, typename ValuePattern>                                          \
-  auto name(TInstruction*& instruction, ValuePattern value) {                                      \
-    static_assert(std::is_same_v<UnaryInstr, std::remove_cv_t<TInstruction>>,                      \
-                  "Expected UnaryInstr instruction in this pattern");                              \
-    return unary_specific(instruction, op, value);                                                 \
-  }                                                                                                \
-                                                                                                   \
-  template <typename ValuePattern> auto name(ValuePattern value) {                                 \
-    return unary_specific(op, value);                                                              \
+#define IMPLEMENT_SPECIFIC_UNARY_PATTERN(name, op)                            \
+  template <typename TInstruction, typename ValuePattern>                     \
+  auto name(TInstruction*& instruction, ValuePattern value) {                 \
+    static_assert(std::is_same_v<UnaryInstr, std::remove_cv_t<TInstruction>>, \
+                  "Expected UnaryInstr instruction in this pattern");         \
+    return unary_specific(instruction, op, value);                            \
+  }                                                                           \
+                                                                              \
+  template <typename ValuePattern>                                            \
+  auto name(ValuePattern value) {                                             \
+    return unary_specific(op, value);                                         \
   }
 
 template <typename TInstruction, typename ValuePattern>
@@ -67,7 +73,8 @@ auto unary(TInstruction*& instruction, UnaryOp& op, ValuePattern value) {
   return detail::UnaryPattern<TInstruction, ValuePattern>(&instruction, &op, value);
 }
 
-template <typename ValuePattern> auto unary(UnaryOp& op, ValuePattern value) {
+template <typename ValuePattern>
+auto unary(UnaryOp& op, ValuePattern value) {
   return detail::UnaryPattern<const UnaryInstr, ValuePattern>(nullptr, &op, value);
 }
 
@@ -78,7 +85,8 @@ auto unary(TInstruction*& instruction, ValuePattern value) {
   return detail::UnaryPattern<TInstruction, ValuePattern>(&instruction, nullptr, value);
 }
 
-template <typename ValuePattern> auto unary(ValuePattern value) {
+template <typename ValuePattern>
+auto unary(ValuePattern value) {
   return detail::UnaryPattern<const UnaryInstr, ValuePattern>(nullptr, nullptr, value);
 }
 
@@ -90,7 +98,8 @@ auto unary_specific(TInstruction*& instruction, UnaryOp specific_op, ValuePatter
                                                                 specific_op);
 }
 
-template <typename ValuePattern> auto unary_specific(UnaryOp specific_op, ValuePattern value) {
+template <typename ValuePattern>
+auto unary_specific(UnaryOp specific_op, ValuePattern value) {
   return detail::UnaryPattern<const UnaryInstr, ValuePattern, true>(nullptr, nullptr, value,
                                                                     specific_op);
 }
@@ -100,4 +109,4 @@ IMPLEMENT_SPECIFIC_UNARY_PATTERN(not_, UnaryOp::Not)
 
 #undef IMPLEMENT_SPECIFIC_UNARY_PATTERN
 
-} // namespace flugzeug::pat
+}  // namespace flugzeug::pat

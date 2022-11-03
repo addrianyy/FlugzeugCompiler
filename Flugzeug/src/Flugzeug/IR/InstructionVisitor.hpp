@@ -5,11 +5,13 @@ namespace flugzeug {
 
 namespace detail {
 
-template <bool Constant> class InstructionVisitor {
-protected:
-  template <typename T> using Argument = std::conditional_t<Constant, const T, T>*;
+template <bool Constant>
+class InstructionVisitor {
+ protected:
+  template <typename T>
+  using Argument = std::conditional_t<Constant, const T, T>*;
 
-public:
+ public:
   // Copy to implementation:
   /*
   void visit_unary_instr(Argument<UnaryInstr> unary) {}
@@ -29,7 +31,7 @@ public:
    */
 };
 
-} // namespace detail
+}  // namespace detail
 
 using InstructionVisitor = detail::InstructionVisitor<false>;
 using ConstInstructionVisitor = detail::InstructionVisitor<true>;
@@ -45,38 +47,38 @@ inline auto visit_instruction(TInstruction* instruction, TVisitor& visitor) {
                 "Cannot visit non-instruction argument");
 
   switch (instruction->get_kind()) {
-  case Value::Kind::UnaryInstr:
-    return visitor.visit_unary_instr(relaxed_cast<UnaryInstr>(instruction));
-  case Value::Kind::BinaryInstr:
-    return visitor.visit_binary_instr(relaxed_cast<BinaryInstr>(instruction));
-  case Value::Kind::IntCompare:
-    return visitor.visit_int_compare(relaxed_cast<IntCompare>(instruction));
-  case Value::Kind::Load:
-    return visitor.visit_load(relaxed_cast<Load>(instruction));
-  case Value::Kind::Store:
-    return visitor.visit_store(relaxed_cast<Store>(instruction));
-  case Value::Kind::Call:
-    return visitor.visit_call(relaxed_cast<Call>(instruction));
-  case Value::Kind::Branch:
-    return visitor.visit_branch(relaxed_cast<Branch>(instruction));
-  case Value::Kind::CondBranch:
-    return visitor.visit_cond_branch(relaxed_cast<CondBranch>(instruction));
-  case Value::Kind::StackAlloc:
-    return visitor.visit_stackalloc(relaxed_cast<StackAlloc>(instruction));
-  case Value::Kind::Ret:
-    return visitor.visit_ret(relaxed_cast<Ret>(instruction));
-  case Value::Kind::Offset:
-    return visitor.visit_offset(relaxed_cast<Offset>(instruction));
-  case Value::Kind::Cast:
-    return visitor.visit_cast(relaxed_cast<Cast>(instruction));
-  case Value::Kind::Select:
-    return visitor.visit_select(relaxed_cast<Select>(instruction));
-  case Value::Kind::Phi:
-    return visitor.visit_phi(relaxed_cast<Phi>(instruction));
-  default:
-    unreachable();
+    case Value::Kind::UnaryInstr:
+      return visitor.visit_unary_instr(relaxed_cast<UnaryInstr>(instruction));
+    case Value::Kind::BinaryInstr:
+      return visitor.visit_binary_instr(relaxed_cast<BinaryInstr>(instruction));
+    case Value::Kind::IntCompare:
+      return visitor.visit_int_compare(relaxed_cast<IntCompare>(instruction));
+    case Value::Kind::Load:
+      return visitor.visit_load(relaxed_cast<Load>(instruction));
+    case Value::Kind::Store:
+      return visitor.visit_store(relaxed_cast<Store>(instruction));
+    case Value::Kind::Call:
+      return visitor.visit_call(relaxed_cast<Call>(instruction));
+    case Value::Kind::Branch:
+      return visitor.visit_branch(relaxed_cast<Branch>(instruction));
+    case Value::Kind::CondBranch:
+      return visitor.visit_cond_branch(relaxed_cast<CondBranch>(instruction));
+    case Value::Kind::StackAlloc:
+      return visitor.visit_stackalloc(relaxed_cast<StackAlloc>(instruction));
+    case Value::Kind::Ret:
+      return visitor.visit_ret(relaxed_cast<Ret>(instruction));
+    case Value::Kind::Offset:
+      return visitor.visit_offset(relaxed_cast<Offset>(instruction));
+    case Value::Kind::Cast:
+      return visitor.visit_cast(relaxed_cast<Cast>(instruction));
+    case Value::Kind::Select:
+      return visitor.visit_select(relaxed_cast<Select>(instruction));
+    case Value::Kind::Phi:
+      return visitor.visit_phi(relaxed_cast<Phi>(instruction));
+    default:
+      unreachable();
   }
 }
-} // namespace visitor
+}  // namespace visitor
 
-} // namespace flugzeug
+}  // namespace flugzeug

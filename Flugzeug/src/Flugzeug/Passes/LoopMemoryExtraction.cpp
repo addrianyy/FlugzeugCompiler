@@ -66,7 +66,9 @@ static bool is_memory_access_unconditional(MemoryDfsContext& dfs_context,
 
 /// Rewrite all uses of the pointer to use newly created stackalloc instead. Load/store the actual
 /// pointer only on the loop boundaries and around aliasing calls.
-static void rewrite_pointer(Value* pointer, Block* preheader, Block* dedicated_exit,
+static void rewrite_pointer(Value* pointer,
+                            Block* preheader,
+                            Block* dedicated_exit,
                             const std::vector<Call*>& calls,
                             const std::unordered_set<Instruction*>& loads_stores,
                             const analysis::PointerAliasing& alias_analysis) {
@@ -114,9 +116,11 @@ static void rewrite_pointer(Value* pointer, Block* preheader, Block* dedicated_e
   }
 }
 
-static bool optimize_loop(Function* function, const analysis::Loop* loop,
+static bool optimize_loop(Function* function,
+                          const analysis::Loop* loop,
                           const analysis::PointerAliasing& alias_analysis,
-                          DominatorTree& dominator_tree, MemoryDfsContext& dfs_context) {
+                          DominatorTree& dominator_tree,
+                          MemoryDfsContext& dfs_context) {
   // TODO: Check correctness of single exit target. Previous runs may have invalidated it (?).
   const auto exit_target = loop->get_single_exit_target();
   if (!exit_target) {
@@ -254,7 +258,8 @@ static bool optimize_loop(Function* function, const analysis::Loop* loop,
   return true;
 }
 
-static bool optimize_loop_or_sub_loops(Function* function, const analysis::Loop* loop,
+static bool optimize_loop_or_sub_loops(Function* function,
+                                       const analysis::Loop* loop,
                                        const analysis::PointerAliasing& alias_analysis,
                                        DominatorTree& dominator_tree,
                                        MemoryDfsContext& dfs_context) {

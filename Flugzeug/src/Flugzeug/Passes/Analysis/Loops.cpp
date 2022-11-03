@@ -23,13 +23,16 @@ struct MaybeSubLoopBackedge {
   bool in_subloop = false;
 };
 
-static std::vector<std::vector<Block*>>
-calculate_block_sccs(SccContext<Block*>& context, const std::unordered_set<Block*>& blocks) {
+static std::vector<std::vector<Block*>> calculate_block_sccs(
+  SccContext<Block*>& context,
+  const std::unordered_set<Block*>& blocks) {
   return calculate_sccs<Block*, true>(context, blocks,
                                       [](Block* block) { return block->successors(); });
 }
 
-static bool visit_loop_block(DfsContext& dfs_context, Block* block, Loop& loop,
+static bool visit_loop_block(DfsContext& dfs_context,
+                             Block* block,
+                             Loop& loop,
                              std::vector<std::pair<Block*, Block*>>& exiting_edges,
                              std::unordered_set<Block*>& back_edges_from,
                              std::vector<MaybeSubLoopBackedge>& maybe_subloops_backedges) {
@@ -100,10 +103,11 @@ static void verify_subloops_backedges(const Loop& subloop,
 
 /// Returns `true` is loops were flattened (actual loop described by the SCC was invalid but
 /// sub-loops were valid and were added to the loop list as non-child loops).
-bool Loop::find_loops_in_scc(Function* function, const std::vector<Block*>& scc_vector,
-                             const DominatorTree& dominator_tree, SccContext<Block*>& scc_context,
+bool Loop::find_loops_in_scc(Function* function,
+                             const std::vector<Block*>& scc_vector,
+                             const DominatorTree& dominator_tree,
+                             SccContext<Block*>& scc_context,
                              std::vector<std::unique_ptr<Loop>>& loops) {
-
   Loop loop;
   loop.blocks = std::unordered_set<Block*>(scc_vector.begin(), scc_vector.end());
 
@@ -214,9 +218,9 @@ bool Loop::find_loops_in_scc(Function* function, const std::vector<Block*>& scc_
   return false;
 }
 
-std::vector<std::unique_ptr<Loop>>
-flugzeug::analysis::analyze_function_loops(Function* function,
-                                           const DominatorTree& dominator_tree) {
+std::vector<std::unique_ptr<Loop>> flugzeug::analysis::analyze_function_loops(
+  Function* function,
+  const DominatorTree& dominator_tree) {
   // Loops are defined only for reachable blocks.
   const auto reachable_blocks =
     function->get_entry_block()->get_reachable_blocks_set(IncludeStart::Yes);
@@ -241,14 +245,20 @@ std::vector<std::unique_ptr<Loop>> flugzeug::analysis::analyze_function_loops(Fu
   return analyze_function_loops(function, dominator_tree);
 }
 
-Block* Loop::get_header() const { return header; }
+Block* Loop::get_header() const {
+  return header;
+}
 
-const std::unordered_set<Block*>& Loop::get_blocks() const { return blocks; }
+const std::unordered_set<Block*>& Loop::get_blocks() const {
+  return blocks;
+}
 const std::unordered_set<Block*>& Loop::get_blocks_without_sub_loops() const {
   return blocks_without_sub_loops;
 }
 
-const std::unordered_set<Block*>& Loop::get_back_edges_from() const { return back_edges_from; }
+const std::unordered_set<Block*>& Loop::get_back_edges_from() const {
+  return back_edges_from;
+}
 const std::vector<std::pair<Block*, Block*>>& Loop::get_exiting_edges() const {
   return exiting_edges;
 }
@@ -285,12 +295,16 @@ Block* Loop::get_single_exit_target() const {
   return exit_target;
 }
 
-bool Loop::contains_block(Block* block) const { return blocks.contains(block); }
+bool Loop::contains_block(Block* block) const {
+  return blocks.contains(block);
+}
 bool Loop::contains_block_skipping_sub_loops(Block* block) const {
   return blocks_without_sub_loops.contains(block);
 }
 
-const std::vector<std::unique_ptr<Loop>>& Loop::get_sub_loops() const { return sub_loops; }
+const std::vector<std::unique_ptr<Loop>>& Loop::get_sub_loops() const {
+  return sub_loops;
+}
 
 void Loop::debug_print_internal(const std::string& indentation) const {
   std::string blocks_s;

@@ -4,27 +4,27 @@ using namespace flugzeug;
 
 void InstructionInserter::insert_internal(Instruction* instruction) {
   switch (insert_type) {
-  case InsertType::BlockFront:
-    insertion_block->push_instruction_front(instruction);
-    break;
+    case InsertType::BlockFront:
+      insertion_block->push_instruction_front(instruction);
+      break;
 
-  case InsertType::BlockBack:
-    insertion_block->push_instruction_back(instruction);
-    break;
+    case InsertType::BlockBack:
+      insertion_block->push_instruction_back(instruction);
+      break;
 
-  case InsertType::BeforeInstruction:
-    instruction->insert_before(insertion_instruction);
-    if (follow_instruction) {
-      insertion_instruction = instruction;
-    }
-    break;
+    case InsertType::BeforeInstruction:
+      instruction->insert_before(insertion_instruction);
+      if (follow_instruction) {
+        insertion_instruction = instruction;
+      }
+      break;
 
-  case InsertType::AfterInstruction:
-    instruction->insert_after(insertion_instruction);
-    if (follow_instruction) {
-      insertion_instruction = instruction;
-    }
-    break;
+    case InsertType::AfterInstruction:
+      instruction->insert_after(insertion_instruction);
+      if (follow_instruction) {
+        insertion_instruction = instruction;
+      }
+      break;
   }
 }
 
@@ -72,7 +72,9 @@ IntCompare* InstructionInserter::int_compare(Value* lhs, IntPredicate predicate,
   return insert(new IntCompare(context, lhs, predicate, rhs));
 }
 
-Load* InstructionInserter::load(Value* ptr) { return insert(new Load(context, ptr)); }
+Load* InstructionInserter::load(Value* ptr) {
+  return insert(new Load(context, ptr));
+}
 
 Store* InstructionInserter::store(Value* ptr, Value* val) {
   return insert(new Store(context, ptr, val));
@@ -82,7 +84,9 @@ Call* InstructionInserter::call(Function* function, const std::vector<Value*>& a
   return insert(new Call(context, function, arguments));
 }
 
-Branch* InstructionInserter::branch(Block* target) { return insert(new Branch(context, target)); }
+Branch* InstructionInserter::branch(Block* target) {
+  return insert(new Branch(context, target));
+}
 
 CondBranch* InstructionInserter::cond_branch(Value* cond, Block* true_target, Block* false_target) {
   return insert(new CondBranch(context, cond, true_target, false_target));
@@ -92,7 +96,9 @@ StackAlloc* InstructionInserter::stack_alloc(Type* type, size_t size) {
   return insert(new StackAlloc(context, type, size));
 }
 
-Ret* InstructionInserter::ret(Value* val) { return insert(new Ret(context, val)); }
+Ret* InstructionInserter::ret(Value* val) {
+  return insert(new Ret(context, val));
+}
 
 Offset* InstructionInserter::offset(Value* base, Value* index) {
   return insert(new Offset(context, base, index));
@@ -106,7 +112,9 @@ Select* InstructionInserter::select(Value* cond, Value* true_val, Value* false_v
   return insert(new Select(context, cond, true_val, false_val));
 }
 
-Phi* InstructionInserter::phi(Type* type) { return insert(new Phi(context, type)); }
+Phi* InstructionInserter::phi(Type* type) {
+  return insert(new Phi(context, type));
+}
 
 Phi* InstructionInserter::phi(const std::vector<Phi::Incoming>& incoming) {
   return insert(new Phi(context, incoming));

@@ -9,18 +9,18 @@ bool opt::MemoryOptimization::run(Function* function, opt::OptimizationLocality 
   analysis::PointerAliasing alias_analysis(function);
 
   switch (locality) {
-  case OptimizationLocality::BlockLocal:
-    return memory::eliminate_dead_stores_local(function, alias_analysis) |
-           memory::eliminate_known_loads_local(function, alias_analysis);
+    case OptimizationLocality::BlockLocal:
+      return memory::eliminate_dead_stores_local(function, alias_analysis) |
+             memory::eliminate_known_loads_local(function, alias_analysis);
 
-  case OptimizationLocality::Global: {
-    const DominatorTree dominator_tree(function);
+    case OptimizationLocality::Global: {
+      const DominatorTree dominator_tree(function);
 
-    return memory::eliminate_dead_stores_global(function, dominator_tree, alias_analysis) |
-           memory::eliminate_known_loads_global(function, dominator_tree, alias_analysis);
-  }
+      return memory::eliminate_dead_stores_global(function, dominator_tree, alias_analysis) |
+             memory::eliminate_known_loads_global(function, dominator_tree, alias_analysis);
+    }
 
-  default:
-    unreachable();
+    default:
+      unreachable();
   }
 }

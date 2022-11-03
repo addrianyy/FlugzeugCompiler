@@ -14,7 +14,8 @@ class Block;
 class IRPrinter;
 class DominatorTree;
 
-template <typename TBlock> using BlockTargets = StaticVector<TBlock*, 2>;
+template <typename TBlock>
+using BlockTargets = StaticVector<TBlock*, 2>;
 
 class Instruction : public User, public IntrusiveNode<Instruction, Block> {
   DEFINE_INSTANCEOF_RANGE(Value, Value::Kind::InstructionBegin, Value::Kind::InstructionEnd)
@@ -26,10 +27,11 @@ class Instruction : public User, public IntrusiveNode<Instruction, Block> {
 
   size_t get_order_in_block() const;
 
-protected:
+ protected:
   using User::User;
 
-  static void print_value_compact(const Value* value, IRPrinter::LinePrinter& printer,
+  static void print_value_compact(const Value* value,
+                                  IRPrinter::LinePrinter& printer,
                                   const std::unordered_set<const Value*>& inlined_values,
                                   bool parens = true);
 
@@ -41,7 +43,7 @@ protected:
   bool print_compact(IRPrinter& printer,
                      const std::unordered_set<const Value*>& inlined_values) const;
 
-public:
+ public:
   using IntrusiveNode::insert_after;
   using IntrusiveNode::insert_before;
   using IntrusiveNode::move_after;
@@ -92,4 +94,4 @@ public:
   bool is_terminator() const;
 };
 
-} // namespace flugzeug
+}  // namespace flugzeug

@@ -1,10 +1,10 @@
 #include "ConditionalFlattening.hpp"
-#include "Utils/SimplifyPhi.hpp"
 
 #include <Flugzeug/IR/Function.hpp>
 #include <Flugzeug/IR/Instructions.hpp>
-
 #include <array>
+
+#include "Utils/SimplifyPhi.hpp"
 
 using namespace flugzeug;
 
@@ -76,8 +76,11 @@ static bool speculate_instructions(const std::array<Block*, N>& from, Block* to)
 }
 
 template <size_t N>
-static bool flatten(const std::array<Block*, N>& speculated_blocks, CondBranch* cond_branch,
-                    Block* true_block, Block* false_block, Block* exit) {
+static bool flatten(const std::array<Block*, N>& speculated_blocks,
+                    CondBranch* cond_branch,
+                    Block* true_block,
+                    Block* false_block,
+                    Block* exit) {
   const auto block = cond_branch->get_block();
 
   // All speculated blocks must have only `block` as predecessor.

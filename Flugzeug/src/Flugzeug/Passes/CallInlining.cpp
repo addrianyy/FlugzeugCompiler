@@ -25,10 +25,10 @@ static bool inline_everything(Function* function) {
 
 bool opt::CallInlining::run(Function* function, InliningStrategy strategy) {
   switch (strategy) {
-  case InliningStrategy::InlineEverything:
-    return inline_everything(function);
+    case InliningStrategy::InlineEverything:
+      return inline_everything(function);
 
-  default:
-    unreachable();
+    default:
+      unreachable();
   }
 }

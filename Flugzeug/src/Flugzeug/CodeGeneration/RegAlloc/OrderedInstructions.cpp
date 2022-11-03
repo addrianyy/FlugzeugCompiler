@@ -48,7 +48,9 @@ BlockInstructionsRange::BlockInstructionsRange(OrderedInstructions& ordered_inst
   last = ordered_instructions.get(block->get_last_instruction())->get_index();
 }
 
-bool OrderedInstruction::has_value() const { return !instruction->is_void(); }
+bool OrderedInstruction::has_value() const {
+  return !instruction->is_void();
+}
 bool OrderedInstruction::is_joined() const {
   return representative != nullptr && representative != this;
 }

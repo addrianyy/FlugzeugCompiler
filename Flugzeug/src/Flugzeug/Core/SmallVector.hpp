@@ -9,8 +9,9 @@
 
 namespace flugzeug {
 
-template <typename T> class SmallVectorImpl {
-protected:
+template <typename T>
+class SmallVectorImpl {
+ protected:
   using StorageT = std::aligned_storage_t<sizeof(T), alignof(T)>;
 
   StorageT* data_ = nullptr;
@@ -61,7 +62,7 @@ protected:
     size_ = other.size();
   }
 
-public:
+ public:
   SmallVectorImpl& operator=(const SmallVectorImpl& other) {
     if (this != &other) {
       clear();
@@ -131,7 +132,8 @@ public:
     size_++;
   }
 
-  template <typename... Args> T& emplace_back(Args&&... args) {
+  template <typename... Args>
+  T& emplace_back(Args&&... args) {
     new (free_element()) T(std::forward<Args>(args)...);
     size_++;
 
@@ -160,12 +162,14 @@ public:
   bool operator!=(const SmallVectorImpl<T>& other) const { return !(this == other); }
 };
 
-template <typename T, size_t N> class SmallVector : public SmallVectorImpl<T> {
+template <typename T, size_t N>
+class SmallVector : public SmallVectorImpl<T> {
   using StorageT = typename SmallVectorImpl<T>::StorageT;
 
   StorageT inline_storage[N];
 
-  template <size_t OtherN> void move_from(SmallVector<T, OtherN>&& other) {
+  template <size_t OtherN>
+  void move_from(SmallVector<T, OtherN>&& other) {
     if (other.is_using_inline_storage()) {
       this->ensure_capacity(other.size());
 
@@ -189,7 +193,7 @@ template <typename T, size_t N> class SmallVector : public SmallVectorImpl<T> {
     }
   }
 
-public:
+ public:
   SmallVector() : SmallVectorImpl<T>(inline_storage, N) {
     verify(this->is_using_inline_storage(), "Offset calculation is incorrect");
   }
@@ -199,11 +203,13 @@ public:
   // implemented by SmallVectorImpl:
   // SmallVector& operator=(const SmallVectorImpl<T>& other)
 
-  template <size_t OtherN> SmallVector(SmallVector<T, OtherN>&& other) : SmallVector() {
+  template <size_t OtherN>
+  SmallVector(SmallVector<T, OtherN>&& other) : SmallVector() {
     move_from(std::move(other));
   }
 
-  template <size_t OtherN> SmallVector& operator=(SmallVector<T, OtherN>&& other) {
+  template <size_t OtherN>
+  SmallVector& operator=(SmallVector<T, OtherN>&& other) {
     if (this != &other) {
       this->clear();
       move_from(std::move(other));
@@ -220,4 +226,4 @@ public:
   }
 };
 
-} // namespace flugzeug
+}  // namespace flugzeug

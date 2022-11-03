@@ -69,7 +69,7 @@ class Context {
   Constant* get_constant(Type* type, uint64_t constant);
   Undef* get_undef(Type* type);
 
-public:
+ public:
   CLASS_NON_MOVABLE_NON_COPYABLE(Context)
 
   Context();
@@ -91,4 +91,4 @@ public:
   Module* create_module_from_file(const std::string& path);
 };
 
-} // namespace flugzeug
+}  // namespace flugzeug

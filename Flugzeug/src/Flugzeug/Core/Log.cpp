@@ -3,7 +3,9 @@
 
 #include <iostream>
 
-void flugzeug::detail::log::log(const char* file, int line, LogLevel level,
+void flugzeug::detail::log::log(const char* file,
+                                int line,
+                                LogLevel level,
                                 const std::string& message) {
   console_colors::ensure_initialized();
 
@@ -11,20 +13,20 @@ void flugzeug::detail::log::log(const char* file, int line, LogLevel level,
   const char* header = nullptr;
 
   switch (level) {
-  case LogLevel::Debug:
-    header = "\x1b[32;1m[debug] ";
-    break;
-  case LogLevel::Info:
-    header = "\x1b[36;1m[info ] ";
-    break;
-  case LogLevel::Warn:
-    header = "\x1b[33;1m[warn ] ";
-    break;
-  case LogLevel::Error:
-    header = "\x1b[31;1m[error] ";
-    break;
-  default:
-    header = "??? ";
+    case LogLevel::Debug:
+      header = "\x1b[32;1m[debug] ";
+      break;
+    case LogLevel::Info:
+      header = "\x1b[36;1m[info ] ";
+      break;
+    case LogLevel::Warn:
+      header = "\x1b[33;1m[warn ] ";
+      break;
+    case LogLevel::Error:
+      header = "\x1b[31;1m[error] ";
+      break;
+    default:
+      header = "??? ";
   }
 
   stream << header << message << "\x1b[0m" << std::endl;

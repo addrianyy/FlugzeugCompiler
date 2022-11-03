@@ -14,7 +14,7 @@ enum class ValidationBehaviour {
 };
 
 class ValidationResults {
-public:
+ public:
   struct Error {
     const char* source_file;
     int source_line;
@@ -25,10 +25,10 @@ public:
     std::string description;
   };
 
-private:
+ private:
   std::vector<Error> errors;
 
-public:
+ public:
   explicit ValidationResults(std::vector<Error> errors) : errors(std::move(errors)) {}
 
   using iterator = std::vector<Error>::const_iterator;
@@ -40,4 +40,4 @@ public:
   const std::vector<Error>& get_errors() const { return errors; }
 };
 
-} // namespace flugzeug
+}  // namespace flugzeug

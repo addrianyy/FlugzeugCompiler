@@ -34,10 +34,16 @@ BEGIN_ENUM_STRINGIFY(stringify_binary_op, BinaryOp)
 END_ENUM_STRINGIFY()
 // clang-format on
 
-void ASTPrinter::increase_indentation() { indentation_str += "  "; }
-void ASTPrinter::decrease_indentation() { indentation_str = indentation_str.substr(2); }
+void ASTPrinter::increase_indentation() {
+  indentation_str += "  ";
+}
+void ASTPrinter::decrease_indentation() {
+  indentation_str = indentation_str.substr(2);
+}
 
-void ASTPrinter::print(std::string_view str) { std::cout << str; }
+void ASTPrinter::print(std::string_view str) {
+  std::cout << str;
+}
 
 void ASTPrinter::key_internal(std::string_view name) {
   print(indentation_str);
@@ -62,16 +68,24 @@ void ASTPrinter::standalone_statement(const Stmt* stmt) {
   print("\n");
 }
 
-void ASTPrinter::simple_structure(std::string_view str) { print(str); }
+void ASTPrinter::simple_structure(std::string_view str) {
+  print(str);
+}
 
 void ASTPrinter::value(const Type& type) {
   const auto s = type.format();
   print(s);
 }
 
-void ASTPrinter::value(UnaryOp op) { print(stringify_unary_op(op)); }
-void ASTPrinter::value(BinaryOp op) { print(stringify_binary_op(op)); }
-void ASTPrinter::value(std::string_view str) { print(str); }
+void ASTPrinter::value(UnaryOp op) {
+  print(stringify_unary_op(op));
+}
+void ASTPrinter::value(BinaryOp op) {
+  print(stringify_binary_op(op));
+}
+void ASTPrinter::value(std::string_view str) {
+  print(str);
+}
 void ASTPrinter::value(const Stmt* stmt) {
   if (stmt) {
     stmt->print(*this);

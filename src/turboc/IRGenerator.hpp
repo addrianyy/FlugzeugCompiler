@@ -19,18 +19,18 @@ class IRGenerator : public ConstASTVisitor {
   };
 
   class CodegenValue {
-  public:
+   public:
     enum class Kind {
       Lvalue,
       Rvalue,
     };
 
-  private:
+   private:
     Kind kind;
     Type type;
     fz::Value* value;
 
-  public:
+   public:
     CodegenValue(Kind kind, Type type, fz::Value* value) : kind(kind), type(type), value(value) {}
 
     static inline CodegenValue lvalue(Type type, fz::Value* value) {
@@ -50,7 +50,7 @@ class IRGenerator : public ConstASTVisitor {
     std::unordered_map<std::string, CodegenValue> variables;
     std::vector<std::vector<std::string>> scopes;
 
-  public:
+   public:
     Variables() = default;
 
     void clear();
@@ -131,8 +131,8 @@ class IRGenerator : public ConstASTVisitor {
 
   explicit IRGenerator(fz::Context* context);
 
-public:
+ public:
   static fz::Module* generate(fz::Context* context, const std::vector<Function>& functions);
 };
 
-} // namespace turboc
+}  // namespace turboc

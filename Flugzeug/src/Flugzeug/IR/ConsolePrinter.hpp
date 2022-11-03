@@ -4,14 +4,14 @@
 namespace flugzeug {
 
 class ConsolePrinter : public IRPrinter {
-public:
+ public:
   enum class Variant {
     Simple,
     Colorful,
     ColorfulIfSupported,
   };
 
-private:
+ private:
   Variant variant;
   std::ostream& output_stream;
 
@@ -32,10 +32,10 @@ private:
 
   void write_string(std::string_view string) override;
 
-public:
+ public:
   explicit ConsolePrinter(Variant variant);
   ConsolePrinter(Variant variant, std::ostream& output_stream);
   ~ConsolePrinter() override;
 };
 
-} // namespace flugzeug
+}  // namespace flugzeug

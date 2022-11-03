@@ -5,7 +5,7 @@
 namespace turboc {
 
 class Type {
-public:
+ public:
   enum class Kind {
     U8,
     U16,
@@ -18,11 +18,11 @@ public:
     Void,
   };
 
-private:
+ private:
   Kind kind;
   uint32_t indirection;
 
-public:
+ public:
   explicit Type(Kind kind, uint32_t indirection = 0) : kind(kind), indirection(indirection) {}
 
   Kind get_kind() const { return kind; }
@@ -46,4 +46,4 @@ public:
   }
 };
 
-} // namespace turboc
+}  // namespace turboc

@@ -5,7 +5,9 @@
 
 using namespace flugzeug;
 
-Block* Value::cast_to_block(Value* value) { return cast<Block>(value); }
+Block* Value::cast_to_block(Value* value) {
+  return cast<Block>(value);
+}
 
 void Value::set_user_operand(User* user, size_t operand_index, Value* value) {
   return user->set_operand(operand_index, value);
@@ -35,7 +37,9 @@ void Value::remove_use(detail::Use* use) {
   }
 }
 
-bool Value::is_phi() const { return cast<Phi>(this); }
+bool Value::is_phi() const {
+  return cast<Phi>(this);
+}
 
 void Value::deduplicate_phi_incoming_blocks(Block* block, User* user) {
   if (const auto phi = cast<Phi>(user)) {
@@ -164,7 +168,9 @@ void Value::replace_uses_with_constant(uint64_t constant) {
   replace_uses_with(get_type()->get_constant(constant));
 }
 
-void Value::replace_uses_with_undef() { replace_uses_with(get_type()->get_undef()); }
+void Value::replace_uses_with_undef() {
+  replace_uses_with(get_type()->get_undef());
+}
 
 void Constant::constrain_constant(Type* type, uint64_t c, uint64_t* u, int64_t* i) {
   const auto bit_size = type->get_bit_size();
@@ -215,7 +221,9 @@ bool Value::is_used_only_by(const User* checked_user) const {
   return all_of(users(), [checked_user](const User& user) { return checked_user == &user; });
 }
 
-std::string Value::format() const { return "v" + std::to_string(display_index); }
+std::string Value::format() const {
+  return "v" + std::to_string(display_index);
+}
 
 std::string Constant::format() const {
   if (get_type()->is_i1()) {
@@ -227,4 +235,6 @@ std::string Constant::format() const {
   }
 }
 
-std::string Undef::format() const { return "undef"; }
+std::string Undef::format() const {
+  return "undef";
+}

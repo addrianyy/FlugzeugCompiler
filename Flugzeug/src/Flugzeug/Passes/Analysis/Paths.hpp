@@ -13,7 +13,7 @@ class BlockChildren {
   BlockTargets<Block> successors;
   size_t index = 0;
 
-public:
+ public:
   BlockChildren(Block* block, Block* barrier) {
     for (const auto successor : block->successors()) {
       if (successor != barrier) {
@@ -31,13 +31,16 @@ public:
   }
 };
 
-} // namespace detail
+}  // namespace detail
 
 class PathAnalysisWorkData {
-  friend void get_blocks_inbetween(Block* from, Block* to, Block* barrier,
+  friend void get_blocks_inbetween(Block* from,
+                                   Block* to,
+                                   Block* barrier,
                                    std::unordered_set<Block*>& blocks_inbetween,
                                    PathAnalysisWorkData* work_data);
-  friend void get_blocks_from_dominator_to_target(Block* dominator, Block* target,
+  friend void get_blocks_from_dominator_to_target(Block* dominator,
+                                                  Block* target,
                                                   std::unordered_set<Block*>& blocks_inbetween,
                                                   PathAnalysisWorkData* work_data);
 
@@ -46,28 +49,34 @@ class PathAnalysisWorkData {
   std::vector<detail::BlockChildren> children;
 };
 
-void get_blocks_inbetween(Block* from, Block* to, Block* barrier,
+void get_blocks_inbetween(Block* from,
+                          Block* to,
+                          Block* barrier,
                           std::unordered_set<Block*>& blocks_inbetween,
                           PathAnalysisWorkData* work_data = nullptr);
-std::unordered_set<Block*> get_blocks_inbetween(Block* from, Block* to, Block* barrier,
+std::unordered_set<Block*> get_blocks_inbetween(Block* from,
+                                                Block* to,
+                                                Block* barrier,
                                                 PathAnalysisWorkData* work_data = nullptr);
 
-void get_blocks_from_dominator_to_target(Block* dominator, Block* target,
+void get_blocks_from_dominator_to_target(Block* dominator,
+                                         Block* target,
                                          std::unordered_set<Block*>& blocks_inbetween,
                                          PathAnalysisWorkData* work_data = nullptr);
-std::unordered_set<Block*>
-get_blocks_from_dominator_to_target(Block* dominator, Block* target,
-                                    PathAnalysisWorkData* work_data = nullptr);
+std::unordered_set<Block*> get_blocks_from_dominator_to_target(
+  Block* dominator,
+  Block* target,
+  PathAnalysisWorkData* work_data = nullptr);
 
 class PathValidator {
-public:
+ public:
   enum class MemoryKillTarget {
     Start,
     End,
     None,
   };
 
-private:
+ private:
   struct CacheKey {
     Block* start;
     Block* end;
@@ -88,21 +97,28 @@ private:
   std::unordered_map<CacheKey, std::unordered_set<Block*>, CacheKeyHash> cache;
 
   bool get_blocks_to_check(const std::unordered_set<Block*>*& blocks_to_check,
-                           const DominatorTree& dominator_tree, Instruction* start,
-                           Instruction* end, MemoryKillTarget kill_target);
+                           const DominatorTree& dominator_tree,
+                           Instruction* start,
+                           Instruction* end,
+                           MemoryKillTarget kill_target);
 
-public:
+ public:
   using VerifierFn = std::function<bool(const Instruction*)>;
 
-  std::optional<size_t> validate_path(const DominatorTree& dominator_tree, Instruction* start,
-                                      Instruction* end, const VerifierFn& verifier);
-
-  std::optional<size_t> validate_path(const DominatorTree& dominator_tree, Instruction* start,
-                                      Instruction* end, MemoryKillTarget kill_target,
+  std::optional<size_t> validate_path(const DominatorTree& dominator_tree,
+                                      Instruction* start,
+                                      Instruction* end,
                                       const VerifierFn& verifier);
 
-  std::optional<size_t> validate_path_count(const DominatorTree& dominator_tree, Instruction* start,
+  std::optional<size_t> validate_path(const DominatorTree& dominator_tree,
+                                      Instruction* start,
+                                      Instruction* end,
+                                      MemoryKillTarget kill_target,
+                                      const VerifierFn& verifier);
+
+  std::optional<size_t> validate_path_count(const DominatorTree& dominator_tree,
+                                            Instruction* start,
                                             Instruction* end);
 };
 
-} // namespace flugzeug::analysis
+}  // namespace flugzeug::analysis

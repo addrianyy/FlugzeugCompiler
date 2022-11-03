@@ -14,11 +14,11 @@ class DominatorTree {
 
   bool first_dominates_second(const Block* dominator, const Block* block) const;
 
-public:
+ public:
   explicit DominatorTree(const Function* function);
 
   bool is_block_dead(const Block* block) const;
   const Block* get_immediate_dominator(const Block* block) const;
 };
 
-} // namespace flugzeug
+}  // namespace flugzeug

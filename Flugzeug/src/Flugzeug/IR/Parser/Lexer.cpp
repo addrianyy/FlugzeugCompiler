@@ -231,9 +231,13 @@ Lexer::Lexer(std::string source_to_lex) : source(std::move(source_to_lex)), eof(
   }
 }
 
-void Lexer::restore(size_t count) { cursor -= intptr_t(count); }
+void Lexer::restore(size_t count) {
+  cursor -= intptr_t(count);
+}
 
-const Token& Lexer::current_token() const { return get_token(cursor); }
+const Token& Lexer::current_token() const {
+  return get_token(cursor);
+}
 const Token& Lexer::consume_token() {
   const auto prev_cursor = cursor;
   cursor++;

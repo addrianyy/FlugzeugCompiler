@@ -5,13 +5,14 @@
 
 using namespace flugzeug;
 
-OptimizationStatistics::StatisticsContext
-OptimizationStatistics::pre_pass_callback(std::string_view pass_name) {
+OptimizationStatistics::StatisticsContext OptimizationStatistics::pre_pass_callback(
+  std::string_view pass_name) {
   return {std::chrono::high_resolution_clock::now()};
 }
 
 void OptimizationStatistics::post_pass_callback(const StatisticsContext& context,
-                                                std::string_view pass_name, bool success) {
+                                                std::string_view pass_name,
+                                                bool success) {
   const auto end_time = std::chrono::high_resolution_clock::now();
   const auto start_time = context.start_time;
   const float elapsed = std::chrono::duration<float>(end_time - start_time).count();
@@ -53,7 +54,6 @@ void OptimizationStatistics::show() const {
 
   log_info("");
   {
-
     std::vector<std::pair<std::string_view, const PassInfo*>> sorted_pass_info;
     sorted_pass_info.reserve(passes_info.size());
 
@@ -77,10 +77,11 @@ void OptimizationStatistics::show() const {
       const auto success_ratio = int((float(info->successes) / float(info->invocations)) * 100.f);
       const auto time_spent_ratio = int((info->time_spent / total_time_spend) * 100.f);
 
-      log_info("{}{:>2}. {:<35} | {:>3} invocations | {:>3} successes | {:>3}% success ratio | "
-               "{:>7.3f}s time spent | {:>3}% time spent",
-               indentation, i + 1, pass_name, info->invocations, info->successes, success_ratio,
-               info->time_spent, time_spent_ratio);
+      log_info(
+        "{}{:>2}. {:<35} | {:>3} invocations | {:>3} successes | {:>3}% success ratio | "
+        "{:>7.3f}s time spent | {:>3}% time spent",
+        indentation, i + 1, pass_name, info->invocations, info->successes, success_ratio,
+        info->time_spent, time_spent_ratio);
     }
   }
 

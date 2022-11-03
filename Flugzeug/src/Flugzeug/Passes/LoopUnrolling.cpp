@@ -3,7 +3,6 @@
 #include <Flugzeug/IR/DominatorTree.hpp>
 #include <Flugzeug/IR/Function.hpp>
 #include <Flugzeug/IR/Instructions.hpp>
-
 #include <Flugzeug/Passes/Analysis/Loops.hpp>
 #include <Flugzeug/Passes/Utils/Evaluation.hpp>
 #include <Flugzeug/Passes/Utils/SimplifyPhi.hpp>
@@ -17,7 +16,7 @@ class UnrolledIteration {
   std::unordered_map<Value*, Value*> reverse_mapping;
   std::vector<Block*> blocks;
 
-public:
+ public:
   void add_block(Block* block) { blocks.push_back(block); }
   const std::vector<Block*>& get_blocks() { return blocks; }
 
@@ -31,7 +30,8 @@ public:
     reverse_mapping.insert({to, from});
   }
 
-  template <typename T> T* map(T* value) {
+  template <typename T>
+  T* map(T* value) {
     const auto it = mapping.find(value);
     if (it != mapping.end()) {
       return cast<T>(it->second);
@@ -40,7 +40,8 @@ public:
     return nullptr;
   }
 
-  template <typename T> T* reverse_map(T* value) {
+  template <typename T>
+  T* reverse_map(T* value) {
     const auto it = reverse_mapping.find(value);
     if (it != reverse_mapping.end()) {
       return cast<T>(it->second);
@@ -168,9 +169,9 @@ static bool get_loop_count_related_instructions(Instruction* instruction,
   return true;
 }
 
-static std::vector<Instruction*>
-order_loop_count_related_instructions(const analysis::Loop* loop,
-                                      const std::unordered_set<Instruction*>& instruction_set) {
+static std::vector<Instruction*> order_loop_count_related_instructions(
+  const analysis::Loop* loop,
+  const std::unordered_set<Instruction*>& instruction_set) {
   std::vector<Instruction*> instructions;
 
   std::unordered_set<Block*> visited;
@@ -325,8 +326,12 @@ static void replace_branch(Instruction* instruction, Block* old_target, Block* n
   }
 }
 
-static void perform_unrolling(Function* function, const analysis::Loop* loop, Block* exit_from,
-                              Block* exit_to, Block* back_edge_from, size_t unroll_count) {
+static void perform_unrolling(Function* function,
+                              const analysis::Loop* loop,
+                              Block* exit_from,
+                              Block* exit_to,
+                              Block* back_edge_from,
+                              size_t unroll_count) {
   // At this point we know that this loop is unrollable and we know how many times it should be
   // unrolled. Unrolling process itself looks like that:
   //   1. Create a new exit block. Make `exit_from` branch to the new exit block instead of
@@ -561,7 +566,8 @@ static void perform_unrolling(Function* function, const analysis::Loop* loop, Bl
   }
 }
 
-static bool unroll_loop(Function* function, const analysis::Loop* loop,
+static bool unroll_loop(Function* function,
+                        const analysis::Loop* loop,
                         const DominatorTree& dominator_tree) {
   // This function will try to unroll the loop using following process:
   //   1. Check if the loop fulfils all conditions required for unrolling (ex. single back edge,
@@ -637,7 +643,8 @@ static bool unroll_loop(Function* function, const analysis::Loop* loop,
   return false;
 }
 
-static bool unroll_loop_or_sub_loops(Function* function, const analysis::Loop* loop,
+static bool unroll_loop_or_sub_loops(Function* function,
+                                     const analysis::Loop* loop,
                                      const DominatorTree& dominator_tree) {
   // Try unrolling this loop.
   if (unroll_loop(function, loop, dominator_tree)) {

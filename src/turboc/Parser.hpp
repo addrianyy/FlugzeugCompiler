@@ -12,7 +12,8 @@ namespace turboc {
 class Parser {
   Lexer& lexer;
 
-  template <typename Fn> void parse_argument_list(Fn fn) {
+  template <typename Fn>
+  void parse_argument_list(Fn fn) {
     lexer.consume_expect(Token::Kind::ParenOpen);
 
     while (true) {
@@ -58,9 +59,9 @@ class Parser {
 
   explicit Parser(Lexer& lexer) : lexer(lexer) {}
 
-public:
+ public:
   static std::vector<Function> parse(Lexer& lexer);
   static std::vector<Function> parse_from_file(const std::string& source_path);
 };
 
-} // namespace turboc
+}  // namespace turboc

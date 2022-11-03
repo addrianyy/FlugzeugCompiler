@@ -3,7 +3,10 @@
 using namespace flugzeug;
 using namespace flugzeug::analysis;
 
-static bool can_reach(Block* from, Block* to, Block* barrier, std::vector<Block*>& stack,
+static bool can_reach(Block* from,
+                      Block* to,
+                      Block* barrier,
+                      std::vector<Block*>& stack,
                       std::unordered_set<Block*>& visited) {
   stack.push_back(from);
 
@@ -31,7 +34,9 @@ static bool can_reach(Block* from, Block* to, Block* barrier, std::vector<Block*
   return false;
 }
 
-void analysis::get_blocks_inbetween(Block* from, Block* to, Block* barrier,
+void analysis::get_blocks_inbetween(Block* from,
+                                    Block* to,
+                                    Block* barrier,
                                     std::unordered_set<Block*>& blocks_inbetween,
                                     PathAnalysisWorkData* work_data) {
   verify(from != barrier && to != barrier, "Invalid barrier block");
@@ -93,14 +98,17 @@ void analysis::get_blocks_inbetween(Block* from, Block* to, Block* barrier,
   }
 }
 
-std::unordered_set<Block*> analysis::get_blocks_inbetween(Block* from, Block* to, Block* barrier,
+std::unordered_set<Block*> analysis::get_blocks_inbetween(Block* from,
+                                                          Block* to,
+                                                          Block* barrier,
                                                           PathAnalysisWorkData* work_data) {
   std::unordered_set<Block*> blocks_inbetween;
   get_blocks_inbetween(from, to, barrier, blocks_inbetween, work_data);
   return blocks_inbetween;
 }
 
-void analysis::get_blocks_from_dominator_to_target(Block* dominator, Block* target,
+void analysis::get_blocks_from_dominator_to_target(Block* dominator,
+                                                   Block* target,
                                                    std::unordered_set<Block*>& blocks_inbetween,
                                                    PathAnalysisWorkData* work_data) {
   std::unordered_set<Block*> buffer_visited;
@@ -152,9 +160,10 @@ void analysis::get_blocks_from_dominator_to_target(Block* dominator, Block* targ
   blocks_inbetween.insert(dominator);
 }
 
-std::unordered_set<Block*>
-analysis::get_blocks_from_dominator_to_target(Block* dominator, Block* target,
-                                              PathAnalysisWorkData* work_data) {
+std::unordered_set<Block*> analysis::get_blocks_from_dominator_to_target(
+  Block* dominator,
+  Block* target,
+  PathAnalysisWorkData* work_data) {
   std::unordered_set<Block*> blocks_inbetween;
   get_blocks_from_dominator_to_target(dominator, target, blocks_inbetween, work_data);
   return blocks_inbetween;
@@ -165,8 +174,10 @@ size_t PathValidator::CacheKeyHash::operator()(const PathValidator::CacheKey& p)
 }
 
 bool PathValidator::get_blocks_to_check(const std::unordered_set<Block*>*& blocks_to_check,
-                                        const DominatorTree& dominator_tree, Instruction* start,
-                                        Instruction* end, MemoryKillTarget kill_target) {
+                                        const DominatorTree& dominator_tree,
+                                        Instruction* start,
+                                        Instruction* end,
+                                        MemoryKillTarget kill_target) {
   const auto start_block = start->get_block();
   const auto end_block = end->get_block();
 
@@ -208,13 +219,15 @@ bool PathValidator::get_blocks_to_check(const std::unordered_set<Block*>*& block
 }
 
 std::optional<size_t> PathValidator::validate_path(const DominatorTree& dominator_tree,
-                                                   Instruction* start, Instruction* end,
+                                                   Instruction* start,
+                                                   Instruction* end,
                                                    const VerifierFn& verifier) {
   return validate_path(dominator_tree, start, end, MemoryKillTarget::None, verifier);
 }
 
 std::optional<size_t> PathValidator::validate_path(const DominatorTree& dominator_tree,
-                                                   Instruction* start, Instruction* end,
+                                                   Instruction* start,
+                                                   Instruction* end,
                                                    MemoryKillTarget kill_target,
                                                    const VerifierFn& verifier) {
   size_t instruction_count = 0;
@@ -294,7 +307,8 @@ std::optional<size_t> PathValidator::validate_path(const DominatorTree& dominato
 }
 
 std::optional<size_t> PathValidator::validate_path_count(const DominatorTree& dominator_tree,
-                                                         Instruction* start, Instruction* end) {
+                                                         Instruction* start,
+                                                         Instruction* end) {
   size_t instruction_count = 0;
 
   // Base case: both path points are in the same block.

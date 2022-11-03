@@ -4,8 +4,8 @@
 namespace flugzeug::opt {
 
 class CFGSimplification : public Pass<"CFGSimplification"> {
-public:
+ public:
   static bool run(Function* function);
 };
 
-} // namespace flugzeug::opt
+}  // namespace flugzeug::opt

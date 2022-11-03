@@ -11,6 +11,6 @@ namespace utils {
 /// Destroy Phi if it is unused and `removed_unused` is true.
 bool simplify_phi(Phi* phi, bool destroy_unused);
 
-} // namespace utils
+}  // namespace utils
 
-} // namespace flugzeug
+}  // namespace flugzeug

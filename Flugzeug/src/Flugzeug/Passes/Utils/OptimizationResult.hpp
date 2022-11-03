@@ -14,12 +14,13 @@ class OptimizationResult {
 
   explicit OptimizationResult(bool successful) : successful(successful) {}
 
-public:
+ public:
   OptimizationResult(Value* replacement) : replacement(replacement), successful(true) {
     verify(replacement, "Cannot use null replacement for `OptimizationResult`");
   }
 
-  template <typename Fn> static OptimizationResult rewrite(Instruction* instruction, Fn&& fn) {
+  template <typename Fn>
+  static OptimizationResult rewrite(Instruction* instruction, Fn&& fn) {
     InstructionInserter inserter(instruction, InsertDestination::Back, true);
     Value* result = fn(inserter);
     verify(result, "Failed to rewrite instruction");
@@ -37,4 +38,4 @@ public:
   Value* get_replacement() const { return replacement; }
 };
 
-} // namespace flugzeug
+}  // namespace flugzeug

@@ -32,7 +32,7 @@ struct InstructionUniqueIdentifierHash {
 class UniqueIdentifierVisitor : public ConstInstructionVisitor {
   InstructionUniqueIdentifier& identifier;
 
-public:
+ public:
   explicit UniqueIdentifierVisitor(InstructionUniqueIdentifier& identifier)
       : identifier(identifier) {}
 
@@ -79,12 +79,12 @@ static bool can_be_deduplicated(Instruction* instruction) {
   }
 
   switch (instruction->get_kind()) {
-  case Value::Kind::StackAlloc:
-  case Value::Kind::Phi:
-    return false;
+    case Value::Kind::StackAlloc:
+    case Value::Kind::Phi:
+      return false;
 
-  default:
-    return true;
+    default:
+      return true;
   }
 }
 
@@ -218,13 +218,13 @@ static bool deduplicate_global(Function* function) {
 
 bool opt::InstructionDeduplication::run(Function* function, OptimizationLocality locality) {
   switch (locality) {
-  case OptimizationLocality::BlockLocal:
-    return deduplicate_block_local(function);
+    case OptimizationLocality::BlockLocal:
+      return deduplicate_block_local(function);
 
-  case OptimizationLocality::Global:
-    return deduplicate_global(function);
+    case OptimizationLocality::Global:
+      return deduplicate_global(function);
 
-  default:
-    unreachable();
+    default:
+      unreachable();
   }
 }

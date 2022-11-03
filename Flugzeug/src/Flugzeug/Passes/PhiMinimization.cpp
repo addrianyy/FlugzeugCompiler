@@ -1,12 +1,12 @@
 #include "PhiMinimization.hpp"
-#include "Analysis/SCC.hpp"
 
+#include <Flugzeug/IR/Function.hpp>
+#include <Flugzeug/IR/Instructions.hpp>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
-#include <Flugzeug/IR/Function.hpp>
-#include <Flugzeug/IR/Instructions.hpp>
+#include "Analysis/SCC.hpp"
 
 using namespace flugzeug;
 

@@ -42,7 +42,8 @@ static Block* add_intermediate_block_between_edges(const std::unordered_set<Bloc
   return intermediate_block;
 }
 
-flugzeug::Block* utils::get_or_create_loop_preheader(Function* function, const analysis::Loop* loop,
+flugzeug::Block* utils::get_or_create_loop_preheader(Function* function,
+                                                     const analysis::Loop* loop,
                                                      bool allow_conditional) {
   std::unordered_set<Block*> entering_blocks;
 

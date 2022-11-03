@@ -9,7 +9,7 @@ namespace flugzeug {
 class Token {
   friend class Lexer;
 
-public:
+ public:
   enum class Keyword {
     I1,
     I8,
@@ -93,7 +93,7 @@ public:
     Eof,
   };
 
-private:
+ private:
   Kind kind;
   Keyword keyword{};
   uint64_t literal{};
@@ -101,7 +101,7 @@ private:
 
   explicit Token(Kind kind) : kind(kind) {}
 
-public:
+ public:
   static std::string_view stringify_kind(Kind kind);
   static std::string_view stringify_keyword(Keyword keyword);
 
@@ -126,4 +126,4 @@ public:
   std::string format() const;
 };
 
-} // namespace flugzeug
+}  // namespace flugzeug

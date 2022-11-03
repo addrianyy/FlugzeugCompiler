@@ -4,8 +4,8 @@
 namespace flugzeug::opt {
 
 class LoopRotation : public Pass<"LoopRotation"> {
-public:
+ public:
   static bool run(Function* function);
 };
 
-} // namespace flugzeug::opt
+}  // namespace flugzeug::opt

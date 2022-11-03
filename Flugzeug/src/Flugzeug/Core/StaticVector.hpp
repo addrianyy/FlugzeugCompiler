@@ -7,7 +7,8 @@
 
 namespace flugzeug {
 
-template <typename T, size_t N> class StaticVector {
+template <typename T, size_t N>
+class StaticVector {
   static_assert(N > 0, "Empty StaticVector is not supported");
 
   using StorageT = std::aligned_storage_t<sizeof(T), alignof(T)>;
@@ -35,7 +36,7 @@ template <typename T, size_t N> class StaticVector {
     size_ = other.size_;
   }
 
-public:
+ public:
   StaticVector() = default;
   ~StaticVector() { clear(); }
 
@@ -96,7 +97,8 @@ public:
     size_++;
   }
 
-  template <typename... Args> T& emplace_back(Args&&... args) {
+  template <typename... Args>
+  T& emplace_back(Args&&... args) {
     new (free_element()) T(std::forward<Args>(args)...);
     size_++;
 
@@ -108,7 +110,8 @@ public:
     end().~T();
   }
 
-  template <size_t OtherN> bool operator==(const StaticVector<T, OtherN>& other) const {
+  template <size_t OtherN>
+  bool operator==(const StaticVector<T, OtherN>& other) const {
     if (other.size() != size()) {
       return false;
     }
@@ -122,9 +125,10 @@ public:
     return true;
   }
 
-  template <size_t OtherN> bool operator!=(const StaticVector<T, OtherN>& other) const {
+  template <size_t OtherN>
+  bool operator!=(const StaticVector<T, OtherN>& other) const {
     return !(this == other);
   }
 };
 
-} // namespace flugzeug
+}  // namespace flugzeug

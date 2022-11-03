@@ -14,7 +14,8 @@
 
 using namespace flugzeug;
 
-template <typename Container, typename Fn> void for_each_erase(Container& container, Fn callback) {
+template <typename Container, typename Fn>
+void for_each_erase(Container& container, Fn callback) {
   auto iterator = begin(container);
   while (iterator != end(container)) {
     if (callback(*iterator)) {
@@ -28,7 +29,7 @@ template <typename Container, typename Fn> void for_each_erase(Container& contai
 class BackEdges {
   const DominatorTree& dominator_tree;
 
-public:
+ public:
   explicit BackEdges(const DominatorTree& dominator_tree) : dominator_tree(dominator_tree) {}
 
   bool is_back_edge(const Block* from, const Block* to) const {
@@ -198,7 +199,8 @@ static std::vector<Block*> toposort_blocks(Function* function, const BackEdges& 
 }
 
 static void build_live_intervals(OrderedInstructions& ordered_instructions,
-                                 const std::vector<Block*>& toposort, const BackEdges& back_edges) {
+                                 const std::vector<Block*>& toposort,
+                                 const BackEdges& back_edges) {
   // Map: block -> values which are live at the beginning of the block
   std::unordered_map<Block*, std::unordered_set<OrderedInstruction*>> live_in_blocks;
   live_in_blocks.reserve(toposort.size());
@@ -373,8 +375,8 @@ static void coalesce(OrderedInstructions& ordered_instructions) {
   }
 }
 
-static std::unordered_map<OrderedInstruction*, uint32_t>
-linear_scan_allocation(OrderedInstructions& ordered_instructions) {
+static std::unordered_map<OrderedInstruction*, uint32_t> linear_scan_allocation(
+  OrderedInstructions& ordered_instructions) {
   // Intervals which aren't processed yet.
   std::vector<OrderedInstruction*> unhandled;
 
@@ -496,9 +498,9 @@ linear_scan_allocation(OrderedInstructions& ordered_instructions) {
   return registers;
 }
 
-static void
-debug_print_allocation(OrderedInstructions& ordered_instructions,
-                       const std::unordered_map<OrderedInstruction*, uint32_t>& allocation) {
+static void debug_print_allocation(
+  OrderedInstructions& ordered_instructions,
+  const std::unordered_map<OrderedInstruction*, uint32_t>& allocation) {
   DebugRepresentation dbg_repr(ordered_instructions);
 
   log_debug("Register allocation:");
@@ -510,9 +512,9 @@ debug_print_allocation(OrderedInstructions& ordered_instructions,
   log_debug("");
 }
 
-static void
-debug_verify_allocation(OrderedInstructions& ordered_instructions,
-                        const std::unordered_map<OrderedInstruction*, uint32_t>& allocation) {
+static void debug_verify_allocation(
+  OrderedInstructions& ordered_instructions,
+  const std::unordered_map<OrderedInstruction*, uint32_t>& allocation) {
   for (OrderedInstruction& a : ordered_instructions.instructions()) {
     if (!a.has_value() || a.is_joined()) {
       continue;

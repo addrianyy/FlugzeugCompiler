@@ -25,7 +25,8 @@ class Function final : public Value, public IntrusiveNode<Function, Module> {
 
   using BlockList = IntrusiveLinkedList<Block, Function>;
 
-  template <typename TBlock, typename TInstruction> class InstructionIteratorInternal {
+  template <typename TBlock, typename TInstruction>
+  class InstructionIteratorInternal {
     TBlock* current_block;
     TInstruction* current_instruction;
 
@@ -42,7 +43,7 @@ class Function final : public Value, public IntrusiveNode<Function, Module> {
       }
     }
 
-  public:
+   public:
     using iterator_category = std::forward_iterator_tag;
     using difference_type = std::ptrdiff_t;
     using value_type = TInstruction;
@@ -99,15 +100,18 @@ class Function final : public Value, public IntrusiveNode<Function, Module> {
   void on_removed_node(Block* block);
 
   void print_prototype(IRPrinter& printer, bool end_line) const;
-  void generate_dot_graph_source(std::ostream& output, bool colors,
+  void generate_dot_graph_source(std::ostream& output,
+                                 bool colors,
                                  IRPrintingMethod method = IRPrintingMethod::Standard) const;
 
   void insert_block(Block* block);
 
-  Function(Context* context, Type* return_type, std::string name,
+  Function(Context* context,
+           Type* return_type,
+           std::string name,
            const std::vector<Type*>& arguments);
 
-public:
+ public:
   ~Function() override;
 
   ValidationResults validate(ValidationBehaviour behaviour) const;
@@ -121,41 +125,83 @@ public:
   void debug_graph() const;
 
 #pragma region block_list
-  Block* get_first_block() { return blocks.get_first(); }
-  Block* get_last_block() { return blocks.get_last(); }
+  Block* get_first_block() {
+    return blocks.get_first();
+  }
+  Block* get_last_block() {
+    return blocks.get_last();
+  }
 
-  const Block* get_first_block() const { return blocks.get_first(); }
-  const Block* get_last_block() const { return blocks.get_last(); }
+  const Block* get_first_block() const {
+    return blocks.get_first();
+  }
+  const Block* get_last_block() const {
+    return blocks.get_last();
+  }
 
-  size_t get_block_count() const { return blocks.get_size(); }
-  bool is_empty() const { return blocks.is_empty(); }
+  size_t get_block_count() const {
+    return blocks.get_size();
+  }
+  bool is_empty() const {
+    return blocks.is_empty();
+  }
 
   using const_iterator = BlockList::const_iterator;
   using iterator = BlockList::iterator;
 
-  iterator begin() { return blocks.begin(); }
-  iterator end() { return blocks.end(); }
+  iterator begin() {
+    return blocks.begin();
+  }
+  iterator end() {
+    return blocks.end();
+  }
 
-  const_iterator begin() const { return blocks.begin(); }
-  const_iterator end() const { return blocks.end(); }
+  const_iterator begin() const {
+    return blocks.begin();
+  }
+  const_iterator end() const {
+    return blocks.end();
+  }
 #pragma endregion
 
-  Module* get_module() { return get_owner(); }
-  const Module* get_module() const { return get_owner(); }
+  Module* get_module() {
+    return get_owner();
+  }
+  const Module* get_module() const {
+    return get_owner();
+  }
 
-  Type* get_return_type() const { return return_type; }
-  std::string_view get_name() const { return name; }
+  Type* get_return_type() const {
+    return return_type;
+  }
+  std::string_view get_name() const {
+    return name;
+  }
 
-  size_t get_parameter_count() const { return parameters.size(); }
+  size_t get_parameter_count() const {
+    return parameters.size();
+  }
 
-  Parameter* get_parameter(size_t i) { return parameters[i]; }
-  const Parameter* get_parameter(size_t i) const { return parameters[i]; }
+  Parameter* get_parameter(size_t i) {
+    return parameters[i];
+  }
+  const Parameter* get_parameter(size_t i) const {
+    return parameters[i];
+  }
 
-  Block* get_entry_block() { return get_first_block(); }
-  const Block* get_entry_block() const { return get_first_block(); }
+  Block* get_entry_block() {
+    return get_first_block();
+  }
+  const Block* get_entry_block() const {
+    return get_first_block();
+  }
 
-  bool is_extern() const { return is_empty(); }
-  bool is_local() const { return !is_empty(); }
+  bool is_extern() const {
+    return is_empty();
+  }
+  bool is_local() const {
+    return !is_empty();
+  }
 
   void reassign_display_indices();
 
@@ -195,4 +241,4 @@ public:
   }
 };
 
-}; // namespace flugzeug
+};  // namespace flugzeug

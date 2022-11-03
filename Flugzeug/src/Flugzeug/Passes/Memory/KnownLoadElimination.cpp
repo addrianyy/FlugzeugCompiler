@@ -42,7 +42,6 @@ bool opt::memory::eliminate_known_loads_local(Function* function,
     stores.clear();
 
     for (Instruction& instruction : advance_early(block)) {
-
       if (const auto store = cast<Store>(instruction)) {
         // The newest known value for the pointer is now defined by this store.
         stores[store->get_ptr()] = store;

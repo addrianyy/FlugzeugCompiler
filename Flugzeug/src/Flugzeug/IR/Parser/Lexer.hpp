@@ -1,7 +1,7 @@
 #pragma once
-#include "Token.hpp"
 #include <string>
 #include <vector>
+#include "Token.hpp"
 
 namespace flugzeug {
 
@@ -14,7 +14,7 @@ class Lexer {
 
   const Token& get_token(intptr_t token_cursor) const;
 
-public:
+ public:
   explicit Lexer(std::string source_to_lex);
 
   void restore(size_t count);
@@ -31,4 +31,4 @@ public:
   void print_tokens() const;
 };
 
-} // namespace flugzeug
+}  // namespace flugzeug

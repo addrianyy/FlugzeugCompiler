@@ -8,6 +8,6 @@ namespace utils {
 
 void inline_call(Call* call);
 
-} // namespace utils
+}  // namespace utils
 
-} // namespace flugzeug
+}  // namespace flugzeug

@@ -14,20 +14,26 @@ inline Constant* evaluate_unary_instr_to_value(Type* type, UnaryOp op, uint64_t 
   return type->get_constant(evaluate_unary_instr(type, op, value));
 }
 
-inline Constant* evaluate_binary_instr_to_value(Type* type, uint64_t lhs, BinaryOp op,
+inline Constant* evaluate_binary_instr_to_value(Type* type,
+                                                uint64_t lhs,
+                                                BinaryOp op,
                                                 uint64_t rhs) {
   return type->get_constant(evaluate_binary_instr(type, lhs, op, rhs));
 }
 
-inline Constant* evaluate_int_compare_to_value(Type* type, uint64_t lhs, IntPredicate predicate,
+inline Constant* evaluate_int_compare_to_value(Type* type,
+                                               uint64_t lhs,
+                                               IntPredicate predicate,
                                                uint64_t rhs) {
   return type->get_context()->get_i1_ty()->get_constant(
     evaluate_int_compare(type, lhs, predicate, rhs));
 }
 
-inline Constant* evaluate_cast_to_value(uint64_t from, Type* from_type, Type* to_type,
+inline Constant* evaluate_cast_to_value(uint64_t from,
+                                        Type* from_type,
+                                        Type* to_type,
                                         CastKind cast_kind) {
   return to_type->get_constant(evaluate_cast(from, from_type, to_type, cast_kind));
 }
 
-} // namespace flugzeug::utils
+}  // namespace flugzeug::utils

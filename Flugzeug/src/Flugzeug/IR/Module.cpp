@@ -52,8 +52,8 @@ void Module::destroy() {
   delete this;
 }
 
-std::unordered_map<const Function*, ValidationResults>
-Module::validate(ValidationBehaviour behaviour) const {
+std::unordered_map<const Function*, ValidationResults> Module::validate(
+  ValidationBehaviour behaviour) const {
   std::unordered_map<const Function*, ValidationResults> all_results;
   size_t total_erors = 0;
 
@@ -80,7 +80,8 @@ Module::validate(ValidationBehaviour behaviour) const {
   return all_results;
 }
 
-Function* Module::create_function(Type* return_type, std::string name,
+Function* Module::create_function(Type* return_type,
+                                  std::string name,
                                   const std::vector<Type*>& arguments) {
   auto function = new Function(context, return_type, std::move(name), arguments);
   function_list.push_back(function);

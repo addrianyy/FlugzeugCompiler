@@ -19,7 +19,7 @@ class OrderedInstruction;
 class DebugRepresentation {
   std::unordered_map<class OrderedInstruction*, std::vector<OrderedInstruction*>> represents;
 
-public:
+ public:
   explicit DebugRepresentation(OrderedInstructions& ordered_instructions);
 
   std::string format(OrderedInstruction* instruction) const;
@@ -39,7 +39,7 @@ class OrderedInstruction {
   LiveInterval live_interval;
   OrderedInstruction* representative = nullptr;
 
-public:
+ public:
   OrderedInstruction() = default;
 
   OrderedInstruction(size_t index, Instruction* instruction)
@@ -64,7 +64,7 @@ class OrderedInstructions {
 
   std::unordered_map<Instruction*, OrderedInstruction*> map;
 
-public:
+ public:
   explicit OrderedInstructions(const std::vector<Block*>& toposort);
 
   std::span<OrderedInstruction> instructions() {
@@ -78,4 +78,4 @@ public:
   void debug_print_interference();
 };
 
-} // namespace flugzeug
+}  // namespace flugzeug

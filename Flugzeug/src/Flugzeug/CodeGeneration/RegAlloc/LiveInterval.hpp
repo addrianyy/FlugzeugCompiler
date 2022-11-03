@@ -14,7 +14,7 @@ class LiveInterval {
 
   explicit LiveInterval(std::vector<Range> ranges) : ranges(std::move(ranges)) {}
 
-public:
+ public:
   LiveInterval() = default;
 
   std::span<const Range> get_ranges() const { return ranges; }
@@ -32,4 +32,4 @@ public:
   void add(Range range);
 };
 
-} // namespace flugzeug
+}  // namespace flugzeug

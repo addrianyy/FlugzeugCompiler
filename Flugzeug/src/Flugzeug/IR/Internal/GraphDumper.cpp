@@ -25,7 +25,7 @@ constexpr std::string_view default_text = "BBBBBB";
 constexpr std::string_view background = "2B2B2B";
 constexpr std::string_view box_border = "BBBBBB";
 
-} // namespace colors
+}  // namespace colors
 
 static void replace_occurrences(std::string& string, std::string_view from, std::string_view to) {
   size_t start_pos = 0;
@@ -42,7 +42,7 @@ class GraphPrinter : public IRPrinter {
   bool in_colored_block = false;
   bool in_bold_block = false;
 
-public:
+ public:
   void write_string(std::string_view s) override {
     if (s == "\n") {
       return;
@@ -109,7 +109,8 @@ public:
   std::string str() const { return stream.str(); }
 };
 
-void Function::generate_dot_graph_source(std::ostream& output, bool colors,
+void Function::generate_dot_graph_source(std::ostream& output,
+                                         bool colors,
                                          IRPrintingMethod method) const {
   output << "digraph G {\n";
   output << fmt::format("bgcolor=\"#{}\"\n", colors::background);

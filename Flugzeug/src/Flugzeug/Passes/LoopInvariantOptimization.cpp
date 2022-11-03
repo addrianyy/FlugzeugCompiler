@@ -3,14 +3,14 @@
 #include <Flugzeug/IR/DominatorTree.hpp>
 #include <Flugzeug/IR/Function.hpp>
 #include <Flugzeug/IR/Instructions.hpp>
-
 #include <Flugzeug/Passes/Analysis/Loops.hpp>
 #include <Flugzeug/Passes/Utils/LoopTransforms.hpp>
 #include <Flugzeug/Passes/Utils/SimplifyPhi.hpp>
 
 using namespace flugzeug;
 
-static bool is_instruction_loop_invariant(Instruction* instruction, const analysis::Loop* loop,
+static bool is_instruction_loop_invariant(Instruction* instruction,
+                                          const analysis::Loop* loop,
                                           std::unordered_set<Instruction*>& invariants) {
   // Volatile instructions or loads cannot be loop invariants.
   if (instruction->is_volatile()) {
@@ -18,12 +18,12 @@ static bool is_instruction_loop_invariant(Instruction* instruction, const analys
   }
 
   switch (instruction->get_kind()) {
-  case Value::Kind::Load:
-  case Value::Kind::Phi:
-    return false;
+    case Value::Kind::Load:
+    case Value::Kind::Phi:
+      return false;
 
-  default:
-    break;
+    default:
+      break;
   }
 
   if (const auto phi = cast<Phi>(instruction)) {

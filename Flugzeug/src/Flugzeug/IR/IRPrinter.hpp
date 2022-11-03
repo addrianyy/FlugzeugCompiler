@@ -16,14 +16,14 @@ enum class IRPrintingMethod {
 };
 
 class IRPrinter {
-public:
+ public:
   class LinePrinter {
     IRPrinter* ir_printer;
 
     bool comma_pending = false;
     bool space_pending = false;
 
-  public:
+   public:
     CLASS_NON_MOVABLE_NON_COPYABLE(LinePrinter)
 
     enum class SpecialItem {
@@ -53,7 +53,7 @@ public:
     void begin_generic_item();
     void end_generic_item();
 
-  private:
+   private:
     void item(const Type* type);
     void item(const Value* value);
     void item(const Block* block);
@@ -64,19 +64,20 @@ public:
     void item(BinaryMathSymbol symbol);
     void item(UnaryMathSymbol symbol);
 
-  public:
+   public:
     explicit LinePrinter(IRPrinter* printer) : ir_printer(printer) {}
     ~LinePrinter() { ir_printer->write_string("\n"); }
 
     void print() {}
 
-    template <typename T, typename... Args> void print(const T& current, Args... args) {
+    template <typename T, typename... Args>
+    void print(const T& current, Args... args) {
       item(current);
       print(args...);
     }
   };
 
-protected:
+ protected:
   virtual void begin_keyword() {}
   virtual void end_keyword() {}
 
@@ -94,7 +95,7 @@ protected:
 
   virtual void write_string(std::string_view string) = 0;
 
-public:
+ public:
   using Item = LinePrinter::SpecialItem;
   using NonKeywordWord = LinePrinter::NonKeywordWord;
   using BinaryMathSymbol = LinePrinter::BinaryMathSymbol;
@@ -109,4 +110,4 @@ public:
   void raw_write(std::string_view string) { write_string(string); }
 };
 
-} // namespace flugzeug
+}  // namespace flugzeug

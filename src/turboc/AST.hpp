@@ -43,7 +43,7 @@ enum class BinaryOp {
 int32_t get_binary_op_precedence(BinaryOp op);
 
 class Stmt {
-public:
+ public:
   // clang-format off
   enum class Kind {
     Assign,
@@ -68,13 +68,13 @@ public:
   };
   // clang-format on
 
-private:
+ private:
   const Kind kind;
 
-protected:
+ protected:
   explicit Stmt(Kind kind) : kind(kind) {}
 
-public:
+ public:
   virtual ~Stmt() = default;
 
   Kind get_kind() const { return kind; }
@@ -88,7 +88,7 @@ class AssignStmt : public Stmt {
   std::unique_ptr<Expr> variable;
   std::unique_ptr<Expr> value;
 
-public:
+ public:
   AssignStmt(std::unique_ptr<Expr> variable, std::unique_ptr<Expr> value)
       : Stmt(Stmt::Kind::Assign), variable(std::move(variable)), value(std::move(value)) {}
 
@@ -105,9 +105,11 @@ class BinaryAssignStmt : public Stmt {
   BinaryOp op;
   std::unique_ptr<Expr> value;
 
-public:
+ public:
   BinaryAssignStmt(std::unique_ptr<Expr> variable, BinaryOp op, std::unique_ptr<Expr> value)
-      : Stmt(Stmt::Kind::BinaryAssign), variable(std::move(variable)), op(op),
+      : Stmt(Stmt::Kind::BinaryAssign),
+        variable(std::move(variable)),
+        op(op),
         value(std::move(value)) {}
 
   const std::unique_ptr<Expr>& get_variable() const { return variable; }
@@ -128,11 +130,18 @@ class DeclareStmt : public Stmt {
   std::unique_ptr<Expr> value;
   std::unique_ptr<Expr> array_size;
 
-public:
-  DeclareStmt(Type type, Type declaration_type, std::string name, std::unique_ptr<Expr> value,
+ public:
+  DeclareStmt(Type type,
+              Type declaration_type,
+              std::string name,
+              std::unique_ptr<Expr> value,
               std::unique_ptr<Expr> array_size)
-      : Stmt(Stmt::Kind::Declare), type(type), declaration_type(declaration_type),
-        name(std::move(name)), value(std::move(value)), array_size(std::move(array_size)) {}
+      : Stmt(Stmt::Kind::Declare),
+        type(type),
+        declaration_type(declaration_type),
+        name(std::move(name)),
+        value(std::move(value)),
+        array_size(std::move(array_size)) {}
 
   Type get_type() const { return type; }
   Type get_declaration_type() const { return declaration_type; }
@@ -149,7 +158,7 @@ class WhileStmt : public Stmt {
   std::unique_ptr<Expr> condition;
   std::unique_ptr<BodyStmt> body;
 
-public:
+ public:
   WhileStmt(std::unique_ptr<Expr> condition, std::unique_ptr<BodyStmt> body)
       : Stmt(Stmt::Kind::While), condition(std::move(condition)), body(std::move(body)) {}
 
@@ -162,14 +171,14 @@ public:
 class IfStmt : public Stmt {
   DEFINE_INSTANCEOF(Stmt, Stmt::Kind::If)
 
-public:
+ public:
   using Arm = std::pair<std::unique_ptr<Expr>, std::unique_ptr<BodyStmt>>;
 
-private:
+ private:
   std::vector<Arm> arms;
   std::unique_ptr<BodyStmt> default_body;
 
-public:
+ public:
   IfStmt(std::vector<Arm> arms, std::unique_ptr<BodyStmt> default_body)
       : Stmt(Stmt::Kind::If), arms(std::move(arms)), default_body(std::move(default_body)) {}
 
@@ -187,11 +196,16 @@ class ForStmt : public Stmt {
   std::unique_ptr<Stmt> step;
   std::unique_ptr<BodyStmt> body;
 
-public:
-  ForStmt(std::unique_ptr<Stmt> init, std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> step,
+ public:
+  ForStmt(std::unique_ptr<Stmt> init,
+          std::unique_ptr<Expr> condition,
+          std::unique_ptr<Stmt> step,
           std::unique_ptr<BodyStmt> body)
-      : Stmt(Stmt::Kind::For), init(std::move(init)), condition(std::move(condition)),
-        step(std::move(step)), body(std::move(body)) {}
+      : Stmt(Stmt::Kind::For),
+        init(std::move(init)),
+        condition(std::move(condition)),
+        step(std::move(step)),
+        body(std::move(body)) {}
 
   const std::unique_ptr<Stmt>& get_init() const { return init; }
   const std::unique_ptr<Expr>& get_condition() const { return condition; }
@@ -206,7 +220,7 @@ class ReturnStmt : public Stmt {
 
   std::unique_ptr<Expr> return_value;
 
-public:
+ public:
   explicit ReturnStmt(std::unique_ptr<Expr> return_value)
       : Stmt(Stmt::Kind::Return), return_value(std::move(return_value)) {}
 
@@ -218,7 +232,7 @@ public:
 class BreakStmt : public Stmt {
   DEFINE_INSTANCEOF(Stmt, Stmt::Kind::Break)
 
-public:
+ public:
   BreakStmt() : Stmt(Stmt::Kind::Break) {}
 
   void print(ASTPrinter& printer) const override;
@@ -227,7 +241,7 @@ public:
 class ContinueStmt : public Stmt {
   DEFINE_INSTANCEOF(Stmt, Stmt::Kind::Continue)
 
-public:
+ public:
   ContinueStmt() : Stmt(Stmt::Kind::Continue) {}
 
   void print(ASTPrinter& printer) const override;
@@ -238,7 +252,7 @@ class BodyStmt : public Stmt {
 
   std::vector<std::unique_ptr<Stmt>> statements;
 
-public:
+ public:
   explicit BodyStmt(std::vector<std::unique_ptr<Stmt>> statements)
       : Stmt(Stmt::Kind::Body), statements(std::move(statements)) {}
 
@@ -250,7 +264,7 @@ public:
 class Expr : public Stmt {
   DEFINE_INSTANCEOF_RANGE(Stmt, Stmt::Kind::ExprBegin, Stmt::Kind::ExprEnd)
 
-protected:
+ protected:
   using Stmt::Stmt;
 };
 
@@ -259,7 +273,7 @@ class VariableExpr : public Expr {
 
   std::string name;
 
-public:
+ public:
   explicit VariableExpr(std::string name) : Expr(Stmt::Kind::Variable), name(std::move(name)) {}
 
   const std::string& get_name() const { return name; }
@@ -273,7 +287,7 @@ class UnaryExpr : public Expr {
   UnaryOp op;
   std::unique_ptr<Expr> value;
 
-public:
+ public:
   UnaryExpr(UnaryOp op, std::unique_ptr<Expr> value)
       : Expr(Stmt::Kind::Unary), op(op), value(std::move(value)) {}
 
@@ -290,7 +304,7 @@ class BinaryExpr : public Expr {
   BinaryOp op;
   std::unique_ptr<Expr> right;
 
-public:
+ public:
   BinaryExpr(std::unique_ptr<Expr> left, BinaryOp op, std::unique_ptr<Expr> right)
       : Expr(Stmt::Kind::Binary), left(std::move(left)), op(op), right(std::move(right)) {}
 
@@ -307,7 +321,7 @@ class NumberExpr : public Expr {
   Type type;
   uint64_t value;
 
-public:
+ public:
   NumberExpr(Type type, uint64_t value) : Expr(Stmt::Kind::Number), type(type), value(value) {}
 
   Type get_type() const { return type; }
@@ -322,7 +336,7 @@ class ArrayExpr : public Expr {
   std::unique_ptr<Expr> array;
   std::unique_ptr<Expr> index;
 
-public:
+ public:
   ArrayExpr(std::unique_ptr<Expr> array, std::unique_ptr<Expr> index)
       : Expr(Stmt::Kind::Array), array(std::move(array)), index(std::move(index)) {}
 
@@ -338,9 +352,10 @@ class CallExpr : public Expr {
   std::string function_name;
   std::vector<std::unique_ptr<Expr>> arguments;
 
-public:
+ public:
   CallExpr(std::string function_name, std::vector<std::unique_ptr<Expr>> arguments)
-      : Expr(Stmt::Kind::Call), function_name(std::move(function_name)),
+      : Expr(Stmt::Kind::Call),
+        function_name(std::move(function_name)),
         arguments(std::move(arguments)) {}
 
   const std::string& get_function_name() const { return function_name; }
@@ -355,7 +370,7 @@ class CastExpr : public Expr {
   std::unique_ptr<Expr> value;
   Type type;
 
-public:
+ public:
   CastExpr(std::unique_ptr<Expr> value, Type type)
       : Expr(Stmt::Kind::Cast), value(std::move(value)), type(type) {}
 
@@ -365,4 +380,4 @@ public:
   void print(ASTPrinter& printer) const override;
 };
 
-} // namespace turboc
+}  // namespace turboc

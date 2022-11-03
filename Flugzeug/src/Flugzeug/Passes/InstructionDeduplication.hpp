@@ -5,8 +5,8 @@
 namespace flugzeug::opt {
 
 class InstructionDeduplication : public Pass<"InstructionDeduplication"> {
-public:
+ public:
   static bool run(Function* function, OptimizationLocality locality);
 };
 
-} // namespace flugzeug::opt
+}  // namespace flugzeug::opt

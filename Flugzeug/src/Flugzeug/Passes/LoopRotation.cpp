@@ -38,8 +38,9 @@ static Block* get_actual_loop_body(Function* function, const analysis::Loop* loo
   return header_branch->get_target(!exit_condition);
 }
 
-static std::unordered_set<Instruction*>
-get_header_instructions_that_escape_loop(const analysis::Loop* loop, Block* exit_target) {
+static std::unordered_set<Instruction*> get_header_instructions_that_escape_loop(
+  const analysis::Loop* loop,
+  Block* exit_target) {
   std::unordered_set<Instruction*> escaping_instructions;
 
   // Go through every instruction in the loop header.

@@ -58,10 +58,14 @@ struct PRFunction {
   std::vector<PRFunctionParameter> parameters;
   std::vector<std::unique_ptr<PRFunctionBlock>> blocks;
 
-  PRFunction(bool is_extern, const PRType& return_type, const std::string_view& name,
+  PRFunction(bool is_extern,
+             const PRType& return_type,
+             const std::string_view& name,
              std::vector<PRFunctionParameter> parameters)
-      : is_extern(is_extern), return_type(return_type), name(name),
+      : is_extern(is_extern),
+        return_type(return_type),
+        name(name),
         parameters(std::move(parameters)) {}
 };
 
-} // namespace flugzeug
+}  // namespace flugzeug

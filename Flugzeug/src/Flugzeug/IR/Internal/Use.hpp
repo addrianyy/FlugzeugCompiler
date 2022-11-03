@@ -34,24 +34,42 @@ class Use {
 
   bool heap_allocated = false;
 
-public:
+ public:
   Use() = default;
   Use(User* user, size_t operand_index) : user(user), operand_index(uint32_t(operand_index)) {}
 
-  size_t get_operand_index() const { return size_t(operand_index); }
+  size_t get_operand_index() const {
+    return size_t(operand_index);
+  }
 
-  User* get_user() { return user; }
-  const User* get_user() const { return user; }
+  User* get_user() {
+    return user;
+  }
+  const User* get_user() const {
+    return user;
+  }
 
-  Use* get_previous() { return previous; }
-  const Use* get_previous() const { return previous; }
+  Use* get_previous() {
+    return previous;
+  }
+  const Use* get_previous() const {
+    return previous;
+  }
 
-  Use* get_next() { return next; }
-  const Use* get_next() const { return next; }
+  Use* get_next() {
+    return next;
+  }
+  const Use* get_next() const {
+    return next;
+  }
 
 #ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
-  Value* get_used_value() { return used_value; }
-  const Value* get_used_value() const { return used_value; }
+  Value* get_used_value() {
+    return used_value;
+  }
+  const Value* get_used_value() const {
+    return used_value;
+  }
 #endif
 };
 
@@ -64,13 +82,14 @@ class ValueUses {
   Use* last = nullptr;
   size_t size = 0;
 
-  template <typename TUse, typename TUser> class UserIteratorInternal {
+  template <typename TUse, typename TUser>
+  class UserIteratorInternal {
     TUse* current;
 #ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
     const Value* used_value = nullptr;
 #endif
 
-  public:
+   public:
     using iterator_category = std::forward_iterator_tag;
     using difference_type = std::ptrdiff_t;
     using value_type = TUser;
@@ -100,14 +119,22 @@ class ValueUses {
       return before;
     }
 
-    reference operator*() const { return *current->get_user(); }
-    pointer operator->() const { return current ? current->get_user() : nullptr; }
+    reference operator*() const {
+      return *current->get_user();
+    }
+    pointer operator->() const {
+      return current ? current->get_user() : nullptr;
+    }
 
-    bool operator==(const UserIteratorInternal& rhs) const { return current == rhs.current; }
-    bool operator!=(const UserIteratorInternal& rhs) const { return current != rhs.current; }
+    bool operator==(const UserIteratorInternal& rhs) const {
+      return current == rhs.current;
+    }
+    bool operator!=(const UserIteratorInternal& rhs) const {
+      return current != rhs.current;
+    }
   };
 
-public:
+ public:
   explicit ValueUses(Value* value) {
 #ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
     this->value = value;
@@ -117,22 +144,38 @@ public:
   void add_use(Use* use);
   void remove_use(Use* use);
 
-  Use* get_first() { return first; }
-  Use* get_last() { return last; }
+  Use* get_first() {
+    return first;
+  }
+  Use* get_last() {
+    return last;
+  }
 
   using iterator = UserIteratorInternal<Use, User>;
   using const_iterator = UserIteratorInternal<const Use, const User>;
 
-  size_t get_size() const { return size; }
-  bool is_empty() const { return size == 0; }
+  size_t get_size() const {
+    return size;
+  }
+  bool is_empty() const {
+    return size == 0;
+  }
 
-  iterator begin() { return iterator(first); }
-  iterator end() { return iterator(nullptr); }
+  iterator begin() {
+    return iterator(first);
+  }
+  iterator end() {
+    return iterator(nullptr);
+  }
 
-  const_iterator begin() const { return const_iterator(first); }
-  const_iterator end() const { return const_iterator(nullptr); }
+  const_iterator begin() const {
+    return const_iterator(first);
+  }
+  const_iterator end() const {
+    return const_iterator(nullptr);
+  }
 };
 
-} // namespace detail
+}  // namespace detail
 
-} // namespace flugzeug
+}  // namespace flugzeug

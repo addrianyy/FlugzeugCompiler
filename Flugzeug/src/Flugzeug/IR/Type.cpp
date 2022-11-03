@@ -9,7 +9,9 @@ Type::Type(Context* context, Type::Kind kind) : context(context), kind(kind) {
   context->increase_refcount();
 }
 
-Type::~Type() { context->decrease_refcount(); }
+Type::~Type() {
+  context->decrease_refcount();
+}
 
 PointerType* Type::ref(uint32_t indirection) const {
   verify(indirection > 0, "Cannnot specify no indirection");
@@ -29,23 +31,23 @@ PointerType* Type::ref(uint32_t indirection) const {
 
 size_t Type::get_bit_size() const {
   switch (kind) {
-  case Kind::Void:
-  case Kind::Block:
-  case Kind::Function:
-    fatal_error("Cannot get size of void or block or function types");
-  case Kind::I1:
-    return 1;
-  case Kind::I8:
-    return 8;
-  case Kind::I16:
-    return 16;
-  case Kind::I32:
-    return 32;
-  case Kind::I64:
-  case Kind::Pointer:
-    return 64;
-  default:
-    unreachable();
+    case Kind::Void:
+    case Kind::Block:
+    case Kind::Function:
+      fatal_error("Cannot get size of void or block or function types");
+    case Kind::I1:
+      return 1;
+    case Kind::I8:
+      return 8;
+    case Kind::I16:
+      return 16;
+    case Kind::I32:
+      return 32;
+    case Kind::I64:
+    case Kind::Pointer:
+      return 64;
+    default:
+      unreachable();
   }
 }
 
@@ -57,18 +59,18 @@ size_t Type::get_byte_size() const {
 
 uint64_t Type::get_bit_mask() const {
   switch (get_bit_size()) {
-  case 1:
-    return 1ull;
-  case 8:
-    return 0xffull;
-  case 16:
-    return 0xffffull;
-  case 32:
-    return 0xffff'ffffull;
-  case 64:
-    return 0xffff'ffff'ffff'ffffull;
-  default:
-    unreachable();
+    case 1:
+      return 1ull;
+    case 8:
+      return 0xffull;
+    case 16:
+      return 0xffffull;
+    case 32:
+      return 0xffff'ffffull;
+    case 64:
+      return 0xffff'ffff'ffff'ffffull;
+    default:
+      unreachable();
   }
 }
 
@@ -87,25 +89,25 @@ std::string Type::format() const {
   }
 
   switch (kind) {
-  case Kind::Void:
-    return "void";
-  case Kind::Block:
-    return "block";
-  case Kind::Function:
-    return "function";
-  case Kind::I1:
-    return "i1";
-  case Kind::I8:
-    return "i8";
-  case Kind::I16:
-    return "i16";
-  case Kind::I32:
-    return "i32";
-  case Kind::I64:
-    return "i64";
-  case Kind::Pointer:
-  default:
-    unreachable();
+    case Kind::Void:
+      return "void";
+    case Kind::Block:
+      return "block";
+    case Kind::Function:
+      return "function";
+    case Kind::I1:
+      return "i1";
+    case Kind::I8:
+      return "i8";
+    case Kind::I16:
+      return "i16";
+    case Kind::I32:
+      return "i32";
+    case Kind::I64:
+      return "i64";
+    case Kind::Pointer:
+    default:
+      unreachable();
   }
 }
 
@@ -131,8 +133,12 @@ Constant* Type::get_constant(uint64_t constant) const {
   return context->get_constant(non_const, constant);
 }
 
-Constant* Type::get_zero() const { return get_constant(0); }
-Constant* Type::get_one() const { return get_constant(1); }
+Constant* Type::get_zero() const {
+  return get_constant(0);
+}
+Constant* Type::get_one() const {
+  return get_constant(1);
+}
 
 Undef* Type::get_undef() const {
   if (!undef) {
@@ -146,7 +152,9 @@ bool Type::is_arithmetic() const {
   return kind == Kind::I8 || kind == Kind::I16 || kind == Kind::I32 || kind == Kind::I64;
 }
 
-bool Type::is_arithmetic_or_pointer() const { return is_pointer() || is_arithmetic(); }
+bool Type::is_arithmetic_or_pointer() const {
+  return is_pointer() || is_arithmetic();
+}
 
 PointerType::PointerType(Context* context, Type* base, Type* pointee, uint32_t indirection)
     : Type(context, Kind::Pointer), base(base), pointee(pointee), indirection(indirection) {
@@ -156,4 +164,6 @@ PointerType::PointerType(Context* context, Type* base, Type* pointee, uint32_t i
   }
 }
 
-Type* PointerType::deref() const { return pointee; }
+Type* PointerType::deref() const {
+  return pointee;
+}

@@ -28,12 +28,13 @@ class InstructionInserter {
 
   void insert_internal(Instruction* instruction);
 
-  template <typename T> T* insert(T* instruction) {
+  template <typename T>
+  T* insert(T* instruction) {
     insert_internal(instruction);
     return instruction;
   }
 
-public:
+ public:
   InstructionInserter() = default;
 
   explicit InstructionInserter(Block* insertion_block,
@@ -71,17 +72,25 @@ public:
   Phi* phi(Type* type);
   Phi* phi(const std::vector<Phi::Incoming>& incoming);
 
-#define UNARY_INSTR(name, op)                                                                      \
-  UnaryInstr* name(Value* val) { return unary_instr(op, val); }
+#define UNARY_INSTR(name, op)    \
+  UnaryInstr* name(Value* val) { \
+    return unary_instr(op, val); \
+  }
 
-#define BINARY_INSTR(name, op)                                                                     \
-  BinaryInstr* name(Value* lhs, Value* rhs) { return binary_instr(lhs, op, rhs); }
+#define BINARY_INSTR(name, op)                \
+  BinaryInstr* name(Value* lhs, Value* rhs) { \
+    return binary_instr(lhs, op, rhs);        \
+  }
 
-#define INT_COMPARE(name, pred)                                                                    \
-  IntCompare* name(Value* lhs, Value* rhs) { return int_compare(lhs, pred, rhs); }
+#define INT_COMPARE(name, pred)              \
+  IntCompare* name(Value* lhs, Value* rhs) { \
+    return int_compare(lhs, pred, rhs);      \
+  }
 
-#define CAST(name, kind)                                                                           \
-  Cast* name(Value* val, Type* target_type) { return cast(kind, val, target_type); }
+#define CAST(name, kind)                      \
+  Cast* name(Value* val, Type* target_type) { \
+    return cast(kind, val, target_type);      \
+  }
 
   UNARY_INSTR(neg, UnaryOp::Neg)
   UNARY_INSTR(not_, UnaryOp::Not)
@@ -122,4 +131,4 @@ public:
 #undef CAST
 };
 
-} // namespace flugzeug
+}  // namespace flugzeug

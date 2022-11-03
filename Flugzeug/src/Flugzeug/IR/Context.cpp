@@ -14,8 +14,12 @@ size_t Context::PointerKeyHash::operator()(const Context::PointerKey& p) const {
   return hash_combine(p.indirection, p.base);
 }
 
-void Context::increase_refcount() { refcount++; }
-void Context::decrease_refcount() { verify(--refcount >= 0, "Refcount became negative"); }
+void Context::increase_refcount() {
+  refcount++;
+}
+void Context::decrease_refcount() {
+  verify(--refcount >= 0, "Refcount became negative");
+}
 
 Context::Context() {
   i1_type = new I1Type(this);
@@ -101,15 +105,15 @@ PointerType* Context::get_pointer_type_internal(Type* base, uint32_t indirection
   verify(indirection > 0, "Cannot create pointer with no indirection");
 
   switch (base->get_kind()) {
-  case Type::Kind::Void:
-  case Type::Kind::Block:
-  case Type::Kind::Function:
-  case Type::Kind::I1:
-  case Type::Kind::Pointer:
-    fatal_error("Invalid pointer base.");
+    case Type::Kind::Void:
+    case Type::Kind::Block:
+    case Type::Kind::Function:
+    case Type::Kind::I1:
+    case Type::Kind::Pointer:
+      fatal_error("Invalid pointer base.");
 
-  default:
-    break;
+    default:
+      break;
   }
 
   PointerType* type = nullptr;
@@ -135,10 +139,12 @@ PointerType* Context::get_pointer_type(Type* pointee, uint32_t indirection) {
   return get_pointer_type_internal(base, indirection);
 }
 
-Module* Context::create_module() { return new Module(this); }
+Module* Context::create_module() {
+  return new Module(this);
+}
 
-#include "Parser/ModuleParser.hpp"
 #include <Flugzeug/Core/Files.hpp>
+#include "Parser/ModuleParser.hpp"
 
 Module* Context::create_module_from_source(std::string source) {
   const auto module = create_module();

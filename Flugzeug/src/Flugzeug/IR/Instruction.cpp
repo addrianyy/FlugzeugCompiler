@@ -26,7 +26,8 @@ BlockTargets<TBlock> get_targets_generic(TInstruction* instruction) {
   return result;
 }
 
-void Instruction::print_value_compact(const Value* value, IRPrinter::LinePrinter& printer,
+void Instruction::print_value_compact(const Value* value,
+                                      IRPrinter::LinePrinter& printer,
                                       const std::unordered_set<const Value*>& inlined_values,
                                       bool parens) {
   if (const auto instruction = cast<Instruction>(value)) {
@@ -142,7 +143,9 @@ void Instruction::replace_instruction_or_uses_and_destroy(Value* new_value) {
   }
 }
 
-BlockTargets<Block> Instruction::targets() { return get_targets_generic<Block>(this); }
+BlockTargets<Block> Instruction::targets() {
+  return get_targets_generic<Block>(this);
+}
 
 BlockTargets<const Block> Instruction::targets() const {
   return get_targets_generic<const Block>(this);
@@ -186,15 +189,15 @@ bool Instruction::is_dominated_by(const Instruction* other,
 
 bool Instruction::is_volatile() const {
   switch (get_kind()) {
-  case Kind::Ret:
-  case Kind::Call:
-  case Kind::Store:
-  case Kind::Branch:
-  case Kind::CondBranch:
-    return true;
+    case Kind::Ret:
+    case Kind::Call:
+    case Kind::Store:
+    case Kind::Branch:
+    case Kind::CondBranch:
+      return true;
 
-  default:
-    return false;
+    default:
+      return false;
   }
 }
 
@@ -202,4 +205,6 @@ bool Instruction::is_branching() const {
   return get_kind() == Kind::Branch || get_kind() == Kind::CondBranch;
 }
 
-bool Instruction::is_terminator() const { return is_branching() || get_kind() == Kind::Ret; }
+bool Instruction::is_terminator() const {
+  return is_branching() || get_kind() == Kind::Ret;
+}

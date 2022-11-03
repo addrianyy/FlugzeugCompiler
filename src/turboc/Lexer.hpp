@@ -11,7 +11,7 @@ namespace turboc {
 class Token {
   friend class Lexer;
 
-public:
+ public:
   enum class Kind {
     Keyword,
     Identifier,
@@ -100,7 +100,7 @@ public:
     uint32_t base{};
   };
 
-private:
+ private:
   Kind kind;
 
   Keyword keyword{};
@@ -109,7 +109,7 @@ private:
 
   explicit Token(Kind kind) : kind(kind) {}
 
-public:
+ public:
   Kind get_kind() const { return kind; }
   bool is(Kind wanted_kind) const { return kind == wanted_kind; }
   bool is_keyword(Keyword wanted_keyword) const {
@@ -148,7 +148,7 @@ class Lexer {
 
   const Token& get_token(intptr_t token_cursor) const;
 
-public:
+ public:
   // Tokens contain references to `source_buffer`.
   CLASS_NON_MOVABLE_NON_COPYABLE(Lexer)
 
@@ -170,4 +170,4 @@ public:
   void consume_expect(Token::Keyword expected_keyword);
 };
 
-} // namespace turboc
+}  // namespace turboc

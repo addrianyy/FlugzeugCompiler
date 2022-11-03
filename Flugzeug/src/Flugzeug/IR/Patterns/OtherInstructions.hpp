@@ -7,15 +7,17 @@ namespace flugzeug::pat {
 
 namespace detail {
 
-template <typename TInstruction, typename PtrPattern> class LoadPattern {
+template <typename TInstruction, typename PtrPattern>
+class LoadPattern {
   TInstruction** bind_instruction;
   PtrPattern ptr;
 
-public:
+ public:
   LoadPattern(TInstruction** bind_instruction, PtrPattern ptr)
       : bind_instruction(bind_instruction), ptr(ptr) {}
 
-  template <typename T> bool match(T* m_value) {
+  template <typename T>
+  bool match(T* m_value) {
     const auto load = flugzeug::cast<Load>(m_value);
     if (!load) {
       return false;
@@ -34,16 +36,18 @@ public:
   }
 };
 
-template <typename TInstruction, typename PtrPattern, typename ValuePattern> class StorePattern {
+template <typename TInstruction, typename PtrPattern, typename ValuePattern>
+class StorePattern {
   TInstruction** bind_instruction;
   PtrPattern ptr;
   ValuePattern value;
 
-public:
+ public:
   StorePattern(TInstruction** bind_instruction, PtrPattern ptr, ValuePattern value)
       : bind_instruction(bind_instruction), ptr(ptr), value(value) {}
 
-  template <typename T> bool match(T* m_value) {
+  template <typename T>
+  bool match(T* m_value) {
     const auto store = flugzeug::cast<Store>(m_value);
     if (!store) {
       return false;
@@ -62,15 +66,17 @@ public:
   }
 };
 
-template <typename TInstruction, typename CalleePattern> class CallPattern {
+template <typename TInstruction, typename CalleePattern>
+class CallPattern {
   TInstruction** bind_instruction;
   CalleePattern callee;
 
-public:
+ public:
   CallPattern(TInstruction** bind_instruction, CalleePattern callee)
       : bind_instruction(bind_instruction), callee(callee) {}
 
-  template <typename T> bool match(T* m_value) {
+  template <typename T>
+  bool match(T* m_value) {
     const auto call = flugzeug::cast<Call>(m_value);
     if (!call) {
       return false;
@@ -89,15 +95,17 @@ public:
   }
 };
 
-template <typename TInstruction, typename TargetPattern> class BranchPattern {
+template <typename TInstruction, typename TargetPattern>
+class BranchPattern {
   TInstruction** bind_instruction;
   TargetPattern target;
 
-public:
+ public:
   BranchPattern(TInstruction** bind_instruction, TargetPattern target)
       : bind_instruction(bind_instruction), target(target) {}
 
-  template <typename T> bool match(T* m_value) {
+  template <typename T>
+  bool match(T* m_value) {
     const auto branch = flugzeug::cast<Branch>(m_value);
     if (!branch) {
       return false;
@@ -123,12 +131,15 @@ class CondBranchOrSelectPattern {
   TruePattern on_true;
   FalsePattern on_false;
 
-public:
-  CondBranchOrSelectPattern(TInstruction** bind_instruction, CondPattern cond, TruePattern on_true,
+ public:
+  CondBranchOrSelectPattern(TInstruction** bind_instruction,
+                            CondPattern cond,
+                            TruePattern on_true,
                             FalsePattern on_false)
       : bind_instruction(bind_instruction), cond(cond), on_true(on_true), on_false(on_false) {}
 
-  template <typename T> bool match(T* m_value) {
+  template <typename T>
+  bool match(T* m_value) {
     const auto instruction = flugzeug::cast<std::remove_cv_t<TInstruction>>(m_value);
     if (!instruction) {
       return false;
@@ -156,13 +167,15 @@ public:
   }
 };
 
-template <typename TInstruction> class RetVoidPattern {
+template <typename TInstruction>
+class RetVoidPattern {
   TInstruction** bind_instruction;
 
-public:
+ public:
   explicit RetVoidPattern(TInstruction** bind_instruction) : bind_instruction(bind_instruction) {}
 
-  template <typename T> bool match(T* m_value) {
+  template <typename T>
+  bool match(T* m_value) {
     const auto ret = flugzeug::cast<Ret>(m_value);
     if (!ret || ret->get_val()) {
       return false;
@@ -176,15 +189,17 @@ public:
   }
 };
 
-template <typename TInstruction, typename ValuePattern> class RetPattern {
+template <typename TInstruction, typename ValuePattern>
+class RetPattern {
   TInstruction** bind_instruction;
   ValuePattern value;
 
-public:
+ public:
   RetPattern(TInstruction** bind_instruction, ValuePattern value)
       : bind_instruction(bind_instruction), value(value) {}
 
-  template <typename T> bool match(T* m_value) {
+  template <typename T>
+  bool match(T* m_value) {
     const auto ret = flugzeug::cast<Ret>(m_value);
     if (!ret || !ret->get_val()) {
       return false;
@@ -203,16 +218,18 @@ public:
   }
 };
 
-template <typename TInstruction, typename BasePattern, typename IndexPattern> class OffsetPattern {
+template <typename TInstruction, typename BasePattern, typename IndexPattern>
+class OffsetPattern {
   TInstruction** bind_instruction;
   BasePattern base;
   IndexPattern index;
 
-public:
+ public:
   OffsetPattern(TInstruction** bind_instruction, BasePattern base, IndexPattern index)
       : bind_instruction(bind_instruction), base(base), index(index) {}
 
-  template <typename T> bool match(T* m_value) {
+  template <typename T>
+  bool match(T* m_value) {
     const auto offset = flugzeug::cast<Offset>(m_value);
     if (!offset) {
       return false;
@@ -231,7 +248,7 @@ public:
   }
 };
 
-} // namespace detail
+}  // namespace detail
 
 template <typename TInstruction, typename PtrPattern>
 auto load(TInstruction*& instruction, PtrPattern ptr) {
@@ -240,7 +257,8 @@ auto load(TInstruction*& instruction, PtrPattern ptr) {
   return detail::LoadPattern<TInstruction, PtrPattern>(&instruction, ptr);
 }
 
-template <typename PtrPattern> auto load(PtrPattern ptr) {
+template <typename PtrPattern>
+auto load(PtrPattern ptr) {
   return detail::LoadPattern<const Load, PtrPattern>(nullptr, ptr);
 }
 
@@ -263,7 +281,8 @@ auto call(TInstruction*& instruction, CalleePattern callee) {
   return detail::CallPattern<TInstruction, CalleePattern>(&instruction, callee);
 }
 
-template <typename CalleePattern> auto call(CalleePattern callee) {
+template <typename CalleePattern>
+auto call(CalleePattern callee) {
   return detail::CallPattern<const Call, CalleePattern>(nullptr, callee);
 }
 
@@ -274,12 +293,15 @@ auto branch(TInstruction*& instruction, TargetPattern target) {
   return detail::BranchPattern<TInstruction, TargetPattern>(&instruction, target);
 }
 
-template <typename TargetPattern> auto branch(TargetPattern target) {
+template <typename TargetPattern>
+auto branch(TargetPattern target) {
   return detail::BranchPattern<const Branch, TargetPattern>(nullptr, target);
 }
 
 template <typename TInstruction, typename CondPattern, typename TruePattern, typename FalsePattern>
-auto cond_branch(TInstruction*& instruction, CondPattern cond, TruePattern on_true,
+auto cond_branch(TInstruction*& instruction,
+                 CondPattern cond,
+                 TruePattern on_true,
                  FalsePattern on_false) {
   static_assert(std::is_same_v<CondBranch, std::remove_cv_t<TInstruction>>,
                 "Expected CondBranch instruction in this pattern");
@@ -293,19 +315,25 @@ auto cond_branch(CondPattern cond, TruePattern on_true, FalsePattern on_false) {
                                            FalsePattern>(nullptr, cond, on_true, on_false);
 }
 
-template <typename TInstruction> auto stackalloc(TInstruction*& instruction) {
+template <typename TInstruction>
+auto stackalloc(TInstruction*& instruction) {
   static_assert(std::is_same_v<StackAlloc, std::remove_cv_t<TInstruction>>,
                 "Expected StackAlloc instruction in this pattern");
   return detail::ValueBindingPattern<TInstruction>(&instruction);
 }
-inline auto stackalloc() { return detail::ValueBindingPattern<const StackAlloc>(nullptr); }
+inline auto stackalloc() {
+  return detail::ValueBindingPattern<const StackAlloc>(nullptr);
+}
 
-template <typename TInstruction> auto ret_void(TInstruction*& instruction) {
+template <typename TInstruction>
+auto ret_void(TInstruction*& instruction) {
   static_assert(std::is_same_v<Ret, std::remove_cv_t<TInstruction>>,
                 "Expected Ret instruction in this pattern");
   return detail::RetVoidPattern<TInstruction>(&instruction);
 }
-inline auto ret_void() { return detail::RetVoidPattern<const Ret>(nullptr); }
+inline auto ret_void() {
+  return detail::RetVoidPattern<const Ret>(nullptr);
+}
 
 template <typename TInstruction, typename ValuePattern>
 auto ret(TInstruction*& instruction, ValuePattern value) {
@@ -314,7 +342,8 @@ auto ret(TInstruction*& instruction, ValuePattern value) {
   return detail::RetPattern<TInstruction, ValuePattern>(&instruction, value);
 }
 
-template <typename ValuePattern> auto ret(ValuePattern value) {
+template <typename ValuePattern>
+auto ret(ValuePattern value) {
   return detail::RetPattern<const Ret, ValuePattern>(nullptr, value);
 }
 
@@ -331,7 +360,9 @@ auto offset(BasePattern base, IndexPattern index) {
 }
 
 template <typename TInstruction, typename CondPattern, typename TruePattern, typename FalsePattern>
-auto select(TInstruction*& instruction, CondPattern cond, TruePattern on_true,
+auto select(TInstruction*& instruction,
+            CondPattern cond,
+            TruePattern on_true,
             FalsePattern on_false) {
   static_assert(std::is_same_v<Select, std::remove_cv_t<TInstruction>>,
                 "Expected Select instruction in this pattern");
@@ -345,11 +376,14 @@ auto select(CondPattern cond, TruePattern on_true, FalsePattern on_false) {
     nullptr, cond, on_true, on_false);
 }
 
-template <typename TInstruction> auto phi(TInstruction*& instruction) {
+template <typename TInstruction>
+auto phi(TInstruction*& instruction) {
   static_assert(std::is_same_v<Phi, std::remove_cv_t<TInstruction>>,
                 "Expected Phi instruction in this pattern");
   return detail::ValueBindingPattern<TInstruction>(&instruction);
 }
-inline auto phi() { return detail::ValueBindingPattern<const Phi>(nullptr); }
+inline auto phi() {
+  return detail::ValueBindingPattern<const Phi>(nullptr);
+}
 
-} // namespace flugzeug::pat
+}  // namespace flugzeug::pat

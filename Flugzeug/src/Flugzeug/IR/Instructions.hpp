@@ -54,7 +54,7 @@ class UnaryInstr final : public Instruction {
 
   UnaryOp op;
 
-public:
+ public:
   UnaryInstr(Context* context, UnaryOp op, Value* val)
       : Instruction(context, Value::Kind::UnaryInstr, val->get_type()), op(op) {
     set_operand_count(1);
@@ -77,7 +77,7 @@ public:
 
   Instruction* clone() override { return new UnaryInstr(get_context(), get_op(), get_val()); }
 
-protected:
+ protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
   void print_instruction_compact_internal(
     IRPrinter::LinePrinter& printer,
@@ -89,7 +89,7 @@ class BinaryInstr final : public Instruction {
 
   BinaryOp op;
 
-public:
+ public:
   BinaryInstr(Context* context, Value* lhs, BinaryOp op, Value* rhs)
       : Instruction(context, Value::Kind::BinaryInstr, lhs->get_type()), op(op) {
     set_operand_count(2);
@@ -122,7 +122,7 @@ public:
 
   static bool is_binary_op_commutative(BinaryOp op);
 
-protected:
+ protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
   void print_instruction_compact_internal(
     IRPrinter::LinePrinter& printer,
@@ -134,7 +134,7 @@ class IntCompare final : public Instruction {
 
   IntPredicate pred;
 
-public:
+ public:
   IntCompare(Context* context, Value* lhs, IntPredicate pred, Value* rhs)
       : Instruction(context, Value::Kind::IntCompare, context->get_i1_ty()), pred(pred) {
     set_operand_count(2);
@@ -168,7 +168,7 @@ public:
   static IntPredicate inverted_predicate(IntPredicate pred);
   static IntPredicate swapped_order_predicate(IntPredicate pred);
 
-protected:
+ protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
   void print_instruction_compact_internal(
     IRPrinter::LinePrinter& printer,
@@ -178,7 +178,7 @@ protected:
 class Load final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Load)
 
-public:
+ public:
   explicit Load(Context* context, Value* ptr)
       : Instruction(context, Value::Kind::Load, cast<PointerType>(ptr->get_type())->deref()) {
     set_operand_count(1);
@@ -194,7 +194,7 @@ public:
 
   Instruction* clone() override { return new Load(get_context(), get_ptr()); }
 
-protected:
+ protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
   void print_instruction_compact_internal(
     IRPrinter::LinePrinter& printer,
@@ -204,7 +204,7 @@ protected:
 class Store final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Store)
 
-public:
+ public:
   Store(Context* context, Value* ptr, Value* val)
       : Instruction(context, Value::Kind::Store, context->get_void_ty()) {
     set_operand_count(2);
@@ -228,7 +228,7 @@ public:
 
   Instruction* clone() override { return new Store(get_context(), get_ptr(), get_val()); }
 
-protected:
+ protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
   void print_instruction_compact_internal(
     IRPrinter::LinePrinter& printer,
@@ -238,7 +238,7 @@ protected:
 class Call final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Call)
 
-public:
+ public:
   Call(Context* context, Function* function, const std::vector<Value*>& arguments);
 
   size_t get_arg_count() const { return get_operand_count() - 1; }
@@ -258,7 +258,7 @@ public:
     return new Call(get_context(), get_callee(), arguments);
   }
 
-protected:
+ protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
   void print_instruction_compact_internal(
     IRPrinter::LinePrinter& printer,
@@ -268,7 +268,7 @@ protected:
 class Branch final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Branch)
 
-public:
+ public:
   explicit Branch(Context* context, Block* target)
       : Instruction(context, Value::Kind::Branch, context->get_void_ty()) {
     set_operand_count(1);
@@ -284,7 +284,7 @@ public:
 
   Instruction* clone() override { return new Branch(get_context(), get_target()); }
 
-protected:
+ protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
   void print_instruction_compact_internal(
     IRPrinter::LinePrinter& printer,
@@ -294,7 +294,7 @@ protected:
 class CondBranch final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::CondBranch)
 
-public:
+ public:
   explicit CondBranch(Context* context, Value* cond, Block* true_target, Block* false_target)
       : Instruction(context, Value::Kind::CondBranch, context->get_void_ty()) {
     set_operand_count(3);
@@ -329,7 +329,7 @@ public:
     return new CondBranch(get_context(), get_cond(), get_true_target(), get_false_target());
   }
 
-protected:
+ protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
   void print_instruction_compact_internal(
     IRPrinter::LinePrinter& printer,
@@ -341,7 +341,7 @@ class StackAlloc final : public Instruction {
 
   size_t size;
 
-public:
+ public:
   explicit StackAlloc(Context* context, Type* type, size_t size = 1)
       : Instruction(context, Value::Kind::StackAlloc, type->ref()), size(size) {}
 
@@ -352,7 +352,7 @@ public:
     return new StackAlloc(get_context(), get_allocated_type(), get_size());
   }
 
-protected:
+ protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
   void print_instruction_compact_internal(
     IRPrinter::LinePrinter& printer,
@@ -362,7 +362,7 @@ protected:
 class Ret final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Ret)
 
-public:
+ public:
   explicit Ret(Context* context, Value* val = nullptr)
       : Instruction(context, Value::Kind::Ret, context->get_void_ty()) {
     if (val) {
@@ -385,7 +385,7 @@ public:
 
   Instruction* clone() override { return new Ret(get_context(), get_val()); }
 
-protected:
+ protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
   void print_instruction_compact_internal(
     IRPrinter::LinePrinter& printer,
@@ -395,7 +395,7 @@ protected:
 class Offset final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Offset)
 
-public:
+ public:
   Offset(Context* context, Value* base, Value* index)
       : Instruction(context, Value::Kind::Offset, base->get_type()) {
     set_operand_count(2);
@@ -419,7 +419,7 @@ public:
 
   Instruction* clone() override { return new Offset(get_context(), get_base(), get_index()); }
 
-protected:
+ protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
   void print_instruction_compact_internal(
     IRPrinter::LinePrinter& printer,
@@ -431,7 +431,7 @@ class Cast final : public Instruction {
 
   CastKind cast_kind;
 
-public:
+ public:
   Cast(Context* context, CastKind cast_kind, Value* val, Type* target_type)
       : Instruction(context, Value::Kind::Cast, target_type), cast_kind(cast_kind) {
     set_operand_count(1);
@@ -451,7 +451,7 @@ public:
     return new Cast(get_context(), get_cast_kind(), get_val(), get_type());
   }
 
-protected:
+ protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
   void print_instruction_compact_internal(
     IRPrinter::LinePrinter& printer,
@@ -461,7 +461,7 @@ protected:
 class Select final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Select)
 
-public:
+ public:
   Select(Context* context, Value* cond, Value* true_val, Value* false_val)
       : Instruction(context, Value::Kind::Select, true_val->get_type()) {
     set_operand_count(3);
@@ -496,7 +496,7 @@ public:
     return new Select(get_context(), get_cond(), get_true_val(), get_false_val());
   }
 
-protected:
+ protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
   void print_instruction_compact_internal(
     IRPrinter::LinePrinter& printer,
@@ -506,7 +506,7 @@ protected:
 class Phi final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Phi)
 
-public:
+ public:
   struct Incoming {
     Block* block;
     Value* value;
@@ -517,11 +517,12 @@ public:
     const Value* value;
   };
 
-private:
+ private:
   static inline size_t get_block_index(size_t i) { return i * 2 + 0; }
   static inline size_t get_value_index(size_t i) { return i * 2 + 1; }
 
-  template <typename TPhi, typename TIncoming> class IncomingIteratorInternal {
+  template <typename TPhi, typename TIncoming>
+  class IncomingIteratorInternal {
     TPhi* phi;
     TIncoming incoming;
     size_t incoming_index = 0;
@@ -534,7 +535,7 @@ private:
       }
     }
 
-  public:
+   public:
     using iterator_category = std::forward_iterator_tag;
     using difference_type = std::ptrdiff_t;
     using value_type = TIncoming;
@@ -582,7 +583,7 @@ private:
   Value* get_incoming_value(size_t i) { return get_operand(get_value_index(i)); }
   const Value* get_incoming_value(size_t i) const { return get_operand(get_value_index(i)); }
 
-public:
+ public:
   explicit Phi(Context* context, Type* type) : Instruction(context, Instruction::Kind::Phi, type) {}
   explicit Phi(Context* context, const std::vector<Incoming>& incoming)
       : Phi(context, incoming[0].value->get_type()) {
@@ -629,11 +630,11 @@ public:
     return new Phi(get_context(), incoming);
   }
 
-protected:
+ protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
   void print_instruction_compact_internal(
     IRPrinter::LinePrinter& printer,
     const std::unordered_set<const Value*>& inlined_values) const override;
 };
 
-} // namespace flugzeug
+}  // namespace flugzeug

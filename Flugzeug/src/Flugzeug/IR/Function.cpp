@@ -59,10 +59,14 @@ void Function::insert_block(Block* block) {
   blocks.push_back(block);
 }
 
-Function::Function(Context* context, Type* return_type, std::string name,
+Function::Function(Context* context,
+                   Type* return_type,
+                   std::string name,
                    const std::vector<Type*>& arguments)
-    : Value(context, Value::Kind::Function, context->get_function_ty()), blocks(this),
-      name(std::move(name)), return_type(return_type) {
+    : Value(context, Value::Kind::Function, context->get_function_ty()),
+      blocks(this),
+      name(std::move(name)),
+      return_type(return_type) {
   verify(return_type->is_arithmetic_or_pointer() || return_type->is_void(),
          "Function return type must be arithmetic or pointer or void");
 
@@ -172,4 +176,6 @@ void Function::destroy() {
   IntrusiveNode::destroy();
 }
 
-std::string Function::format() const { return name; }
+std::string Function::format() const {
+  return name;
+}

@@ -20,7 +20,7 @@ static std::optional<BinaryOp> corresponding_divmod(BinaryOp op) {
 }
 
 class Reorderer : InstructionVisitor {
-public:
+ public:
   bool did_something = false;
 
   Instruction* visit_binary_instr(Argument<BinaryInstr> binary) {

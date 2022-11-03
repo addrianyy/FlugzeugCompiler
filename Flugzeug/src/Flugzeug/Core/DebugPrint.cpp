@@ -14,6 +14,8 @@ void flugzeug::debug_print(std::string_view string) {
 
 #include "Log.hpp"
 
-void flugzeug::debug_print(std::string_view string) { log_debug("{}", string); }
+void flugzeug::debug_print(std::string_view string) {
+  log_debug("{}", string);
+}
 
 #endif

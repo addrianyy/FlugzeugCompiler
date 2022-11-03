@@ -19,40 +19,40 @@ class CommonOperation {
 
   UnaryOp unary_op = UnaryOp::Neg;
 
-public:
+ public:
   bool add_case(Value* value) {
     switch (kind) {
-    case Kind::Unknown: {
-      if (const auto unary = cast<UnaryInstr>(value)) {
-        kind = Kind::Unary;
-        unary_op = unary->get_op();
+      case Kind::Unknown: {
+        if (const auto unary = cast<UnaryInstr>(value)) {
+          kind = Kind::Unary;
+          unary_op = unary->get_op();
 
-        return true;
+          return true;
+        }
+
+        if (const auto binary = cast<BinaryInstr>(value)) {
+          kind = Kind::Binary;
+          binary_op = binary->get_op();
+          binary_rhs = binary->get_rhs();
+
+          return true;
+        }
+
+        return false;
       }
 
-      if (const auto binary = cast<BinaryInstr>(value)) {
-        kind = Kind::Binary;
-        binary_op = binary->get_op();
-        binary_rhs = binary->get_rhs();
-
-        return true;
+      case Kind::Unary: {
+        const auto unary = cast<UnaryInstr>(value);
+        return unary && unary->get_op() == unary_op;
       }
 
-      return false;
-    }
+      case Kind::Binary: {
+        const auto binary = cast<BinaryInstr>(value);
+        return binary && binary->get_op() == binary_op && binary->get_rhs() == binary_rhs;
+      }
 
-    case Kind::Unary: {
-      const auto unary = cast<UnaryInstr>(value);
-      return unary && unary->get_op() == unary_op;
-    }
-
-    case Kind::Binary: {
-      const auto binary = cast<BinaryInstr>(value);
-      return binary && binary->get_op() == binary_op && binary->get_rhs() == binary_rhs;
-    }
-
-    default:
-      unreachable();
+      default:
+        unreachable();
     }
   }
 
@@ -70,16 +70,16 @@ public:
 
   Instruction* create_instruction(Value* argument) {
     switch (kind) {
-    case Kind::Unary: {
-      return new UnaryInstr(argument->get_context(), unary_op, argument);
-    }
+      case Kind::Unary: {
+        return new UnaryInstr(argument->get_context(), unary_op, argument);
+      }
 
-    case Kind::Binary: {
-      return new BinaryInstr(argument->get_context(), argument, binary_op, binary_rhs);
-    }
+      case Kind::Binary: {
+        return new BinaryInstr(argument->get_context(), argument, binary_op, binary_rhs);
+      }
 
-    default:
-      unreachable();
+      default:
+        unreachable();
     }
   }
 };

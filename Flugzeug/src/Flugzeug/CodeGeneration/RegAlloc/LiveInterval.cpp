@@ -5,8 +5,12 @@
 
 using namespace flugzeug;
 
-size_t LiveInterval::first_range_start() const { return ranges.front().start; }
-size_t LiveInterval::last_range_end() const { return ranges.back().end; }
+size_t LiveInterval::first_range_start() const {
+  return ranges.front().start;
+}
+size_t LiveInterval::last_range_end() const {
+  return ranges.back().end;
+}
 
 bool LiveInterval::ends_before(const LiveInterval& other) const {
   return last_range_end() <= other.first_range_start();
@@ -138,4 +142,6 @@ LiveInterval LiveInterval::merge(const LiveInterval& a, const LiveInterval& b) {
   return LiveInterval(std::move(result));
 }
 
-void LiveInterval::clear() { ranges.clear(); }
+void LiveInterval::clear() {
+  ranges.clear();
+}

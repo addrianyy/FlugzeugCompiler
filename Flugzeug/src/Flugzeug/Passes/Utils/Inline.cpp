@@ -13,13 +13,14 @@ class InlinedFunction {
   std::unordered_map<Value*, Value*> mapping;
   std::vector<Block*> blocks;
 
-public:
+ public:
   void add_block(Block* block) { blocks.push_back(block); }
   const std::vector<Block*>& get_blocks() { return blocks; }
 
   void add_mapping(Value* from, Value* to) { mapping.insert({from, to}); }
 
-  template <typename T> T* map(T* value) {
+  template <typename T>
+  T* map(T* value) {
     if (value->is_global()) {
       return value;
     }

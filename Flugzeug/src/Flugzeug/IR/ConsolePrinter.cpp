@@ -18,13 +18,23 @@ void ConsolePrinter::set_color(int color) {
   }
 }
 
-void ConsolePrinter::begin_keyword() { set_color(32); }
-void ConsolePrinter::begin_value() { set_color(33); }
+void ConsolePrinter::begin_keyword() {
+  set_color(32);
+}
+void ConsolePrinter::begin_value() {
+  set_color(33);
+}
 void ConsolePrinter::begin_constant() {}
-void ConsolePrinter::begin_type() { set_color(34); }
-void ConsolePrinter::begin_block() { set_color(37); }
+void ConsolePrinter::begin_type() {
+  set_color(34);
+}
+void ConsolePrinter::begin_block() {
+  set_color(37);
+}
 
-void ConsolePrinter::write_string(std::string_view string) { output_stream << string; }
+void ConsolePrinter::write_string(std::string_view string) {
+  output_stream << string;
+}
 
 ConsolePrinter::ConsolePrinter(ConsolePrinter::Variant variant)
     : ConsolePrinter(variant, std::cout) {}
@@ -44,4 +54,6 @@ ConsolePrinter::ConsolePrinter(ConsolePrinter::Variant variant, std::ostream& ou
   reset();
 }
 
-ConsolePrinter::~ConsolePrinter() { output_stream.flush(); }
+ConsolePrinter::~ConsolePrinter() {
+  output_stream.flush();
+}

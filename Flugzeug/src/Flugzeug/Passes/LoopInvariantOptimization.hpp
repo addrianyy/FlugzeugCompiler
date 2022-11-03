@@ -4,8 +4,8 @@
 namespace flugzeug::opt {
 
 class LoopInvariantOptimization : public Pass<"LoopInvariantOptimization"> {
-public:
+ public:
   static bool run(Function* function);
 };
 
-} // namespace flugzeug::opt
+}  // namespace flugzeug::opt

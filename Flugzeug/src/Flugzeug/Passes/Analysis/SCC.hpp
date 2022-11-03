@@ -8,7 +8,8 @@
 
 namespace flugzeug::analysis {
 
-template <typename T> struct SccContext {
+template <typename T>
+struct SccContext {
   struct VertexData {
     std::optional<size_t> index;
     size_t lowlink = ~(size_t(0));
@@ -25,7 +26,9 @@ template <typename T> struct SccContext {
 
 namespace detail {
 template <typename T, bool SkipTrivialNonLoopingSCCs, typename Fn>
-static void scc_visit(SccContext<T>& context, T value, const std::unordered_set<T>& value_set,
+static void scc_visit(SccContext<T>& context,
+                      T value,
+                      const std::unordered_set<T>& value_set,
                       const Fn& get_neighbours) {
   const auto get_vertex = [&](T value) -> typename SccContext<T>::VertexData& {
     const auto it = context.indices.find(value);
@@ -107,7 +110,7 @@ static void scc_visit(SccContext<T>& context, T value, const std::unordered_set<
     }
   }
 }
-} // namespace detail
+}  // namespace detail
 
 template <typename T, bool SkipTrivialNonLoopingSCCs, typename Fn>
 std::vector<std::vector<T>> calculate_sccs(SccContext<T>& context,
@@ -146,4 +149,4 @@ std::vector<std::vector<T>> calculate_sccs(const std::unordered_set<T>& values,
   return calculate_sccs<T, SkipTrivialNonLoopingSCCs, Fn>(context, values, get_neighbours);
 }
 
-} // namespace flugzeug::analysis
+}  // namespace flugzeug::analysis

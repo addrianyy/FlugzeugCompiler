@@ -103,9 +103,13 @@ void User::set_operand_count(size_t count) {
   adjust_uses_count(count);
 }
 
-void User::grow_operand_count(size_t grow) { set_operand_count(get_operand_count() + grow); }
+void User::grow_operand_count(size_t grow) {
+  set_operand_count(get_operand_count() + grow);
+}
 
-size_t User::get_operand_count() const { return used_operands.size(); }
+size_t User::get_operand_count() const {
+  return used_operands.size();
+}
 
 Value* User::get_operand(size_t index) {
   verify(index < get_operand_count(), "Tried to use out of bounds operand.");

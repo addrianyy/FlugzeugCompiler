@@ -20,7 +20,7 @@ class User;
 class Block;
 
 class Value {
-public:
+ public:
   // clang-format off
   enum class Kind {
     Constant,
@@ -49,7 +49,7 @@ public:
   };
   // clang-format on
 
-private:
+ private:
   friend class User;
 
   const Kind kind;
@@ -71,10 +71,10 @@ private:
   bool is_phi() const;
   void deduplicate_phi_incoming_blocks(Block* block, User* user);
 
-protected:
+ protected:
   Value(Context* context, Kind kind, Type* type);
 
-public:
+ public:
   CLASS_NON_MOVABLE_NON_COPYABLE(Value);
 
   virtual ~Value();
@@ -100,7 +100,8 @@ public:
   void replace_uses_with_constant(uint64_t constant);
   void replace_uses_with_undef();
 
-  template <typename Fn> void replace_uses_with_predicated(Value* new_value, Fn&& predicate) {
+  template <typename Fn>
+  void replace_uses_with_predicated(Value* new_value, Fn&& predicate) {
     if (this == new_value) {
       return;
     }
@@ -154,10 +155,12 @@ public:
   IteratorRange<UserIterator> users() { return {uses.begin(), uses.end()}; }
   IteratorRange<ConstUserIterator> users() const { return {uses.begin(), uses.end()}; }
 
-  template <typename TUser> IteratorRange<SpecificUserIterator<TUser>> users() {
+  template <typename TUser>
+  IteratorRange<SpecificUserIterator<TUser>> users() {
     return {SpecificUserIterator<TUser>(uses.begin()), SpecificUserIterator<TUser>(uses.end())};
   }
-  template <typename TUser> IteratorRange<ConstSpecificUserIterator<TUser>> users() const {
+  template <typename TUser>
+  IteratorRange<ConstSpecificUserIterator<TUser>> users() const {
     return {ConstSpecificUserIterator<TUser>(uses.begin()),
             ConstSpecificUserIterator<TUser>(uses.end())};
   }
@@ -175,7 +178,7 @@ class Constant final : public Value {
 
   Constant(Context* context, Type* type, uint64_t constant);
 
-public:
+ public:
   static uint64_t constrain_u(Type* type, uint64_t value);
   static int64_t constrain_i(Type* type, int64_t value);
 
@@ -200,8 +203,8 @@ class Undef final : public Value {
 
   Undef(Context* context, Type* type) : Value(context, Kind::Undef, type) {}
 
-public:
+ public:
   std::string format() const override;
 };
 
-} // namespace flugzeug
+}  // namespace flugzeug

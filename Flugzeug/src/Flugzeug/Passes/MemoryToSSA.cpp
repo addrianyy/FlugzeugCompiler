@@ -39,7 +39,8 @@ static std::vector<StackAlloc*> find_optimizable_stackallocs(Function* function)
   return stackallocs;
 }
 
-static Value* get_value_for_first_use(Block* block, StackAlloc* stackalloc,
+static Value* get_value_for_first_use(Block* block,
+                                      StackAlloc* stackalloc,
                                       std::vector<Phi*>& inserted_phis) {
   const auto type = stackalloc->get_allocated_type();
 

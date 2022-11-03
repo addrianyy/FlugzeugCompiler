@@ -64,26 +64,26 @@ Value* ModuleFromASTGenerator::operand_to_value(const PRInstructionOperand& oper
   Value* result = nullptr;
 
   switch (operand.kind) {
-  case PRInstructionOperand::Kind::Value: {
-    const auto it = fn_ctx.ir_value_map.find(operand.name);
-    verify(it != fn_ctx.ir_value_map.end(), "Undefined value `{}` was used", operand.name);
+    case PRInstructionOperand::Kind::Value: {
+      const auto it = fn_ctx.ir_value_map.find(operand.name);
+      verify(it != fn_ctx.ir_value_map.end(), "Undefined value `{}` was used", operand.name);
 
-    result = it->second;
-    break;
-  }
+      result = it->second;
+      break;
+    }
 
-  case PRInstructionOperand::Kind::Constant: {
-    result = type->get_constant(operand.constant);
-    break;
-  }
+    case PRInstructionOperand::Kind::Constant: {
+      result = type->get_constant(operand.constant);
+      break;
+    }
 
-  case PRInstructionOperand::Kind::Undef: {
-    result = type->get_undef();
-    break;
-  }
+    case PRInstructionOperand::Kind::Undef: {
+      result = type->get_undef();
+      break;
+    }
 
-  default:
-    unreachable();
+    default:
+      unreachable();
   }
 
   verify(result, "Failed to get value from instruction operand");
@@ -114,88 +114,89 @@ Instruction* ModuleFromASTGenerator::generate_instruction(const PRInstruction* i
   }
 
   switch (kind_kw) {
-  case Token::Keyword::Cmp: {
-    const auto predicate = Token::keyword_to_int_predicate(instruction->specific_keyword);
-    verify(predicate, "Invalid keyword for int predicate");
-    return new IntCompare(context, operand_to_value(instruction, 0), *predicate,
-                          operand_to_value(instruction, 1));
-  }
-
-  case Token::Keyword::Load: {
-    const auto load = new Load(context, operand_to_value(instruction, 0));
-    const auto expected_type = convert_type(instruction->specific_type);
-    if (load->get_type() != expected_type) {
-      fatal_error("{}: Type mismatch for load result. Expected `{}`, found `{}`.",
-                  fn_ctx.pr_function->name, expected_type->format(), load->get_type()->format());
-    }
-    return load;
-  }
-
-  case Token::Keyword::Store: {
-    return new Store(context, operand_to_value(instruction, 0), operand_to_value(instruction, 1));
-  }
-
-  case Token::Keyword::Call: {
-    const auto return_type = convert_type(instruction->specific_type);
-    const auto callee_name = instruction->specific_name;
-
-    const auto callee = module->get_function(callee_name);
-    verify(callee, "Undefined function `{}` called", callee_name);
-
-    if (return_type != callee->get_return_type()) {
-      fatal_error("{}: Type mismatch for `{}` call result. Expected `{}`, found `{}`.",
-                  fn_ctx.pr_function->name, callee->get_name(), return_type->format(),
-                  callee->get_return_type()->format());
+    case Token::Keyword::Cmp: {
+      const auto predicate = Token::keyword_to_int_predicate(instruction->specific_keyword);
+      verify(predicate, "Invalid keyword for int predicate");
+      return new IntCompare(context, operand_to_value(instruction, 0), *predicate,
+                            operand_to_value(instruction, 1));
     }
 
-    std::vector<Value*> arguments;
-    arguments.reserve(instruction->operands.size());
-
-    for (const auto& operand : instruction->operands) {
-      arguments.push_back(operand_to_value(operand));
+    case Token::Keyword::Load: {
+      const auto load = new Load(context, operand_to_value(instruction, 0));
+      const auto expected_type = convert_type(instruction->specific_type);
+      if (load->get_type() != expected_type) {
+        fatal_error("{}: Type mismatch for load result. Expected `{}`, found `{}`.",
+                    fn_ctx.pr_function->name, expected_type->format(), load->get_type()->format());
+      }
+      return load;
     }
 
-    return new Call(context, callee, arguments);
-  }
-
-  case Token::Keyword::Branch: {
-    return new Branch(context, operand_to_block(instruction, 0));
-  }
-
-  case Token::Keyword::Bcond: {
-    return new CondBranch(context, operand_to_value(instruction, 0),
-                          operand_to_block(instruction, 1), operand_to_block(instruction, 2));
-  }
-
-  case Token::Keyword::Stackalloc: {
-    return new StackAlloc(context, convert_type(instruction->specific_type),
-                          instruction->specific_size);
-  }
-
-  case Token::Keyword::Ret: {
-    if (instruction->operands.empty()) {
-      return new Ret(context);
-    } else {
-      return new Ret(context, operand_to_value(instruction, 0));
+    case Token::Keyword::Store: {
+      return new Store(context, operand_to_value(instruction, 0), operand_to_value(instruction, 1));
     }
-  }
 
-  case Token::Keyword::Offset: {
-    return new Offset(context, operand_to_value(instruction, 0), operand_to_value(instruction, 1));
-  }
+    case Token::Keyword::Call: {
+      const auto return_type = convert_type(instruction->specific_type);
+      const auto callee_name = instruction->specific_name;
 
-  case Token::Keyword::Select: {
-    return new Select(context, operand_to_value(instruction, 0), operand_to_value(instruction, 1),
-                      operand_to_value(instruction, 2));
-  }
+      const auto callee = module->get_function(callee_name);
+      verify(callee, "Undefined function `{}` called", callee_name);
 
-  case Token::Keyword::Phi: {
-    // We will fill the incoming values later.
-    return new Phi(context, convert_type(instruction->specific_type));
-  }
+      if (return_type != callee->get_return_type()) {
+        fatal_error("{}: Type mismatch for `{}` call result. Expected `{}`, found `{}`.",
+                    fn_ctx.pr_function->name, callee->get_name(), return_type->format(),
+                    callee->get_return_type()->format());
+      }
 
-  default:
-    unreachable();
+      std::vector<Value*> arguments;
+      arguments.reserve(instruction->operands.size());
+
+      for (const auto& operand : instruction->operands) {
+        arguments.push_back(operand_to_value(operand));
+      }
+
+      return new Call(context, callee, arguments);
+    }
+
+    case Token::Keyword::Branch: {
+      return new Branch(context, operand_to_block(instruction, 0));
+    }
+
+    case Token::Keyword::Bcond: {
+      return new CondBranch(context, operand_to_value(instruction, 0),
+                            operand_to_block(instruction, 1), operand_to_block(instruction, 2));
+    }
+
+    case Token::Keyword::Stackalloc: {
+      return new StackAlloc(context, convert_type(instruction->specific_type),
+                            instruction->specific_size);
+    }
+
+    case Token::Keyword::Ret: {
+      if (instruction->operands.empty()) {
+        return new Ret(context);
+      } else {
+        return new Ret(context, operand_to_value(instruction, 0));
+      }
+    }
+
+    case Token::Keyword::Offset: {
+      return new Offset(context, operand_to_value(instruction, 0),
+                        operand_to_value(instruction, 1));
+    }
+
+    case Token::Keyword::Select: {
+      return new Select(context, operand_to_value(instruction, 0), operand_to_value(instruction, 1),
+                        operand_to_value(instruction, 2));
+    }
+
+    case Token::Keyword::Phi: {
+      // We will fill the incoming values later.
+      return new Phi(context, convert_type(instruction->specific_type));
+    }
+
+    default:
+      unreachable();
   }
 }
 
@@ -343,8 +344,10 @@ void ModuleFromASTGenerator::generate_function_body() {
 }
 
 ModuleFromASTGenerator::ModuleFromASTGenerator(
-  Module* module, std::vector<std::unique_ptr<PRFunction>> parsed_functions)
-    : context(module->get_context()), module(module),
+  Module* module,
+  std::vector<std::unique_ptr<PRFunction>> parsed_functions)
+    : context(module->get_context()),
+      module(module),
       parsed_functions(std::move(parsed_functions)) {
   verify(module->is_empty(), "Module passed to ModuleFromASTGenerator must be empty");
 }

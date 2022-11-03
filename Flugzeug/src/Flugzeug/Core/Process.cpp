@@ -8,7 +8,8 @@
 #include <Windows.h>
 #include <vector>
 
-uint32_t flugzeug::run_process(const std::string& application, const std::string& command_line,
+uint32_t flugzeug::run_process(const std::string& application,
+                               const std::string& command_line,
                                const std::string& process_stdin) {
   const auto actual_command_line = fmt::format(R"("{}" {})", application, command_line);
 
@@ -60,7 +61,8 @@ uint32_t flugzeug::run_process(const std::string& application, const std::string
 #elif defined(PLATFORM_LINUX)
 #include <cstdio>
 
-uint32_t flugzeug::run_process(const std::string& application, const std::string& command_line,
+uint32_t flugzeug::run_process(const std::string& application,
+                               const std::string& command_line,
                                const std::string& process_stdin) {
   const auto actual_command_line = fmt::format("{} {}", application, command_line);
 
@@ -77,7 +79,8 @@ uint32_t flugzeug::run_process(const std::string& application, const std::string
 
 #else
 
-uint32_t flugzeug::run_process(const std::string& application, const std::string& command_line,
+uint32_t flugzeug::run_process(const std::string& application,
+                               const std::string& command_line,
                                const std::string& process_stdin) {
   fatal_error("`run_process` is not implemented yet for this platform");
 }

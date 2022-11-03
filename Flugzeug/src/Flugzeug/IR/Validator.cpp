@@ -11,21 +11,27 @@
 
 using namespace flugzeug;
 
-#define validation_check(value, format, ...)                                                       \
+#define validation_check(value, format, ...) \
   (check_fmt(__FILE__, __LINE__, !!(value), (format), ##__VA_ARGS__))
 
-template <typename T> class Format {
+template <typename T>
+class Format {
   const T* value;
 
-public:
+ public:
   explicit Format(const T* value) : value(value) {}
   const T* get() const { return value; }
 };
 
-template <typename T> struct fmt::formatter<Format<T>> {
-  template <typename ParseContext> constexpr auto parse(ParseContext& ctx) { return ctx.begin(); }
+template <typename T>
+struct fmt::formatter<Format<T>> {
+  template <typename ParseContext>
+  constexpr auto parse(ParseContext& ctx) {
+    return ctx.begin();
+  }
 
-  template <typename FormatContext> auto format(const Format<T>& value, FormatContext& ctx) {
+  template <typename FormatContext>
+  auto format(const Format<T>& value, FormatContext& ctx) {
     return fmt::format_to(ctx.out(), "{}", value.get()->format());
   }
 };
@@ -51,7 +57,10 @@ class Validator : public ConstInstructionVisitor {
   }
 
   template <typename... Args>
-  inline bool check_fmt(const char* file, int line, bool value, fmt::format_string<Args...> fmt,
+  inline bool check_fmt(const char* file,
+                        int line,
+                        bool value,
+                        fmt::format_string<Args...> fmt,
                         Args&&... args) {
     if (!value) {
       add_error(file, line, fmt::format(fmt, std::forward<Args>(args)...));
@@ -205,23 +214,23 @@ class Validator : public ConstInstructionVisitor {
     const auto both_arithmetic = val_type->is_arithmetic() && type->is_arithmetic();
 
     switch (kind) {
-    case CastKind::Bitcast:
-      validation_check(from_bit_size == to_bit_size, "Bitcast types must have the same size");
-      break;
+      case CastKind::Bitcast:
+        validation_check(from_bit_size == to_bit_size, "Bitcast types must have the same size");
+        break;
 
-    case CastKind::Truncate:
-      validation_check(both_arithmetic, "Truncate can only convert between arithmetic types");
-      validation_check(from_bit_size > to_bit_size, "Truncate can only convert to smaller types");
-      break;
+      case CastKind::Truncate:
+        validation_check(both_arithmetic, "Truncate can only convert between arithmetic types");
+        validation_check(from_bit_size > to_bit_size, "Truncate can only convert to smaller types");
+        break;
 
-    case CastKind::ZeroExtend:
-    case CastKind::SignExtend:
-      validation_check(both_arithmetic, "Sext/Zext can only convert between arithmetic types");
-      validation_check(from_bit_size < to_bit_size, "Sext/Zext can only convert to bigger types");
-      break;
+      case CastKind::ZeroExtend:
+      case CastKind::SignExtend:
+        validation_check(both_arithmetic, "Sext/Zext can only convert between arithmetic types");
+        validation_check(from_bit_size < to_bit_size, "Sext/Zext can only convert to bigger types");
+        break;
 
-    default:
-      unreachable();
+      default:
+        unreachable();
     }
   }
 
@@ -326,7 +335,7 @@ class Validator : public ConstInstructionVisitor {
     visitor::visit_instruction(instruction, *this);
   }
 
-public:
+ public:
   explicit Validator(const Function* function) : function(function), dominator_tree(function) {
     for (size_t i = 0; i < function->get_parameter_count(); ++i) {
       parameters.insert(function->get_parameter(i));
@@ -397,7 +406,9 @@ static void set_console_color(std::ostream& stream, int color) {
   }
 }
 
-static void print_error(const Function* function, std::ostream& stream, ConsolePrinter& printer,
+static void print_error(const Function* function,
+                        std::ostream& stream,
+                        ConsolePrinter& printer,
                         const ValidationResults::Error& error) {
   // Red
   const int key_color = 31;
@@ -465,4 +476,4 @@ ValidationResults validate_function(const Function* function, ValidationBehaviou
   return results;
 }
 
-} // namespace flugzeug
+}  // namespace flugzeug

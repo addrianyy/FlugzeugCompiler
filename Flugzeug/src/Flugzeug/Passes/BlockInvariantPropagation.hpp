@@ -4,8 +4,8 @@
 namespace flugzeug::opt {
 
 class BlockInvariantPropagation : public Pass<"BlockInvariantPropagation"> {
-public:
+ public:
   static bool run(Function* function);
 };
 
-} // namespace flugzeug::opt
+}  // namespace flugzeug::opt

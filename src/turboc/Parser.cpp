@@ -275,34 +275,34 @@ std::unique_ptr<Stmt> Parser::parse_statement() {
     }
 
     switch (keyword) {
-    case Token::Keyword::If:
-      return parse_if();
-    case Token::Keyword::For:
-      return parse_for();
-    case Token::Keyword::Return: {
-      lexer.consume_token();
+      case Token::Keyword::If:
+        return parse_if();
+      case Token::Keyword::For:
+        return parse_for();
+      case Token::Keyword::Return: {
+        lexer.consume_token();
 
-      auto return_value =
-        lexer.current_token().is(Token::Kind::Semicolon) ? nullptr : parse_expression();
+        auto return_value =
+          lexer.current_token().is(Token::Kind::Semicolon) ? nullptr : parse_expression();
 
-      return std::make_unique<ReturnStmt>(std::move(return_value));
-    }
-    case Token::Keyword::While: {
-      lexer.consume_token();
+        return std::make_unique<ReturnStmt>(std::move(return_value));
+      }
+      case Token::Keyword::While: {
+        lexer.consume_token();
 
-      auto condition = parse_paren_expression();
-      auto body = parse_body();
+        auto condition = parse_paren_expression();
+        auto body = parse_body();
 
-      return std::make_unique<WhileStmt>(std::move(condition), std::move(body));
-    }
-    case Token::Keyword::Continue:
-      lexer.consume_token();
-      return std::make_unique<ContinueStmt>();
-    case Token::Keyword::Break:
-      lexer.consume_token();
-      return std::make_unique<BreakStmt>();
-    default:
-      unreachable();
+        return std::make_unique<WhileStmt>(std::move(condition), std::move(body));
+      }
+      case Token::Keyword::Continue:
+        lexer.consume_token();
+        return std::make_unique<ContinueStmt>();
+      case Token::Keyword::Break:
+        lexer.consume_token();
+        return std::make_unique<BreakStmt>();
+      default:
+        unreachable();
     }
   } else {
     return parse_expression_statement();

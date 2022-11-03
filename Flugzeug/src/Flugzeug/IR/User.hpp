@@ -1,7 +1,7 @@
 #pragma once
+#include <Flugzeug/Core/SmallVector.hpp>
 #include "Internal/Use.hpp"
 #include "Value.hpp"
-#include <Flugzeug/Core/SmallVector.hpp>
 
 #include <Flugzeug/Core/ClassTraits.hpp>
 #include <Flugzeug/Core/Iterator.hpp>
@@ -25,10 +25,11 @@ class User : public Value {
   SmallVector<Value*, expected_operand_count> used_operands;
   SmallVector<detail::Use*, expected_operand_count> uses_for_operands;
 
-  template <typename TOperand> class OperandIteratorInternal {
+  template <typename TOperand>
+  class OperandIteratorInternal {
     TOperand* const* current;
 
-  public:
+   public:
     using iterator_category = std::forward_iterator_tag;
     using difference_type = std::ptrdiff_t;
     using value_type = TOperand;
@@ -55,7 +56,7 @@ class User : public Value {
     bool operator!=(const OperandIteratorInternal& rhs) const { return current != rhs.current; }
   };
 
-protected:
+ protected:
   using Value::Value;
 
   void remove_phi_incoming_helper(size_t incoming_index);
@@ -66,7 +67,7 @@ protected:
   void set_operand_count(size_t count);
   void grow_operand_count(size_t grow);
 
-public:
+ public:
   ~User() override;
 
   size_t get_operand_count() const;
@@ -79,7 +80,8 @@ public:
   bool uses_value(Value* value) const;
   bool replace_operands(Value* old_value, Value* new_value);
 
-  template <typename Fn> bool transform_operands(Fn&& transform) {
+  template <typename Fn>
+  bool transform_operands(Fn&& transform) {
     bool transformed_something = false;
 
     std::vector<Block*> new_blocks;
@@ -125,4 +127,4 @@ public:
   }
 };
 
-} // namespace flugzeug
+}  // namespace flugzeug

@@ -36,7 +36,9 @@ bool flugzeug::console_colors::are_allowed() {
   return true;
 }
 
-void flugzeug::console_colors::reset_color(std::ostream& stream) { stream << "\x1b[0m"; }
+void flugzeug::console_colors::reset_color(std::ostream& stream) {
+  stream << "\x1b[0m";
+}
 void flugzeug::console_colors::set_color(std::ostream& stream, int color) {
   stream << "\x1b[1;" << color << "m";
 }

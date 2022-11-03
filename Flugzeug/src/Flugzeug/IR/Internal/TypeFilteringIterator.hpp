@@ -4,7 +4,8 @@
 
 namespace flugzeug::detail {
 
-template <typename T, typename TUnderlyingIterator> class TypeFilteringIterator {
+template <typename T, typename TUnderlyingIterator>
+class TypeFilteringIterator {
   TUnderlyingIterator underlying;
 
   void move_to_required_type() {
@@ -18,7 +19,7 @@ template <typename T, typename TUnderlyingIterator> class TypeFilteringIterator 
     }
   }
 
-public:
+ public:
   using iterator_category = std::forward_iterator_tag;
   using difference_type = std::ptrdiff_t;
   using value_type = T;
@@ -48,4 +49,4 @@ public:
   bool operator!=(const TypeFilteringIterator& rhs) const { return !(*this == rhs); }
 };
 
-} // namespace flugzeug::detail
+}  // namespace flugzeug::detail

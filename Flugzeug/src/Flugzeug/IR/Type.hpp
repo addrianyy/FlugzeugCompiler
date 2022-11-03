@@ -14,7 +14,7 @@ class Undef;
 class PointerType;
 
 class Type {
-public:
+ public:
   enum class Kind {
     Void,
     Block,
@@ -27,7 +27,7 @@ public:
     Function,
   };
 
-private:
+ private:
   const Kind kind;
   Context* const context;
 
@@ -37,10 +37,10 @@ private:
   mutable Constant* one = nullptr;
   mutable Undef* undef = nullptr;
 
-protected:
+ protected:
   Type(Context* context, Kind kind);
 
-public:
+ public:
   CLASS_NON_MOVABLE_NON_COPYABLE(Type);
 
   virtual ~Type();
@@ -87,7 +87,7 @@ class PointerType final : public Type {
 
   PointerType(Context* context, Type* base, Type* pointee, uint32_t indirection);
 
-public:
+ public:
   Type* get_base() const { return base; }
   Type* get_pointee() const { return pointee; }
 
@@ -96,13 +96,13 @@ public:
   Type* deref() const;
 };
 
-#define DEFINE_SIMPLE_TYPE(type_name, kind_name)                                                   \
-  class type_name final : public Type {                                                            \
-    DEFINE_INSTANCEOF(Type, Type::Kind::kind_name)                                                 \
-                                                                                                   \
-    friend class Context;                                                                          \
-                                                                                                   \
-    explicit type_name(Context* context) : Type(context, Type::Kind::kind_name) {}                 \
+#define DEFINE_SIMPLE_TYPE(type_name, kind_name)                                   \
+  class type_name final : public Type {                                            \
+    DEFINE_INSTANCEOF(Type, Type::Kind::kind_name)                                 \
+                                                                                   \
+    friend class Context;                                                          \
+                                                                                   \
+    explicit type_name(Context* context) : Type(context, Type::Kind::kind_name) {} \
   };
 
 DEFINE_SIMPLE_TYPE(I1Type, I1)
@@ -116,4 +116,4 @@ DEFINE_SIMPLE_TYPE(FunctionType, Function)
 
 #undef DEFINE_SIMPLE_TYPE
 
-} // namespace flugzeug
+}  // namespace flugzeug

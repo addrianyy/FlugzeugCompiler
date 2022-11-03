@@ -8,158 +8,158 @@ using SpecialItem = IRPrinter::LinePrinter::SpecialItem;
 
 static std::string_view to_string(UnaryOp op) {
   switch (op) {
-  case UnaryOp::Neg:
-    return "neg";
-  case UnaryOp::Not:
-    return "not";
-  default:
-    unreachable();
+    case UnaryOp::Neg:
+      return "neg";
+    case UnaryOp::Not:
+      return "not";
+    default:
+      unreachable();
   }
 }
 
 static std::string_view to_string(BinaryOp op) {
   switch (op) {
-  case BinaryOp::Add:
-    return "add";
-  case BinaryOp::Sub:
-    return "sub";
-  case BinaryOp::Mul:
-    return "mul";
-  case BinaryOp::ModS:
-    return "smod";
-  case BinaryOp::DivS:
-    return "sdiv";
-  case BinaryOp::ModU:
-    return "umod";
-  case BinaryOp::DivU:
-    return "udiv";
-  case BinaryOp::Shr:
-    return "shr";
-  case BinaryOp::Shl:
-    return "shl";
-  case BinaryOp::Sar:
-    return "sar";
-  case BinaryOp::And:
-    return "and";
-  case BinaryOp::Or:
-    return "or";
-  case BinaryOp::Xor:
-    return "xor";
-  default:
-    unreachable();
+    case BinaryOp::Add:
+      return "add";
+    case BinaryOp::Sub:
+      return "sub";
+    case BinaryOp::Mul:
+      return "mul";
+    case BinaryOp::ModS:
+      return "smod";
+    case BinaryOp::DivS:
+      return "sdiv";
+    case BinaryOp::ModU:
+      return "umod";
+    case BinaryOp::DivU:
+      return "udiv";
+    case BinaryOp::Shr:
+      return "shr";
+    case BinaryOp::Shl:
+      return "shl";
+    case BinaryOp::Sar:
+      return "sar";
+    case BinaryOp::And:
+      return "and";
+    case BinaryOp::Or:
+      return "or";
+    case BinaryOp::Xor:
+      return "xor";
+    default:
+      unreachable();
   }
 }
 
 static std::string_view to_string(IntPredicate pred) {
   switch (pred) {
-  case IntPredicate::Equal:
-    return "eq";
-  case IntPredicate::NotEqual:
-    return "ne";
-  case IntPredicate::GtU:
-    return "ugt";
-  case IntPredicate::GteU:
-    return "ugte";
-  case IntPredicate::GtS:
-    return "sgt";
-  case IntPredicate::GteS:
-    return "sgte";
-  case IntPredicate::LtU:
-    return "ult";
-  case IntPredicate::LteU:
-    return "ulte";
-  case IntPredicate::LtS:
-    return "slt";
-  case IntPredicate::LteS:
-    return "slte";
-  default:
-    unreachable();
+    case IntPredicate::Equal:
+      return "eq";
+    case IntPredicate::NotEqual:
+      return "ne";
+    case IntPredicate::GtU:
+      return "ugt";
+    case IntPredicate::GteU:
+      return "ugte";
+    case IntPredicate::GtS:
+      return "sgt";
+    case IntPredicate::GteS:
+      return "sgte";
+    case IntPredicate::LtU:
+      return "ult";
+    case IntPredicate::LteU:
+      return "ulte";
+    case IntPredicate::LtS:
+      return "slt";
+    case IntPredicate::LteS:
+      return "slte";
+    default:
+      unreachable();
   }
 }
 
 static std::string_view to_string(CastKind cast) {
   switch (cast) {
-  case CastKind::ZeroExtend:
-    return "zext";
-  case CastKind::SignExtend:
-    return "sext";
-  case CastKind::Truncate:
-    return "trunc";
-  case CastKind::Bitcast:
-    return "bitcast";
-  default:
-    unreachable();
+    case CastKind::ZeroExtend:
+      return "zext";
+    case CastKind::SignExtend:
+      return "sext";
+    case CastKind::Truncate:
+      return "trunc";
+    case CastKind::Bitcast:
+      return "bitcast";
+    default:
+      unreachable();
   }
 }
 
 static std::string_view to_symbol(UnaryOp op) {
   switch (op) {
-  case UnaryOp::Neg:
-    return "-";
-  case UnaryOp::Not:
-    return "~";
-  default:
-    unreachable();
+    case UnaryOp::Neg:
+      return "-";
+    case UnaryOp::Not:
+      return "~";
+    default:
+      unreachable();
   }
 }
 
 static std::string_view to_symbol(BinaryOp op) {
   switch (op) {
-  case BinaryOp::Add:
-    return "+";
-  case BinaryOp::Sub:
-    return "-";
-  case BinaryOp::Mul:
-    return "*";
-  case BinaryOp::ModU:
-    return "%u";
-  case BinaryOp::DivU:
-    return "/u";
-  case BinaryOp::ModS:
-    return "%s";
-  case BinaryOp::DivS:
-    return "/s";
-  case BinaryOp::Shr:
-    return ">>";
-  case BinaryOp::Shl:
-    return "<<";
-  case BinaryOp::Sar:
-    return ">>>";
-  case BinaryOp::And:
-    return "&";
-  case BinaryOp::Or:
-    return "|";
-  case BinaryOp::Xor:
-    return "^";
-  default:
-    unreachable();
+    case BinaryOp::Add:
+      return "+";
+    case BinaryOp::Sub:
+      return "-";
+    case BinaryOp::Mul:
+      return "*";
+    case BinaryOp::ModU:
+      return "%u";
+    case BinaryOp::DivU:
+      return "/u";
+    case BinaryOp::ModS:
+      return "%s";
+    case BinaryOp::DivS:
+      return "/s";
+    case BinaryOp::Shr:
+      return ">>";
+    case BinaryOp::Shl:
+      return "<<";
+    case BinaryOp::Sar:
+      return ">>>";
+    case BinaryOp::And:
+      return "&";
+    case BinaryOp::Or:
+      return "|";
+    case BinaryOp::Xor:
+      return "^";
+    default:
+      unreachable();
   }
 }
 
 static std::string_view to_symbol(IntPredicate predicate) {
   switch (predicate) {
-  case IntPredicate::Equal:
-    return "==";
-  case IntPredicate::NotEqual:
-    return "!=";
-  case IntPredicate::GtU:
-    return ">u";
-  case IntPredicate::GteU:
-    return ">=u";
-  case IntPredicate::GtS:
-    return ">s";
-  case IntPredicate::GteS:
-    return ">=s";
-  case IntPredicate::LtU:
-    return "<u";
-  case IntPredicate::LteU:
-    return "<=u";
-  case IntPredicate::LtS:
-    return "<s";
-  case IntPredicate::LteS:
-    return "<=s";
-  default:
-    unreachable();
+    case IntPredicate::Equal:
+      return "==";
+    case IntPredicate::NotEqual:
+      return "!=";
+    case IntPredicate::GtU:
+      return ">u";
+    case IntPredicate::GteU:
+      return ">=u";
+    case IntPredicate::GtS:
+      return ">s";
+    case IntPredicate::GteS:
+      return ">=s";
+    case IntPredicate::LtU:
+      return "<u";
+    case IntPredicate::LteU:
+      return "<=u";
+    case IntPredicate::LtS:
+      return "<s";
+    case IntPredicate::LteS:
+      return "<=s";
+    default:
+      unreachable();
   }
 }
 
@@ -250,7 +250,8 @@ void Phi::print_instruction_internal(IRPrinter::LinePrinter& p) const {
 }
 
 void UnaryInstr::print_instruction_compact_internal(
-  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  IRPrinter::LinePrinter& p,
+  const std::unordered_set<const Value*>& inlined_values) const {
   const auto symbol = to_symbol(get_op());
 
   p.print(IRPrinter::UnaryMathSymbol{symbol});
@@ -258,7 +259,8 @@ void UnaryInstr::print_instruction_compact_internal(
 }
 
 void BinaryInstr::print_instruction_compact_internal(
-  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  IRPrinter::LinePrinter& p,
+  const std::unordered_set<const Value*>& inlined_values) const {
   const auto symbol = to_symbol(get_op());
 
   print_value_compact(get_lhs(), p, inlined_values);
@@ -267,7 +269,8 @@ void BinaryInstr::print_instruction_compact_internal(
 }
 
 void IntCompare::print_instruction_compact_internal(
-  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  IRPrinter::LinePrinter& p,
+  const std::unordered_set<const Value*>& inlined_values) const {
   const auto symbol = to_symbol(get_pred());
 
   print_value_compact(get_lhs(), p, inlined_values);
@@ -276,13 +279,15 @@ void IntCompare::print_instruction_compact_internal(
 }
 
 void Load::print_instruction_compact_internal(
-  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  IRPrinter::LinePrinter& p,
+  const std::unordered_set<const Value*>& inlined_values) const {
   p.print("load", get_type(), IRPrinter::Item::Comma, get_ptr()->get_type());
   print_value_compact(get_ptr(), p, inlined_values);
 }
 
 void Store::print_instruction_compact_internal(
-  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  IRPrinter::LinePrinter& p,
+  const std::unordered_set<const Value*>& inlined_values) const {
   p.print("store", get_ptr()->get_type());
   print_value_compact(get_ptr(), p, inlined_values);
   p.print(IRPrinter::Item::Comma, get_val()->get_type());
@@ -290,7 +295,8 @@ void Store::print_instruction_compact_internal(
 }
 
 void Call::print_instruction_compact_internal(
-  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  IRPrinter::LinePrinter& p,
+  const std::unordered_set<const Value*>& inlined_values) const {
   p.print("call", get_type(), IRPrinter::NonKeywordWord{get_callee()->get_name()},
           SpecialItem::ParenOpen);
 
@@ -303,19 +309,22 @@ void Call::print_instruction_compact_internal(
 }
 
 void Branch::print_instruction_compact_internal(
-  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  IRPrinter::LinePrinter& p,
+  const std::unordered_set<const Value*>& inlined_values) const {
   p.print("branch", get_target());
 }
 
 void CondBranch::print_instruction_compact_internal(
-  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  IRPrinter::LinePrinter& p,
+  const std::unordered_set<const Value*>& inlined_values) const {
   p.print("bcond");
   print_value_compact(get_cond(), p, inlined_values, false);
   p.print(SpecialItem::Comma, get_true_target(), SpecialItem::Comma, get_false_target());
 }
 
 void StackAlloc::print_instruction_compact_internal(
-  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  IRPrinter::LinePrinter& p,
+  const std::unordered_set<const Value*>& inlined_values) const {
   p.print("stackalloc", get_allocated_type());
 
   if (size != 1) {
@@ -324,7 +333,8 @@ void StackAlloc::print_instruction_compact_internal(
 }
 
 void Ret::print_instruction_compact_internal(
-  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  IRPrinter::LinePrinter& p,
+  const std::unordered_set<const Value*>& inlined_values) const {
   p.print("ret");
 
   if (is_ret_void()) {
@@ -336,20 +346,23 @@ void Ret::print_instruction_compact_internal(
 }
 
 void Offset::print_instruction_compact_internal(
-  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  IRPrinter::LinePrinter& p,
+  const std::unordered_set<const Value*>& inlined_values) const {
   print_value_compact(get_base(), p, inlined_values);
   p.print("offset by");
   print_value_compact(get_index(), p, inlined_values);
 }
 
 void Cast::print_instruction_compact_internal(
-  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  IRPrinter::LinePrinter& p,
+  const std::unordered_set<const Value*>& inlined_values) const {
   p.print(to_string(get_cast_kind()), get_type());
   print_value_compact(get_val(), p, inlined_values);
 }
 
 void Select::print_instruction_compact_internal(
-  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  IRPrinter::LinePrinter& p,
+  const std::unordered_set<const Value*>& inlined_values) const {
   print_value_compact(get_cond(), p, inlined_values);
   p.print(IRPrinter::BinaryMathSymbol{"?"});
   print_value_compact(get_true_val(), p, inlined_values);
@@ -358,7 +371,8 @@ void Select::print_instruction_compact_internal(
 }
 
 void Phi::print_instruction_compact_internal(
-  IRPrinter::LinePrinter& p, const std::unordered_set<const Value*>& inlined_values) const {
+  IRPrinter::LinePrinter& p,
+  const std::unordered_set<const Value*>& inlined_values) const {
   p.print("phi", get_type(), SpecialItem::BracketOpen);
 
   for (auto incoming : *this) {

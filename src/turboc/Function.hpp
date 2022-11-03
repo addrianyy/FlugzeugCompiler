@@ -12,15 +12,15 @@ namespace turboc {
 class BodyStmt;
 
 class FunctionPrototype {
-public:
+ public:
   using Argument = std::pair<Type, std::string>;
 
-private:
+ private:
   std::string name;
   std::vector<Argument> arguments;
   Type return_type;
 
-public:
+ public:
   FunctionPrototype(std::string name, std::vector<Argument> arguments, const Type& return_type)
       : name(std::move(name)), arguments(std::move(arguments)), return_type(return_type) {}
 
@@ -35,7 +35,7 @@ class Function {
   FunctionPrototype prototype;
   std::unique_ptr<BodyStmt> body;
 
-public:
+ public:
   Function(FunctionPrototype prototype, std::unique_ptr<BodyStmt> body)
       : prototype(std::move(prototype)), body(std::move(body)) {}
 
@@ -45,4 +45,4 @@ public:
   void print(ASTPrinter& printer) const;
 };
 
-} // namespace turboc
+}  // namespace turboc

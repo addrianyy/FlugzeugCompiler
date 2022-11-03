@@ -19,7 +19,7 @@ class Propagator : public InstructionVisitor {
     return c;
   }
 
-public:
+ public:
   explicit Propagator(Type* type) : type(type) {}
 
   OptimizationResult visit_unary_instr(Argument<UnaryInstr> unary) {

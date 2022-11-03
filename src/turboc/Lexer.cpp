@@ -109,7 +109,9 @@ Token Lexer::lex_char_literal(std::string_view& source) {
   return token;
 }
 
-Token Lexer::lex_string_literal(std::string_view& source) { fatal_error("Not implemented yet."); }
+Token Lexer::lex_string_literal(std::string_view& source) {
+  fatal_error("Not implemented yet.");
+}
 
 bool Lexer::skip_comments(std::string_view& source) {
   if (source.starts_with("/*"sv)) {
@@ -278,7 +280,9 @@ void Lexer::print_tokens() {
   std::cout << std::endl;
 }
 
-const Token& Lexer::current_token() const { return get_token(cursor); }
+const Token& Lexer::current_token() const {
+  return get_token(cursor);
+}
 
 const Token& Lexer::consume_token() {
   const auto prev_cursor = cursor;
@@ -286,7 +290,9 @@ const Token& Lexer::consume_token() {
   return get_token(prev_cursor);
 }
 
-void Lexer::restore(size_t count) { cursor -= intptr_t(count); }
+void Lexer::restore(size_t count) {
+  cursor -= intptr_t(count);
+}
 
 std::string_view Lexer::consume_identifier() {
   const auto token = consume_token();

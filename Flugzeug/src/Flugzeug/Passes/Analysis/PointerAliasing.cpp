@@ -12,14 +12,15 @@ using namespace flugzeug::analysis;
 
 using analysis::detail::PointerOriginMap;
 
-template <typename T> struct ValuePairHash {
+template <typename T>
+struct ValuePairHash {
   size_t operator()(const std::pair<const Value*, const Value*>& p) const {
     return hash_combine(p.first, p.second);
   }
 };
 
-using BaseIndexToOffset = std::unordered_map<std::pair<const Value*, const Value*>, const Offset*,
-                                             ValuePairHash<const Value*>>;
+using BaseIndexToOffset = std::
+  unordered_map<std::pair<const Value*, const Value*>, const Offset*, ValuePairHash<const Value*>>;
 
 template <typename K, typename V>
 std::optional<V> lookup_map(const std::unordered_map<K, V>& map, K key) {
@@ -57,7 +58,7 @@ class PointerOriginCalculator : public ConstInstructionVisitor {
 
   [[noreturn]] void invalid_instruction() { unreachable(); }
 
-public:
+ public:
   explicit PointerOriginCalculator(const PointerOriginMap& origin_map) : origin_map(origin_map) {}
 
   // Instructions which can create pointers but for which we don't know the origin.
@@ -115,7 +116,7 @@ class PointerSafetyCalculator : public ConstInstructionVisitor {
   const std::unordered_set<const Value*>& safe_pointers;
   const Value* pointer;
 
-public:
+ public:
   explicit PointerSafetyCalculator(const std::unordered_set<const Value*>& safe_pointers,
                                    const Value* pointer)
       : safe_pointers(safe_pointers), pointer(pointer) {}
@@ -154,7 +155,6 @@ static void process_offset_instruction(
   const Offset* offset,
   std::unordered_map<const Value*, std::pair<const Value*, int64_t>>& constant_offset_db,
   BaseIndexToOffset& base_index_to_offset) {
-
   const auto base = offset->get_base();
   const auto index = offset->get_index();
 
@@ -295,7 +295,8 @@ PointerAliasing::PointerAliasing(const Function* function) {
   }
 }
 
-Aliasing PointerAliasing::can_alias(const Instruction* instruction, const Value* v1,
+Aliasing PointerAliasing::can_alias(const Instruction* instruction,
+                                    const Value* v1,
                                     const Value* v2) const {
   verify(v1->get_type()->is_pointer() && v2->get_type()->is_pointer(),
          "Provided values aren't pointers");
@@ -432,10 +433,10 @@ Aliasing PointerAliasing::can_instruction_access_pointer(const Instruction* inst
   return Aliasing::Never;
 }
 
-bool PointerAliasing::is_pointer_accessed_inbetween(const Value* pointer, const Instruction* begin,
+bool PointerAliasing::is_pointer_accessed_inbetween(const Value* pointer,
+                                                    const Instruction* begin,
                                                     const Instruction* end,
                                                     PointerAliasing::AccessType access_type) const {
-
   verify(begin->get_block() == end->get_block(), "Instructions are in different blocks");
 
   for (const Instruction& instruction : instruction_range(begin, end)) {

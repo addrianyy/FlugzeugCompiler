@@ -5,7 +5,8 @@
 
 using namespace flugzeug;
 
-static bool process_pointer(Instruction* pointer, int64_t offset_from_stackalloc,
+static bool process_pointer(Instruction* pointer,
+                            int64_t offset_from_stackalloc,
                             Call* zero_buffer_call,
                             std::vector<std::pair<Instruction*, int64_t>>& worklist) {
   for (Instruction& user : pointer->users<Instruction>()) {

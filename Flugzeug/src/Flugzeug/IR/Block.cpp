@@ -9,7 +9,8 @@
 
 using namespace flugzeug;
 
-template <typename TBlock> TBlock* get_single_successor_generic(TBlock* block) {
+template <typename TBlock>
+TBlock* get_single_successor_generic(TBlock* block) {
   if (const auto branch = cast<Branch>(block->get_last_instruction())) {
     return branch->get_target();
   } else if (const auto cond_branch = cast<CondBranch>(block->get_last_instruction())) {
@@ -387,7 +388,9 @@ bool Block::has_predecessor(const Block* predecessor) const {
          predecessors_list_unique.end();
 }
 
-Block* Block::get_single_successor() { return get_single_successor_generic<Block>(this); }
+Block* Block::get_single_successor() {
+  return get_single_successor_generic<Block>(this);
+}
 
 const Block* Block::get_single_successor() const {
   return get_single_successor_generic<const Block>(this);
@@ -415,7 +418,9 @@ BlockTargets<const Block> Block::successors() const {
   return {};
 }
 
-std::span<Block*> Block::predecessors() { return predecessors_list_unique; }
+std::span<Block*> Block::predecessors() {
+  return predecessors_list_unique;
+}
 
 std::span<const Block*> Block::predecessors() const {
   const auto const_predecessors = const_cast<const Block**>(predecessors_list_unique.data());

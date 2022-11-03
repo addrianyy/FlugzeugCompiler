@@ -1,10 +1,9 @@
 #pragma once
-#include "Instruction.hpp"
-
 #include <Flugzeug/Core/IntrusiveLinkedList.hpp>
-
 #include <span>
 #include <unordered_set>
+
+#include "Instruction.hpp"
 
 namespace flugzeug {
 
@@ -60,7 +59,7 @@ class Block final : public Value, public IntrusiveNode<Block, Function> {
   explicit Block(Context* context)
       : Value(context, Value::Kind::Block, context->get_block_ty()), instruction_list(this) {}
 
-public:
+ public:
   ~Block() override;
 
   void print(IRPrinter& printer, IRPrintingMethod method = IRPrintingMethod::Standard) const;
@@ -68,19 +67,33 @@ public:
   void debug_print() const;
 
 #pragma region instruction_list
-  Instruction* get_first_instruction() { return instruction_list.get_first(); }
-  Instruction* get_last_instruction() { return instruction_list.get_last(); }
+  Instruction* get_first_instruction() {
+    return instruction_list.get_first();
+  }
+  Instruction* get_last_instruction() {
+    return instruction_list.get_last();
+  }
 
-  const Instruction* get_first_instruction() const { return instruction_list.get_first(); }
-  const Instruction* get_last_instruction() const { return instruction_list.get_last(); }
+  const Instruction* get_first_instruction() const {
+    return instruction_list.get_first();
+  }
+  const Instruction* get_last_instruction() const {
+    return instruction_list.get_last();
+  }
 
-  size_t get_instruction_count() const { return instruction_list.get_size(); }
-  bool is_empty() const { return instruction_list.is_empty(); }
+  size_t get_instruction_count() const {
+    return instruction_list.get_size();
+  }
+  bool is_empty() const {
+    return instruction_list.is_empty();
+  }
 
   void push_instruction_front(Instruction* instruction) {
     instruction_list.push_front(instruction);
   }
-  void push_instruction_back(Instruction* instruction) { instruction_list.push_back(instruction); }
+  void push_instruction_back(Instruction* instruction) {
+    instruction_list.push_back(instruction);
+  }
 
   using const_iterator = InstructionList::const_iterator;
   using iterator = InstructionList::iterator;
@@ -93,17 +106,33 @@ public:
   using ConstSpecificInstructionIterator =
     detail::TypeFilteringIterator<const TInstruction, const_iterator>;
 
-  iterator begin() { return instruction_list.begin(); }
-  iterator end() { return instruction_list.end(); }
+  iterator begin() {
+    return instruction_list.begin();
+  }
+  iterator end() {
+    return instruction_list.end();
+  }
 
-  const_iterator begin() const { return instruction_list.begin(); }
-  const_iterator end() const { return instruction_list.end(); }
+  const_iterator begin() const {
+    return instruction_list.begin();
+  }
+  const_iterator end() const {
+    return instruction_list.end();
+  }
 
-  reverse_iterator rbegin() { return instruction_list.rbegin(); }
-  reverse_iterator rend() { return instruction_list.rend(); }
+  reverse_iterator rbegin() {
+    return instruction_list.rbegin();
+  }
+  reverse_iterator rend() {
+    return instruction_list.rend();
+  }
 
-  const_reverse_iterator rbegin() const { return instruction_list.rbegin(); }
-  const_reverse_iterator rend() const { return instruction_list.rend(); }
+  const_reverse_iterator rbegin() const {
+    return instruction_list.rbegin();
+  }
+  const_reverse_iterator rend() const {
+    return instruction_list.rend();
+  }
 
   template <typename TInstruction>
   IteratorRange<SpecificInstructionIterator<TInstruction>> instructions() {
@@ -117,10 +146,16 @@ public:
   }
 #pragma endregion
 
-  bool is_entry_block() const { return is_entry; }
+  bool is_entry_block() const {
+    return is_entry;
+  }
 
-  Function* get_function() { return get_owner(); }
-  const Function* get_function() const { return get_owner(); }
+  Function* get_function() {
+    return get_owner();
+  }
+  const Function* get_function() const {
+    return get_owner();
+  }
 
   std::string format() const override;
 
@@ -181,11 +216,12 @@ auto instruction_range(TInstruction1* begin, TInstruction2* end) {
 
   return IteratorRange(Iterator(begin), Iterator(end));
 }
-template <typename TInstruction1> auto instruction_range(TInstruction1* begin, std::nullptr_t end) {
+template <typename TInstruction1>
+auto instruction_range(TInstruction1* begin, std::nullptr_t end) {
   using Iterator =
     std::conditional_t<std::is_const_v<TInstruction1>, Block::const_iterator, Block::iterator>;
 
   return IteratorRange(Iterator(begin), Iterator(nullptr));
 }
 
-} // namespace flugzeug
+}  // namespace flugzeug

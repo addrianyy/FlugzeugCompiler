@@ -5,7 +5,10 @@ namespace flugzeug::pat {
 
 namespace detail {
 
-template <typename TInstruction, typename LHSPattern, typename RHSPattern, bool MustBeCommutative,
+template <typename TInstruction,
+          typename LHSPattern,
+          typename RHSPattern,
+          bool MustBeCommutative,
           bool MatchSpecificOp = false>
 class BinaryPattern {
   TInstruction** bind_instruction;
@@ -14,13 +17,20 @@ class BinaryPattern {
   RHSPattern rhs_pattern;
   BinaryOp specific_op;
 
-public:
-  BinaryPattern(TInstruction** bind_instruction, LHSPattern lhs, BinaryOp* bind_op, RHSPattern rhs,
+ public:
+  BinaryPattern(TInstruction** bind_instruction,
+                LHSPattern lhs,
+                BinaryOp* bind_op,
+                RHSPattern rhs,
                 BinaryOp specific_op = BinaryOp::Add)
-      : bind_instruction(bind_instruction), lhs_pattern(lhs), bind_op(bind_op), rhs_pattern(rhs),
+      : bind_instruction(bind_instruction),
+        lhs_pattern(lhs),
+        bind_op(bind_op),
+        rhs_pattern(rhs),
         specific_op(specific_op) {}
 
-  template <typename T> bool match(T* m_value) {
+  template <typename T>
+  bool match(T* m_value) {
     const auto binary = flugzeug::cast<BinaryInstr>(m_value);
     if (!binary) {
       return false;
@@ -56,48 +66,52 @@ public:
   }
 };
 
-} // namespace detail
+}  // namespace detail
 
-#define IMPLEMENT_BINARY_PATTERN(name, commutative)                                                \
-  template <typename TInstruction, typename LHSPattern, typename RHSPattern>                       \
-  auto name(TInstruction*& instruction, LHSPattern lhs, BinaryOp& op, RHSPattern rhs) {            \
-    static_assert(std::is_same_v<BinaryInstr, std::remove_cv_t<TInstruction>>,                     \
-                  "Expected BinaryInstr instruction in this pattern");                             \
-    return detail::BinaryPattern<TInstruction, LHSPattern, RHSPattern, commutative>(               \
-      &instruction, lhs, &op, rhs);                                                                \
-  }                                                                                                \
-                                                                                                   \
-  template <typename LHSPattern, typename RHSPattern>                                              \
-  auto name(LHSPattern lhs, BinaryOp& op, RHSPattern rhs) {                                        \
-    return detail::BinaryPattern<const BinaryInstr, LHSPattern, RHSPattern, commutative>(          \
-      nullptr, lhs, &op, rhs);                                                                     \
-  }                                                                                                \
-                                                                                                   \
-  template <typename TInstruction, typename LHSPattern, typename RHSPattern>                       \
-  auto name(TInstruction*& instruction, LHSPattern lhs, RHSPattern rhs) {                          \
-    static_assert(std::is_same_v<BinaryInstr, std::remove_cv_t<TInstruction>>,                     \
-                  "Expected BinaryInstr instruction in this pattern");                             \
-    return detail::BinaryPattern<TInstruction, LHSPattern, RHSPattern, commutative>(               \
-      &instruction, lhs, nullptr, rhs);                                                            \
-  }                                                                                                \
-                                                                                                   \
-  template <typename LHSPattern, typename RHSPattern> auto name(LHSPattern lhs, RHSPattern rhs) {  \
-    return detail::BinaryPattern<const BinaryInstr, LHSPattern, RHSPattern, commutative>(          \
-      nullptr, lhs, nullptr, rhs);                                                                 \
+#define IMPLEMENT_BINARY_PATTERN(name, commutative)                                       \
+  template <typename TInstruction, typename LHSPattern, typename RHSPattern>              \
+  auto name(TInstruction*& instruction, LHSPattern lhs, BinaryOp& op, RHSPattern rhs) {   \
+    static_assert(std::is_same_v<BinaryInstr, std::remove_cv_t<TInstruction>>,            \
+                  "Expected BinaryInstr instruction in this pattern");                    \
+    return detail::BinaryPattern<TInstruction, LHSPattern, RHSPattern, commutative>(      \
+      &instruction, lhs, &op, rhs);                                                       \
+  }                                                                                       \
+                                                                                          \
+  template <typename LHSPattern, typename RHSPattern>                                     \
+  auto name(LHSPattern lhs, BinaryOp& op, RHSPattern rhs) {                               \
+    return detail::BinaryPattern<const BinaryInstr, LHSPattern, RHSPattern, commutative>( \
+      nullptr, lhs, &op, rhs);                                                            \
+  }                                                                                       \
+                                                                                          \
+  template <typename TInstruction, typename LHSPattern, typename RHSPattern>              \
+  auto name(TInstruction*& instruction, LHSPattern lhs, RHSPattern rhs) {                 \
+    static_assert(std::is_same_v<BinaryInstr, std::remove_cv_t<TInstruction>>,            \
+                  "Expected BinaryInstr instruction in this pattern");                    \
+    return detail::BinaryPattern<TInstruction, LHSPattern, RHSPattern, commutative>(      \
+      &instruction, lhs, nullptr, rhs);                                                   \
+  }                                                                                       \
+                                                                                          \
+  template <typename LHSPattern, typename RHSPattern>                                     \
+  auto name(LHSPattern lhs, RHSPattern rhs) {                                             \
+    return detail::BinaryPattern<const BinaryInstr, LHSPattern, RHSPattern, commutative>( \
+      nullptr, lhs, nullptr, rhs);                                                        \
   }
 
-#define IMPLEMENT_SPECIFIC_BINARY_PATTERN(name, op)                                                \
-  template <typename TInstruction, typename LHSPattern, typename RHSPattern>                       \
-  auto name(TInstruction*& instruction, LHSPattern lhs, RHSPattern rhs) {                          \
-    return binary_specific(instruction, lhs, op, rhs);                                             \
-  }                                                                                                \
-                                                                                                   \
-  template <typename LHSPattern, typename RHSPattern> auto name(LHSPattern lhs, RHSPattern rhs) {  \
-    return binary_specific(lhs, op, rhs);                                                          \
+#define IMPLEMENT_SPECIFIC_BINARY_PATTERN(name, op)                          \
+  template <typename TInstruction, typename LHSPattern, typename RHSPattern> \
+  auto name(TInstruction*& instruction, LHSPattern lhs, RHSPattern rhs) {    \
+    return binary_specific(instruction, lhs, op, rhs);                       \
+  }                                                                          \
+                                                                             \
+  template <typename LHSPattern, typename RHSPattern>                        \
+  auto name(LHSPattern lhs, RHSPattern rhs) {                                \
+    return binary_specific(lhs, op, rhs);                                    \
   }
 
 template <typename TInstruction, typename LHSPattern, typename RHSPattern>
-auto binary_specific(TInstruction*& instruction, LHSPattern lhs, BinaryOp specific_op,
+auto binary_specific(TInstruction*& instruction,
+                     LHSPattern lhs,
+                     BinaryOp specific_op,
                      RHSPattern rhs) {
   static_assert(std::is_same_v<BinaryInstr, std::remove_cv_t<TInstruction>>,
                 "Expected BinaryInstr instruction in this pattern");
@@ -131,4 +145,4 @@ IMPLEMENT_SPECIFIC_BINARY_PATTERN(xor_, BinaryOp::Xor)
 #undef IMPLEMENT_BINARY_PATTERN
 #undef IMPLEMENT_SPECIFIC_BINARY_PATTERN
 
-} // namespace flugzeug::pat
+}  // namespace flugzeug::pat

@@ -143,61 +143,61 @@ void IRPrinter::LinePrinter::item(IRPrinter::LinePrinter::SpecialItem special) {
   comma_pending = false;
 
   switch (special) {
-  case SpecialItem::Comma:
-    comma_pending = true;
-    space_pending = true;
-    break;
+    case SpecialItem::Comma:
+      comma_pending = true;
+      space_pending = true;
+      break;
 
-  case SpecialItem::Colon:
-    ir_printer->write_string(":");
-    space_pending = true;
-    break;
+    case SpecialItem::Colon:
+      ir_printer->write_string(":");
+      space_pending = true;
+      break;
 
-  case SpecialItem::Equals:
-    if (space_pending) {
-      ir_printer->write_string(" ");
-    }
-    ir_printer->write_string("=");
-    space_pending = true;
-    break;
+    case SpecialItem::Equals:
+      if (space_pending) {
+        ir_printer->write_string(" ");
+      }
+      ir_printer->write_string("=");
+      space_pending = true;
+      break;
 
-  case SpecialItem::ParenOpen:
-    ir_printer->write_string("(");
-    space_pending = false;
-    break;
+    case SpecialItem::ParenOpen:
+      ir_printer->write_string("(");
+      space_pending = false;
+      break;
 
-  case SpecialItem::ParenClose:
-    ir_printer->write_string(")");
-    space_pending = false;
-    break;
+    case SpecialItem::ParenClose:
+      ir_printer->write_string(")");
+      space_pending = false;
+      break;
 
-  case SpecialItem::BracketOpen:
-    if (space_pending) {
-      ir_printer->write_string(" ");
-    }
-    ir_printer->write_string("[");
-    space_pending = false;
-    break;
+    case SpecialItem::BracketOpen:
+      if (space_pending) {
+        ir_printer->write_string(" ");
+      }
+      ir_printer->write_string("[");
+      space_pending = false;
+      break;
 
-  case SpecialItem::BracketClose:
-    ir_printer->write_string("]");
-    space_pending = false;
-    break;
+    case SpecialItem::BracketClose:
+      ir_printer->write_string("]");
+      space_pending = false;
+      break;
 
-  case SpecialItem::ParenOpenExpr:
-    if (comma_pending) {
-      ir_printer->write_string(", ");
-    } else if (space_pending) {
-      ir_printer->write_string(" ");
-    }
-    ir_printer->write_string("(");
-    space_pending = false;
-    comma_pending = false;
-    break;
+    case SpecialItem::ParenOpenExpr:
+      if (comma_pending) {
+        ir_printer->write_string(", ");
+      } else if (space_pending) {
+        ir_printer->write_string(" ");
+      }
+      ir_printer->write_string("(");
+      space_pending = false;
+      comma_pending = false;
+      break;
 
-  case SpecialItem::ParenCloseExpr:
-    ir_printer->write_string(")");
-    space_pending = false;
-    break;
+    case SpecialItem::ParenCloseExpr:
+      ir_printer->write_string(")");
+      space_pending = false;
+      break;
   }
 }

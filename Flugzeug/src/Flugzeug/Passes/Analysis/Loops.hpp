@@ -11,7 +11,8 @@ class DominatorTree;
 
 namespace analysis {
 
-template <typename T> struct SccContext;
+template <typename T>
+struct SccContext;
 
 /// Properties of the loop:
 ///   1. All blocks of the loop are strongly connected.
@@ -19,8 +20,9 @@ template <typename T> struct SccContext;
 ///   3. All back edges in the loop (but not in sub-loops) must point to loop header.
 ///   4. All sub-loops can be entered only from this loop and can exit only into this loop.
 class Loop {
-  friend std::vector<std::unique_ptr<Loop>>
-  analyze_function_loops(Function* function, const DominatorTree& dominator_tree);
+  friend std::vector<std::unique_ptr<Loop>> analyze_function_loops(
+    Function* function,
+    const DominatorTree& dominator_tree);
 
   Block* header = nullptr;
   std::unordered_set<Block*> blocks;
@@ -31,14 +33,15 @@ class Loop {
 
   std::vector<std::unique_ptr<Loop>> sub_loops;
 
-  static bool find_loops_in_scc(Function* function, const std::vector<Block*>& scc_vector,
+  static bool find_loops_in_scc(Function* function,
+                                const std::vector<Block*>& scc_vector,
                                 const DominatorTree& dominator_tree,
                                 SccContext<Block*>& scc_context,
                                 std::vector<std::unique_ptr<Loop>>& loops);
 
   void debug_print_internal(const std::string& indentation) const;
 
-public:
+ public:
   Block* get_header() const;
 
   const std::unordered_set<Block*>& get_blocks() const;
@@ -63,6 +66,6 @@ std::vector<std::unique_ptr<Loop>> analyze_function_loops(Function* function,
                                                           const DominatorTree& dominator_tree);
 std::vector<std::unique_ptr<Loop>> analyze_function_loops(Function* function);
 
-} // namespace analysis
+}  // namespace analysis
 
-} // namespace flugzeug
+}  // namespace flugzeug

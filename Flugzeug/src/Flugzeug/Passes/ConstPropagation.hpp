@@ -4,8 +4,8 @@
 namespace flugzeug::opt {
 
 class ConstPropagation : public Pass<"ConstPropagation"> {
-public:
+ public:
   static bool run(Function* function);
 };
 
-} // namespace flugzeug::opt
+}  // namespace flugzeug::opt

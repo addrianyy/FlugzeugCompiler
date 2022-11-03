@@ -11,14 +11,16 @@
 
 using namespace flugzeug;
 
-#define PROPAGATE_RESULT(result_expression)                                                        \
-  do {                                                                                             \
-    if (const auto _result = (result_expression)) {                                                \
-      return _result;                                                                              \
-    }                                                                                              \
+#define PROPAGATE_RESULT(result_expression)         \
+  do {                                              \
+    if (const auto _result = (result_expression)) { \
+      return _result;                               \
+    }                                               \
   } while (0)
 
-static bool is_pow2(uint64_t x) { return (x != 0) && !(x & (x - 1)); }
+static bool is_pow2(uint64_t x) {
+  return (x != 0) && !(x & (x - 1));
+}
 
 static uint64_t bin_log2(uint64_t x) {
   for (uint64_t i = 1; i < 64; ++i) {
@@ -148,7 +150,8 @@ static bool is_value_compared_to(Value* value, Value*& cmp_value, int64_t& cmp_c
   return false;
 }
 
-static OptimizationResult simplify_selected_arithmetic_1(Value* cmp_value, int64_t cmp_constant,
+static OptimizationResult simplify_selected_arithmetic_1(Value* cmp_value,
+                                                         int64_t cmp_constant,
                                                          Value* on_constant,
                                                          BinaryInstr* on_non_constant) {
   // (b != 0) ? (a - b) : a   =>   a - b
@@ -172,66 +175,67 @@ static OptimizationResult simplify_selected_arithmetic_1(Value* cmp_value, int64
   }
 
   switch (op) {
-  case BinaryOp::Add: {
-    if (cmp_constant == 0) {
-      return on_non_constant;
+    case BinaryOp::Add: {
+      if (cmp_constant == 0) {
+        return on_non_constant;
+      }
+      break;
     }
-    break;
-  }
-  case BinaryOp::Sub: {
-    if (cmp_constant == 0 && rhs == cmp_value) {
-      return on_non_constant;
+    case BinaryOp::Sub: {
+      if (cmp_constant == 0 && rhs == cmp_value) {
+        return on_non_constant;
+      }
+      break;
     }
-    break;
-  }
 
-  case BinaryOp::Mul: {
-    if (cmp_constant == 1) {
-      return on_non_constant;
+    case BinaryOp::Mul: {
+      if (cmp_constant == 1) {
+        return on_non_constant;
+      }
+      break;
     }
-    break;
-  }
 
-  case BinaryOp::DivU:
-  case BinaryOp::DivS: {
-    if (cmp_constant == 1 && rhs == cmp_value) {
-      return on_non_constant;
+    case BinaryOp::DivU:
+    case BinaryOp::DivS: {
+      if (cmp_constant == 1 && rhs == cmp_value) {
+        return on_non_constant;
+      }
+      break;
     }
-    break;
-  }
 
-  case BinaryOp::Shr:
-  case BinaryOp::Shl:
-  case BinaryOp::Sar: {
-    if (cmp_constant == 0 && rhs == cmp_value) {
-      return on_non_constant;
+    case BinaryOp::Shr:
+    case BinaryOp::Shl:
+    case BinaryOp::Sar: {
+      if (cmp_constant == 0 && rhs == cmp_value) {
+        return on_non_constant;
+      }
+      break;
     }
-    break;
-  }
 
-  case BinaryOp::And: {
-    if (cmp_constant == -1) {
-      return on_non_constant;
+    case BinaryOp::And: {
+      if (cmp_constant == -1) {
+        return on_non_constant;
+      }
+      break;
     }
-    break;
-  }
 
-  case BinaryOp::Or: {
-  case BinaryOp::Xor:
-    if (cmp_constant == 0) {
-      return on_non_constant;
+    case BinaryOp::Or: {
+      case BinaryOp::Xor:
+        if (cmp_constant == 0) {
+          return on_non_constant;
+        }
+        break;
     }
-    break;
-  }
 
-  default:
-    break;
+    default:
+      break;
   }
 
   return OptimizationResult::unchanged();
 }
 
-static OptimizationResult simplify_selected_arithmetic_2(Value* cmp_value, int64_t cmp_constant,
+static OptimizationResult simplify_selected_arithmetic_2(Value* cmp_value,
+                                                         int64_t cmp_constant,
                                                          Value* on_constant_value,
                                                          BinaryInstr* on_non_constant) {
   // (b != 0) ? (a * b) : 0   =>   a * b
@@ -248,23 +252,23 @@ static OptimizationResult simplify_selected_arithmetic_2(Value* cmp_value, int64
   }
 
   switch (on_non_constant->get_op()) {
-  case BinaryOp::Mul:
-  case BinaryOp::And: {
-    if (cmp_constant == 0 && on_constant == 0) {
-      return on_non_constant;
+    case BinaryOp::Mul:
+    case BinaryOp::And: {
+      if (cmp_constant == 0 && on_constant == 0) {
+        return on_non_constant;
+      }
+      break;
     }
-    break;
-  }
 
-  case BinaryOp::Or: {
-    if (cmp_constant == -1 && on_constant == -1) {
-      return on_non_constant;
+    case BinaryOp::Or: {
+      if (cmp_constant == -1 && on_constant == -1) {
+        return on_non_constant;
+      }
+      break;
     }
-    break;
-  }
 
-  default:
-    break;
+    default:
+      break;
   }
 
   return OptimizationResult::unchanged();
@@ -453,7 +457,7 @@ static OptimizationResult bitcasts_to_offset(Cast* cast_instr) {
 class Simplifier : public InstructionVisitor {
   Context* context;
 
-public:
+ public:
   explicit Simplifier(Instruction* instruction) : context(instruction->get_context()) {}
 
   OptimizationResult visit_unary_instr(Argument<UnaryInstr> unary) {
@@ -495,179 +499,179 @@ public:
     }
 
     switch (binary->get_op()) {
-    case BinaryOp::Add: {
-      if (rhs->is_zero()) {
-        // x + 0 == x
-        return lhs;
-      }
-
-      break;
-    }
-
-    case BinaryOp::Sub: {
-      if (lhs == rhs) {
-        // x - x == 0
-        return type->get_zero();
-      }
-
-      if (rhs->is_zero()) {
-        // x - 0 == x
-        return lhs;
-      }
-
-      if (lhs->is_zero()) {
-        // 0 - x == -x
-        return new UnaryInstr(context, UnaryOp::Neg, rhs);
-      }
-
-      if (const auto constant = cast<Constant>(rhs)) {
-        // Canonicalize
-        // x - c == x + (-c)
-
-        // We do these casts to avoid compiler warning.
-        const auto negated_constant =
-          type->get_constant(uint64_t(-int64_t(constant->get_constant_u())));
-        return new BinaryInstr(context, lhs, BinaryOp::Add, negated_constant);
-      }
-
-      break;
-    }
-
-    case BinaryOp::And: {
-      if (rhs->is_zero()) {
-        // x & 0 == 0
-        return type->get_zero();
-      }
-
-      if (rhs->is_all_ones()) {
-        // x & 111...111 == x
-        return lhs;
-      }
-
-      if (lhs == rhs) {
-        // x & x == x
-        return lhs;
-      }
-
-      break;
-    }
-
-    case BinaryOp::Or: {
-      if (rhs->is_zero()) {
-        // x | 0 == x
-        return lhs;
-      }
-
-      if (rhs->is_all_ones()) {
-        // x | 111...111 == 111...111
-        return rhs;
-      }
-
-      if (lhs == rhs) {
-        // x | x == x
-        return lhs;
-      }
-
-      break;
-    }
-
-    case BinaryOp::Xor: {
-      if (rhs->is_zero()) {
-        // x ^ 0 == x
-        return lhs;
-      }
-
-      if (lhs == rhs) {
-        // x ^ x == 0
-        return type->get_zero();
-      }
-
-      if (rhs->is_all_ones()) {
-        // a ^ 111...111 = ~a
-        return new UnaryInstr(context, UnaryOp::Not, lhs);
-      }
-
-      break;
-    }
-
-    case BinaryOp::Mul: {
-      if (rhs->is_zero()) {
-        // x * 0 == 0
-        return type->get_zero();
-      }
-
-      if (rhs->is_one()) {
-        // x * 1 == x
-        return lhs;
-      }
-
-      if (rhs->is_all_ones()) {
-        // a * -1 == -a
-        return new UnaryInstr(context, UnaryOp::Neg, lhs);
-      }
-
-      if (const auto multiplier_v = cast<Constant>(rhs)) {
-        const auto multiplier = multiplier_v->get_constant_u();
-        if (is_pow2(multiplier)) {
-          // X * Y (if Y is power of 2) == X << log2(Y)
-          const auto shift_amount = type->get_constant(bin_log2(multiplier));
-          return new BinaryInstr(context, lhs, BinaryOp::Shl, shift_amount);
+      case BinaryOp::Add: {
+        if (rhs->is_zero()) {
+          // x + 0 == x
+          return lhs;
         }
+
+        break;
       }
 
-      break;
-    }
+      case BinaryOp::Sub: {
+        if (lhs == rhs) {
+          // x - x == 0
+          return type->get_zero();
+        }
 
-    case BinaryOp::DivU:
-    case BinaryOp::DivS: {
-      if (lhs->is_zero()) {
-        // 0 / x == 0
-        return type->get_zero();
+        if (rhs->is_zero()) {
+          // x - 0 == x
+          return lhs;
+        }
+
+        if (lhs->is_zero()) {
+          // 0 - x == -x
+          return new UnaryInstr(context, UnaryOp::Neg, rhs);
+        }
+
+        if (const auto constant = cast<Constant>(rhs)) {
+          // Canonicalize
+          // x - c == x + (-c)
+
+          // We do these casts to avoid compiler warning.
+          const auto negated_constant =
+            type->get_constant(uint64_t(-int64_t(constant->get_constant_u())));
+          return new BinaryInstr(context, lhs, BinaryOp::Add, negated_constant);
+        }
+
+        break;
       }
 
-      if (rhs->is_one()) {
-        // x / 1 == x
-        return lhs;
+      case BinaryOp::And: {
+        if (rhs->is_zero()) {
+          // x & 0 == 0
+          return type->get_zero();
+        }
+
+        if (rhs->is_all_ones()) {
+          // x & 111...111 == x
+          return lhs;
+        }
+
+        if (lhs == rhs) {
+          // x & x == x
+          return lhs;
+        }
+
+        break;
       }
 
-      if (lhs == rhs) {
-        // x / x == 1
-        return type->get_one();
+      case BinaryOp::Or: {
+        if (rhs->is_zero()) {
+          // x | 0 == x
+          return lhs;
+        }
+
+        if (rhs->is_all_ones()) {
+          // x | 111...111 == 111...111
+          return rhs;
+        }
+
+        if (lhs == rhs) {
+          // x | x == x
+          return lhs;
+        }
+
+        break;
       }
 
-      break;
-    }
+      case BinaryOp::Xor: {
+        if (rhs->is_zero()) {
+          // x ^ 0 == x
+          return lhs;
+        }
 
-    case BinaryOp::ModU:
-    case BinaryOp::ModS: {
-      if (lhs->is_zero() || rhs->is_one() || lhs == rhs) {
-        // 0 % x == 0
-        // x % 1 == 0
-        // x % x == 0
-        return type->get_zero();
+        if (lhs == rhs) {
+          // x ^ x == 0
+          return type->get_zero();
+        }
+
+        if (rhs->is_all_ones()) {
+          // a ^ 111...111 = ~a
+          return new UnaryInstr(context, UnaryOp::Not, lhs);
+        }
+
+        break;
       }
 
-      break;
-    }
+      case BinaryOp::Mul: {
+        if (rhs->is_zero()) {
+          // x * 0 == 0
+          return type->get_zero();
+        }
 
-    case BinaryOp::Shr:
-    case BinaryOp::Shl:
-    case BinaryOp::Sar: {
-      if (lhs->is_zero()) {
-        // 0 <<>> x == 0
-        return type->get_zero();
+        if (rhs->is_one()) {
+          // x * 1 == x
+          return lhs;
+        }
+
+        if (rhs->is_all_ones()) {
+          // a * -1 == -a
+          return new UnaryInstr(context, UnaryOp::Neg, lhs);
+        }
+
+        if (const auto multiplier_v = cast<Constant>(rhs)) {
+          const auto multiplier = multiplier_v->get_constant_u();
+          if (is_pow2(multiplier)) {
+            // X * Y (if Y is power of 2) == X << log2(Y)
+            const auto shift_amount = type->get_constant(bin_log2(multiplier));
+            return new BinaryInstr(context, lhs, BinaryOp::Shl, shift_amount);
+          }
+        }
+
+        break;
       }
 
-      if (rhs->is_zero()) {
-        // x <<>> 0 == x
-        return lhs;
+      case BinaryOp::DivU:
+      case BinaryOp::DivS: {
+        if (lhs->is_zero()) {
+          // 0 / x == 0
+          return type->get_zero();
+        }
+
+        if (rhs->is_one()) {
+          // x / 1 == x
+          return lhs;
+        }
+
+        if (lhs == rhs) {
+          // x / x == 1
+          return type->get_one();
+        }
+
+        break;
       }
 
-      break;
-    }
+      case BinaryOp::ModU:
+      case BinaryOp::ModS: {
+        if (lhs->is_zero() || rhs->is_one() || lhs == rhs) {
+          // 0 % x == 0
+          // x % 1 == 0
+          // x % x == 0
+          return type->get_zero();
+        }
 
-    default:
-      unreachable();
+        break;
+      }
+
+      case BinaryOp::Shr:
+      case BinaryOp::Shl:
+      case BinaryOp::Sar: {
+        if (lhs->is_zero()) {
+          // 0 <<>> x == 0
+          return type->get_zero();
+        }
+
+        if (rhs->is_zero()) {
+          // x <<>> 0 == x
+          return lhs;
+        }
+
+        break;
+      }
+
+      default:
+        unreachable();
     }
 
     return OptimizationResult::unchanged();
@@ -703,23 +707,23 @@ public:
     // Optimize some unsigned comparisons.
     if (rhs->is_zero()) {
       switch (pred) {
-      case IntPredicate::LtU:
-        // unsigned < 0 == false
-        return false_value;
+        case IntPredicate::LtU:
+          // unsigned < 0 == false
+          return false_value;
 
-      case IntPredicate::LteU:
-      case IntPredicate::GteU:
-        // unsigned <= 0 == true
-        // unsigned >= 0 == true
-        return true_value;
+        case IntPredicate::LteU:
+        case IntPredicate::GteU:
+          // unsigned <= 0 == true
+          // unsigned >= 0 == true
+          return true_value;
 
-      case IntPredicate::GtU:
-        // unsigned > 0 == unsigned != 0
-        return new IntCompare(context, lhs, IntPredicate::NotEqual,
-                              lhs->get_type()->get_constant(0));
+        case IntPredicate::GtU:
+          // unsigned > 0 == unsigned != 0
+          return new IntCompare(context, lhs, IntPredicate::NotEqual,
+                                lhs->get_type()->get_constant(0));
 
-      default:
-        break;
+        default:
+          break;
       }
     } else if (rhs->is_one() && pred == IntPredicate::LtU) {
       // unsigned < 1 == unsigned == 0

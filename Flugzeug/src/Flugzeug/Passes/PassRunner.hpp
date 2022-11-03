@@ -30,10 +30,11 @@ class OptimizationStatistics {
   float total_time_spend = 0.f;
 
   StatisticsContext pre_pass_callback(std::string_view pass_name);
-  void post_pass_callback(const StatisticsContext& context, std::string_view pass_name,
+  void post_pass_callback(const StatisticsContext& context,
+                          std::string_view pass_name,
                           bool success);
 
-public:
+ public:
   OptimizationStatistics() = default;
 
   void show() const;
@@ -51,17 +52,19 @@ class FunctionPassRunner {
 
   void validate() const;
 
-public:
+ public:
   CLASS_NON_COPYABLE(FunctionPassRunner)
 
   explicit FunctionPassRunner(Function* function, bool strict_validation = false)
       : function(function), strict_validation(strict_validation) {}
 
-  explicit FunctionPassRunner(Function* function, OptimizationStatistics* statistics,
+  explicit FunctionPassRunner(Function* function,
+                              OptimizationStatistics* statistics,
                               bool strict_validation = false)
       : function(function), statistics(statistics), strict_validation(strict_validation) {}
 
-  template <typename T, typename... Args> bool run(Args&&... args) {
+  template <typename T, typename... Args>
+  bool run(Args&&... args) {
     static_assert(std::is_base_of_v<detail::PassBase, T>,
                   "Optimization pass must inherit from Pass class.");
 
@@ -91,8 +94,10 @@ public:
   bool did_something() const { return did_something_; }
 
   template <typename OptCallback>
-  static bool enter_optimization_loop(Function* function, OptimizationStatistics* statistics,
-                                      bool strict_validation, OptCallback opt_callback) {
+  static bool enter_optimization_loop(Function* function,
+                                      OptimizationStatistics* statistics,
+                                      bool strict_validation,
+                                      OptCallback opt_callback) {
     bool did_something = false;
 
     while (true) {
@@ -110,13 +115,15 @@ public:
   }
 
   template <typename OptCallback>
-  static bool enter_optimization_loop(Function* function, OptimizationStatistics* statistics,
+  static bool enter_optimization_loop(Function* function,
+                                      OptimizationStatistics* statistics,
                                       OptCallback opt_callback) {
     return enter_optimization_loop(function, statistics, false, opt_callback);
   }
 
   template <typename OptCallback>
-  static bool enter_optimization_loop(Function* function, bool strict_validation,
+  static bool enter_optimization_loop(Function* function,
+                                      bool strict_validation,
                                       OptCallback opt_callback) {
     return enter_optimization_loop(function, nullptr, strict_validation, opt_callback);
   }
@@ -127,4 +134,4 @@ public:
   }
 };
 
-} // namespace flugzeug
+}  // namespace flugzeug

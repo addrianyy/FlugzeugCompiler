@@ -80,7 +80,9 @@ BEGIN_ENUM_STRINGIFY(stringify_token_keyword, Token::Keyword)
 END_ENUM_STRINGIFY()
 // clang-format on
 
-std::string_view Token::stringify_kind(Token::Kind kind) { return stringify_token_kind(kind); }
+std::string_view Token::stringify_kind(Token::Kind kind) {
+  return stringify_token_kind(kind);
+}
 std::string_view Token::stringify_keyword(Token::Keyword keyword) {
   return stringify_token_keyword(keyword);
 }

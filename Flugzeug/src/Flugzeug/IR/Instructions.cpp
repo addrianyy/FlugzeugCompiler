@@ -5,69 +5,69 @@ using namespace flugzeug;
 
 bool BinaryInstr::is_binary_op_commutative(BinaryOp op) {
   switch (op) {
-  case BinaryOp::Add:
-  case BinaryOp::Mul:
-  case BinaryOp::And:
-  case BinaryOp::Or:
-  case BinaryOp::Xor:
-    return true;
+    case BinaryOp::Add:
+    case BinaryOp::Mul:
+    case BinaryOp::And:
+    case BinaryOp::Or:
+    case BinaryOp::Xor:
+      return true;
 
-  default:
-    return false;
+    default:
+      return false;
   }
 }
 
 IntPredicate IntCompare::inverted_predicate(IntPredicate pred) {
   switch (pred) {
-  case IntPredicate::Equal:
-    return IntPredicate::NotEqual;
-  case IntPredicate::NotEqual:
-    return IntPredicate::Equal;
-  case IntPredicate::GtS:
-    return IntPredicate::LteS;
-  case IntPredicate::GteS:
-    return IntPredicate::LtS;
-  case IntPredicate::GtU:
-    return IntPredicate::LteU;
-  case IntPredicate::GteU:
-    return IntPredicate::LtU;
-  case IntPredicate::LtS:
-    return IntPredicate::GteS;
-  case IntPredicate::LteS:
-    return IntPredicate::GtS;
-  case IntPredicate::LtU:
-    return IntPredicate::GteU;
-  case IntPredicate::LteU:
-    return IntPredicate::GtU;
-  default:
-    unreachable();
+    case IntPredicate::Equal:
+      return IntPredicate::NotEqual;
+    case IntPredicate::NotEqual:
+      return IntPredicate::Equal;
+    case IntPredicate::GtS:
+      return IntPredicate::LteS;
+    case IntPredicate::GteS:
+      return IntPredicate::LtS;
+    case IntPredicate::GtU:
+      return IntPredicate::LteU;
+    case IntPredicate::GteU:
+      return IntPredicate::LtU;
+    case IntPredicate::LtS:
+      return IntPredicate::GteS;
+    case IntPredicate::LteS:
+      return IntPredicate::GtS;
+    case IntPredicate::LtU:
+      return IntPredicate::GteU;
+    case IntPredicate::LteU:
+      return IntPredicate::GtU;
+    default:
+      unreachable();
   }
 }
 
 IntPredicate IntCompare::swapped_order_predicate(IntPredicate pred) {
   switch (pred) {
-  case IntPredicate::Equal:
-    return IntPredicate::Equal;
-  case IntPredicate::NotEqual:
-    return IntPredicate::NotEqual;
-  case IntPredicate::GtS:
-    return IntPredicate::LtS;
-  case IntPredicate::GteS:
-    return IntPredicate::LteS;
-  case IntPredicate::GtU:
-    return IntPredicate::LtU;
-  case IntPredicate::GteU:
-    return IntPredicate::LteU;
-  case IntPredicate::LtS:
-    return IntPredicate::GtS;
-  case IntPredicate::LteS:
-    return IntPredicate::GteS;
-  case IntPredicate::LtU:
-    return IntPredicate::GtU;
-  case IntPredicate::LteU:
-    return IntPredicate::GteU;
-  default:
-    unreachable();
+    case IntPredicate::Equal:
+      return IntPredicate::Equal;
+    case IntPredicate::NotEqual:
+      return IntPredicate::NotEqual;
+    case IntPredicate::GtS:
+      return IntPredicate::LtS;
+    case IntPredicate::GteS:
+      return IntPredicate::LteS;
+    case IntPredicate::GtU:
+      return IntPredicate::LtU;
+    case IntPredicate::GteU:
+      return IntPredicate::LteU;
+    case IntPredicate::LtS:
+      return IntPredicate::GtS;
+    case IntPredicate::LteS:
+      return IntPredicate::GteS;
+    case IntPredicate::LtU:
+      return IntPredicate::GtU;
+    case IntPredicate::LteU:
+      return IntPredicate::GteU;
+    default:
+      unreachable();
   }
 }
 
@@ -82,9 +82,13 @@ Call::Call(Context* context, Function* function, const std::vector<Value*>& argu
   }
 }
 
-Function* Call::get_callee() { return cast<Function>(get_operand(0)); }
+Function* Call::get_callee() {
+  return cast<Function>(get_operand(0));
+}
 
-const Function* Call::get_callee() const { return cast<Function>(get_operand(0)); }
+const Function* Call::get_callee() const {
+  return cast<Function>(get_operand(0));
+}
 
 bool Phi::index_for_block(const Block* block, size_t& index) const {
   index = 0;

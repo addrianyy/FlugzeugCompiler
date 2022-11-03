@@ -5,8 +5,8 @@
 namespace flugzeug::opt {
 
 class MemoryOptimization : public Pass<"MemoryOptimization"> {
-public:
+ public:
   static bool run(Function* function, OptimizationLocality locality);
 };
 
-} // namespace flugzeug::opt
+}  // namespace flugzeug::opt

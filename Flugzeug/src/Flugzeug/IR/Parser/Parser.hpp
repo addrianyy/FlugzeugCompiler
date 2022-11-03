@@ -54,10 +54,10 @@ class Parser {
   void parse_function_body();
   void parse_function();
 
-public:
+ public:
   explicit Parser(Lexer& lexer) : lexer(lexer) {}
 
   std::vector<std::unique_ptr<PRFunction>> parse();
 };
 
-} // namespace flugzeug
+}  // namespace flugzeug

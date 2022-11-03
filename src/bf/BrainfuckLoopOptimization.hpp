@@ -8,8 +8,8 @@ class Function;
 namespace bf {
 
 class BrainfuckLoopOptimization : public flugzeug::Pass<"BrainfuckLoopOptimization"> {
-public:
+ public:
   static bool run(flugzeug::Function* function);
 };
 
-} // namespace bf
+}  // namespace bf

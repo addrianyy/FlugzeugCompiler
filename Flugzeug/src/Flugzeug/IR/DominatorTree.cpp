@@ -52,8 +52,8 @@ static size_t intersect(const std::vector<size_t>& dominators, size_t finger1, s
   }
 }
 
-static std::unordered_map<const Block*, const Block*>
-calculate_immediate_dominators(const Block* entry_block) {
+static std::unordered_map<const Block*, const Block*> calculate_immediate_dominators(
+  const Block* entry_block) {
   const auto postorder = traverse_dfs_postorder(entry_block);
   const auto entry_index = postorder.size() - 1;
 
