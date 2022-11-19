@@ -92,8 +92,7 @@ static void rewrite_pointer(Value* pointer,
     store->insert_after(load);
   };
 
-  load_pointer_to_stackalloc_after(stackalloc);
-  store_stackalloc_to_pointer_before(dedicated_exit->get_first_instruction());
+  bool has_stores = false;
 
   // Rewrite all loads/stores to use stackalloc.
   for (Instruction* user : loads_stores) {
@@ -103,14 +102,22 @@ static void rewrite_pointer(Value* pointer,
 
     if (const auto store = cast<Store>(user)) {
       store->set_ptr(stackalloc);
+      has_stores = true;
     }
+  }
+
+  load_pointer_to_stackalloc_after(stackalloc);
+  if (has_stores) {
+    store_stackalloc_to_pointer_before(dedicated_exit->get_first_instruction());
   }
 
   // Insert additional loads and stores around aliasing calls.
   for (Call* call : calls) {
     if (alias_analysis.can_instruction_access_pointer(
           call, pointer, analysis::PointerAliasing::AccessType::All) != analysis::Aliasing::Never) {
-      store_stackalloc_to_pointer_before(call);
+      if (has_stores) {
+        store_stackalloc_to_pointer_before(call);
+      }
       load_pointer_to_stackalloc_after(call);
     }
   }
