@@ -39,18 +39,38 @@ uint64_t get_tick_count() {
 
 }  // namespace flugzeug::environment
 
+#elif defined(PLATFORM_MAC)
+
+#include <unistd.h>
+
+namespace flugzeug::environment {
+
+uint32_t get_current_process_id() {
+  return uint32_t(getpid());
+}
+uint32_t get_current_thread_id() {
+  uint64_t tid;
+  pthread_threadid_np(nullptr, &tid);
+  return uint32_t(tid);
+}
+uint64_t get_tick_count() {
+  return clock_gettime_nsec_np(CLOCK_UPTIME_RAW);
+}
+
+}  // namespace flugzeug::environment
+
 #else
 
 namespace flugzeug::environment {
 
 uint32_t get_current_process_id() {
-  return fatal_error("Not supported yet");
+  fatal_error("Not supported yet");
 }
 uint32_t get_current_thread_id() {
-  return fatal_error("Not supported yet");
+  fatal_error("Not supported yet");
 }
 uint64_t get_tick_count() {
-  return fatal_error("Not supported yet");
+  fatal_error("Not supported yet");
 }
 
 }  // namespace flugzeug::environment

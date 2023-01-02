@@ -58,7 +58,7 @@ uint32_t flugzeug::run_process(const std::string& application,
   return exit_code;
 }
 
-#elif defined(PLATFORM_LINUX)
+#elif defined(PLATFORM_LINUX) || defined(PLATFORM_MAC)
 #include <cstdio>
 
 uint32_t flugzeug::run_process(const std::string& application,
