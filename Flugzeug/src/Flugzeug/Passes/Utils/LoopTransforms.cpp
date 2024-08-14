@@ -47,7 +47,7 @@ flugzeug::Block* utils::get_or_create_loop_preheader(Function* function,
                                                      bool allow_conditional) {
   std::unordered_set<Block*> entering_blocks;
 
-  for (const auto predecessor : loop->get_header()->predecessors()) {
+  for (const auto predecessor : loop->header()->predecessors()) {
     if (!loop->contains_block(predecessor)) {
       entering_blocks.insert(predecessor);
     }
@@ -57,11 +57,11 @@ flugzeug::Block* utils::get_or_create_loop_preheader(Function* function,
     return *entering_blocks.begin();
   }
 
-  return add_intermediate_block_between_edges(entering_blocks, loop->get_header());
+  return add_intermediate_block_between_edges(entering_blocks, loop->header());
 }
 
 Block* utils::get_or_create_loop_dedicated_exit(Function* function, const analysis::Loop* loop) {
-  const auto exit_target = loop->get_single_exit_target();
+  const auto exit_target = loop->single_exit_target();
   if (!exit_target) {
     return nullptr;
   }
@@ -86,10 +86,10 @@ Block* utils::get_or_create_loop_dedicated_exit(Function* function, const analys
 Block* utils::get_or_create_loop_single_back_edge_block(Function* function,
                                                         const analysis::Loop* loop) {
   // If there is only one block that branches to the header then just return it.
-  const auto back_edge_block = loop->get_single_back_edge();
+  const auto back_edge_block = loop->single_back_edge();
   if (back_edge_block) {
     return back_edge_block;
   }
 
-  return add_intermediate_block_between_edges(loop->get_back_edges_from(), loop->get_header());
+  return add_intermediate_block_between_edges(loop->back_edges_from(), loop->header());
 }

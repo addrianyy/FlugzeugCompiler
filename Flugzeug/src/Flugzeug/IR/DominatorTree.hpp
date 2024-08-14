@@ -18,7 +18,7 @@ class DominatorTree {
   explicit DominatorTree(const Function* function);
 
   bool is_block_dead(const Block* block) const;
-  const Block* get_immediate_dominator(const Block* block) const;
+  const Block* immediate_dominator(const Block* block) const;
 };
 
 }  // namespace flugzeug

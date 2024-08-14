@@ -121,7 +121,7 @@ bool opt::ConstPropagation::run(Function* function) {
     Propagator propagator(instruction.type());
 
     if (const auto result = visitor::visit_instruction(&instruction, propagator)) {
-      if (const auto replacement = result.get_replacement()) {
+      if (const auto replacement = result.replacement()) {
         instruction.replace_instruction_or_uses_and_destroy(replacement);
       }
       did_something = true;

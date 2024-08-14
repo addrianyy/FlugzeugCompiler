@@ -6,10 +6,10 @@
 using namespace flugzeug;
 
 size_t LiveInterval::first_range_start() const {
-  return ranges.front().start;
+  return ranges_.front().start;
 }
 size_t LiveInterval::last_range_end() const {
-  return ranges.back().end;
+  return ranges_.back().end;
 }
 
 bool LiveInterval::ends_before(const LiveInterval& other) const {
@@ -17,29 +17,29 @@ bool LiveInterval::ends_before(const LiveInterval& other) const {
 }
 
 bool LiveInterval::overlaps_with(size_t other) const {
-  return any_of(ranges,
+  return any_of(ranges_,
                 [other](const Range& range) { return other >= range.start && other < range.end; });
 }
 
 void LiveInterval::add(Range range) {
-  if (ranges.empty()) {
-    ranges.push_back(range);
+  if (ranges_.empty()) {
+    ranges_.push_back(range);
   } else {
-    const auto last = ranges.back();
+    const auto last = ranges_.back();
     verify(last.end <= range.start, "Unordered insertion to live interval");
 
     // Try to merge the last range.
     if (last.end == range.start) {
-      ranges.back().end = range.end;
+      ranges_.back().end = range.end;
     } else {
-      ranges.push_back(range);
+      ranges_.push_back(range);
     }
   }
 }
 
 bool LiveInterval::are_overlapping(const LiveInterval& a, const LiveInterval& b) {
-  std::span<const Range> a_ranges = a.get_ranges();
-  std::span<const Range> b_ranges = b.get_ranges();
+  std::span<const Range> a_ranges = a.ranges();
+  std::span<const Range> b_ranges = b.ranges();
 
   size_t previous_end = 0;
 
@@ -88,8 +88,8 @@ bool LiveInterval::are_overlapping(const LiveInterval& a, const LiveInterval& b)
 }
 
 LiveInterval LiveInterval::merge(const LiveInterval& a, const LiveInterval& b) {
-  std::span<const Range> a_ranges = a.get_ranges();
-  std::span<const Range> b_ranges = b.get_ranges();
+  std::span<const Range> a_ranges = a.ranges();
+  std::span<const Range> b_ranges = b.ranges();
 
   std::vector<Range> result;
 
@@ -143,5 +143,5 @@ LiveInterval LiveInterval::merge(const LiveInterval& a, const LiveInterval& b) {
 }
 
 void LiveInterval::clear() {
-  ranges.clear();
+  ranges_.clear();
 }

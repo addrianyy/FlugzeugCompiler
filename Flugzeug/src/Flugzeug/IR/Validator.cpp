@@ -107,22 +107,24 @@ class Validator : public ConstInstructionVisitor {
 
   void visit_load(Argument<Load> load) {
     const auto type = load->type();
-    const auto ptr_type = load->address()->type();
+    const auto address_type = load->address()->type();
 
-    validation_check(ptr_type->is_pointer(), "Load operand isn't a pointer ({})", Format(ptr_type));
-    validation_check(type->ref() == ptr_type, "Load operand and return type mismatch");
+    validation_check(address_type->is_pointer(), "Load operand isn't a pointer ({})",
+                     Format(address_type));
+    validation_check(type->ref() == address_type, "Load operand and return type mismatch");
     validation_check(type->is_arithmetic_or_pointer(),
                      "Loaded value isn't of arithmetic or pointer type ({})", Format(type));
   }
 
   void visit_store(Argument<Store> store) {
     const auto type = store->type();
-    const auto ptr_type = store->address()->type();
-    const auto val_type = store->value()->type();
+    const auto address_type = store->address()->type();
+    const auto value_type = store->value()->type();
 
-    validation_check(val_type->ref() == ptr_type, "Store destination and value type mismatch");
-    validation_check(val_type->is_arithmetic_or_pointer(),
-                     "Stored value isn't of arithmetic or pointer type ({})", Format(val_type));
+    validation_check(value_type->ref() == address_type,
+                     "Store destination and value type mismatch");
+    validation_check(value_type->is_arithmetic_or_pointer(),
+                     "Stored value isn't of arithmetic or pointer type ({})", Format(value_type));
     validation_check(type->is_void(), "Store doesn't return void ({})", Format(type));
   }
 

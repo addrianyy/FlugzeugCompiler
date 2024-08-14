@@ -27,7 +27,7 @@ static bool is_instruction_loop_invariant(Instruction* instruction,
   }
 
   if (const auto phi = cast<Phi>(instruction)) {
-    if (phi->block() != loop->get_header()) {
+    if (phi->block() != loop->header()) {
       return false;
     }
 
@@ -64,7 +64,7 @@ static std::vector<Instruction*> get_loop_invariants(Function* function,
 
   std::unordered_set<Block*> visited;
   std::vector<Block*> stack;
-  stack.push_back(loop->get_header());
+  stack.push_back(loop->header());
 
   while (!stack.empty()) {
     Block* block = stack.back();
@@ -122,7 +122,7 @@ static bool optimize_invariants_in_loop_or_sub_loops(Function* function,
   }
 
   // If it didn't work then try optimizing one of the sub-loops.
-  for (const auto& sub_loop : loop->get_sub_loops()) {
+  for (const auto& sub_loop : loop->sub_loops()) {
     if (optimize_invariants_in_loop_or_sub_loops(function, sub_loop.get())) {
       return true;
     }

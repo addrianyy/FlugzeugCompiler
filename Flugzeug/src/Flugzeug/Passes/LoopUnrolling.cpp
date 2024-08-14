@@ -85,7 +85,7 @@ static bool get_loop_count_related_instructions(Instruction* instruction,
   if (const auto phi = cast<Phi>(instruction)) {
     // Because we are copying from previous iteration to current one, Phis must be placed in the
     // loop header (as this is where the back edge jumps to).
-    if (phi->block() != loop->get_header()) {
+    if (phi->block() != loop->header()) {
       return false;
     }
 
@@ -176,7 +176,7 @@ static std::vector<Instruction*> order_loop_count_related_instructions(
 
   std::unordered_set<Block*> visited;
   std::vector<Block*> stack;
-  stack.push_back(loop->get_header());
+  stack.push_back(loop->header());
 
   // Do DFS traversal on loop blocks to properly order loop count related instructions.
   while (!stack.empty()) {
@@ -370,7 +370,7 @@ static void perform_unrolling(Function* function,
 
   // (Step 2) Find all values that escape the loop by going through every instruction inside and
   // checking users.
-  for (Block* block : loop->get_blocks()) {
+  for (Block* block : loop->blocks()) {
     for (Instruction& instruction : *block) {
       if (instruction.is_void()) {
         continue;
@@ -423,7 +423,7 @@ static void perform_unrolling(Function* function,
     mappings_count = 0;
 
     // Copy blocks and instructions for this unroll instance and setup mappings.
-    for (Block* original_block : loop->get_blocks()) {
+    for (Block* original_block : loop->blocks()) {
       const auto new_block = function->create_block();
 
       unroll_data.add_mapping(original_block, new_block);
@@ -496,8 +496,8 @@ static void perform_unrolling(Function* function,
 
   // (Step 7) Replace back edges from curent interation head to the next unrolled iteration head.
   if (unroll_count > 1) {
-    const auto old_target = loop->get_header();
-    const auto new_target = unrolls.front().map(loop->get_header());
+    const auto old_target = loop->header();
+    const auto new_target = unrolls.front().map(loop->header());
 
     replace_branch(back_edge_from->last_instruction(), old_target, new_target);
   }
@@ -508,8 +508,8 @@ static void perform_unrolling(Function* function,
 
       // Change edge from (this instance exiting block -> this instance header) to
       // (this instance exiting block -> next instance header).
-      const auto old_target = unrolls[unroll].map(loop->get_header());
-      const auto new_target = unrolls[unroll + 1].map(loop->get_header());
+      const auto old_target = unrolls[unroll].map(loop->header());
+      const auto new_target = unrolls[unroll + 1].map(loop->header());
 
       replace_branch(back_edge_instruction, old_target, new_target);
     }
@@ -518,7 +518,7 @@ static void perform_unrolling(Function* function,
   // (Step 8) Back edge in the last unrolled iteration is unreachable. We will remove it.
   {
     Instruction* back_edge_instruction = back_edge_from->last_instruction();
-    Block* loop_header = loop->get_header();
+    Block* loop_header = loop->header();
 
     // Get actual back edge instruction and loop header for the last unrolled iteration.
     if (!unrolls.empty()) {
@@ -555,10 +555,10 @@ static void perform_unrolling(Function* function,
 
   // (Step 9) Loop header has still some incoming values corresponding to the loop back edge. Remove
   // them.
-  loop->get_header()->remove_incoming_block_from_phis(back_edge_from, false);
+  loop->header()->remove_incoming_block_from_phis(back_edge_from, false);
 
   // Simplify Phis after calling `remove_incoming_block_from_phis`.
-  for (Phi& phi : advance_early(loop->get_header()->instructions<Phi>())) {
+  for (Phi& phi : advance_early(loop->header()->instructions<Phi>())) {
     utils::simplify_phi(&phi, false);
   }
 }
@@ -576,8 +576,8 @@ static bool unroll_loop(Function* function,
   //   5. Interpret instructions to determine static loop count.
   //   6. Actually unroll the loop (more detailed description of this in `perform_unrolling`).
 
-  const auto [exit_from, exit_to] = loop->get_single_exiting_edge();
-  const auto back_edge_from = loop->get_single_back_edge();
+  const auto [exit_from, exit_to] = loop->single_exiting_edge();
+  const auto back_edge_from = loop->single_back_edge();
 
   // (Step 1) We can only unroll loops with one exiting edge and one back edge.
   if (!exit_from || !exit_to || !back_edge_from) {
@@ -649,7 +649,7 @@ static bool unroll_loop_or_sub_loops(Function* function,
   }
 
   // If it didn't work then try unrolling one of the sub-loops.
-  for (const auto& sub_loop : loop->get_sub_loops()) {
+  for (const auto& sub_loop : loop->sub_loops()) {
     if (unroll_loop_or_sub_loops(function, sub_loop.get(), dominator_tree)) {
       return true;
     }

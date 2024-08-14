@@ -173,7 +173,7 @@ bool DominatorTree::first_dominates_second(const Block* dominator, const Block* 
       return true;
     }
 
-    block = get_immediate_dominator(block);
+    block = immediate_dominator(block);
   }
 
   return false;
@@ -181,7 +181,7 @@ bool DominatorTree::first_dominates_second(const Block* dominator, const Block* 
 
 DominatorTree::DominatorTree(const Function* function)
     : immediate_dominators(calculate_immediate_dominators(function->entry_block())) {
-  verify(!get_immediate_dominator(function->entry_block()),
+  verify(!immediate_dominator(function->entry_block()),
          "Entry block shouldn't have immediate dominator");
 }
 
@@ -189,7 +189,7 @@ bool DominatorTree::is_block_dead(const Block* block) const {
   return !block->is_entry_block() && !immediate_dominators.contains(block);
 }
 
-const Block* DominatorTree::get_immediate_dominator(const Block* block) const {
+const Block* DominatorTree::immediate_dominator(const Block* block) const {
   const auto it = immediate_dominators.find(block);
   if (it == immediate_dominators.end()) {
     return nullptr;

@@ -60,8 +60,8 @@ Block* InstructionInserter::insertion_block() {
   return nullptr;
 }
 
-UnaryInstr* InstructionInserter::unary_instr(UnaryOp op, Value* val) {
-  return insert(new UnaryInstr(context, op, val));
+UnaryInstr* InstructionInserter::unary_instr(UnaryOp op, Value* value) {
+  return insert(new UnaryInstr(context, op, value));
 }
 
 BinaryInstr* InstructionInserter::binary_instr(Value* lhs, BinaryOp op, Value* rhs) {
@@ -72,12 +72,12 @@ IntCompare* InstructionInserter::int_compare(Value* lhs, IntPredicate predicate,
   return insert(new IntCompare(context, lhs, predicate, rhs));
 }
 
-Load* InstructionInserter::load(Value* ptr) {
-  return insert(new Load(context, ptr));
+Load* InstructionInserter::load(Value* address) {
+  return insert(new Load(context, address));
 }
 
-Store* InstructionInserter::store(Value* ptr, Value* val) {
-  return insert(new Store(context, ptr, val));
+Store* InstructionInserter::store(Value* address, Value* stored_value) {
+  return insert(new Store(context, address, stored_value));
 }
 
 Call* InstructionInserter::call(Function* function, const std::vector<Value*>& arguments) {
@@ -88,28 +88,30 @@ Branch* InstructionInserter::branch(Block* target) {
   return insert(new Branch(context, target));
 }
 
-CondBranch* InstructionInserter::cond_branch(Value* cond, Block* true_target, Block* false_target) {
-  return insert(new CondBranch(context, cond, true_target, false_target));
+CondBranch* InstructionInserter::cond_branch(Value* condition,
+                                             Block* true_target,
+                                             Block* false_target) {
+  return insert(new CondBranch(context, condition, true_target, false_target));
 }
 
 StackAlloc* InstructionInserter::stack_alloc(Type* type, size_t size) {
   return insert(new StackAlloc(context, type, size));
 }
 
-Ret* InstructionInserter::ret(Value* val) {
-  return insert(new Ret(context, val));
+Ret* InstructionInserter::ret(Value* value) {
+  return insert(new Ret(context, value));
 }
 
 Offset* InstructionInserter::offset(Value* base, Value* index) {
   return insert(new Offset(context, base, index));
 }
 
-Cast* InstructionInserter::cast(CastKind kind, Value* val, Type* target_type) {
-  return insert(new Cast(context, kind, val, target_type));
+Cast* InstructionInserter::cast(CastKind kind, Value* casted_value, Type* target_type) {
+  return insert(new Cast(context, kind, casted_value, target_type));
 }
 
-Select* InstructionInserter::select(Value* cond, Value* true_val, Value* false_val) {
-  return insert(new Select(context, cond, true_val, false_val));
+Select* InstructionInserter::select(Value* condition, Value* true_value, Value* false_value) {
+  return insert(new Select(context, condition, true_value, false_value));
 }
 
 Phi* InstructionInserter::phi(Type* type) {

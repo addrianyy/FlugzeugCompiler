@@ -14,7 +14,7 @@ class AllocatedRegisters {
   explicit AllocatedRegisters(std::unordered_map<const Instruction*, uint32_t> registers)
       : registers(std::move(registers)) {}
 
-  uint32_t get_register(const Instruction* instruction) const;
+  uint32_t register_for_instruction(const Instruction* instruction) const;
 };
 
 AllocatedRegisters allocate_registers(Function* function);

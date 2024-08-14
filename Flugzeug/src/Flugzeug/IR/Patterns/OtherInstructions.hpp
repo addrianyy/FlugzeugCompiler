@@ -7,14 +7,14 @@ namespace flugzeug::pat {
 
 namespace detail {
 
-template <typename TInstruction, typename PtrPattern>
+template <typename TInstruction, typename AddressPattern>
 class LoadPattern {
   TInstruction** bind_instruction;
-  PtrPattern ptr;
+  AddressPattern address;
 
  public:
-  LoadPattern(TInstruction** bind_instruction, PtrPattern ptr)
-      : bind_instruction(bind_instruction), ptr(ptr) {}
+  LoadPattern(TInstruction** bind_instruction, AddressPattern address)
+      : bind_instruction(bind_instruction), address(address) {}
 
   template <typename T>
   bool match(T* m_value) {
@@ -23,7 +23,7 @@ class LoadPattern {
       return false;
     }
 
-    const bool matched = ptr.match(load->address());
+    const bool matched = address.match(load->address());
     if (!matched) {
       return false;
     }
@@ -36,15 +36,15 @@ class LoadPattern {
   }
 };
 
-template <typename TInstruction, typename PtrPattern, typename ValuePattern>
+template <typename TInstruction, typename AddressPattern, typename ValuePattern>
 class StorePattern {
   TInstruction** bind_instruction;
-  PtrPattern ptr;
+  AddressPattern address;
   ValuePattern value;
 
  public:
-  StorePattern(TInstruction** bind_instruction, PtrPattern ptr, ValuePattern value)
-      : bind_instruction(bind_instruction), ptr(ptr), value(value) {}
+  StorePattern(TInstruction** bind_instruction, AddressPattern address, ValuePattern value)
+      : bind_instruction(bind_instruction), address(address), value(value) {}
 
   template <typename T>
   bool match(T* m_value) {
@@ -53,7 +53,7 @@ class StorePattern {
       return false;
     }
 
-    const bool matched = ptr.match(store->address()) && value.match(store->value());
+    const bool matched = address.match(store->address()) && value.match(store->value());
     if (!matched) {
       return false;
     }
@@ -249,28 +249,29 @@ class OffsetPattern {
 
 }  // namespace detail
 
-template <typename TInstruction, typename PtrPattern>
-auto load(TInstruction*& instruction, PtrPattern ptr) {
+template <typename TInstruction, typename AddressPattern>
+auto load(TInstruction*& instruction, AddressPattern address) {
   static_assert(std::is_same_v<Load, std::remove_cv_t<TInstruction>>,
                 "Expected Load instruction in this pattern");
-  return detail::LoadPattern<TInstruction, PtrPattern>(&instruction, ptr);
+  return detail::LoadPattern<TInstruction, AddressPattern>(&instruction, address);
 }
 
-template <typename PtrPattern>
-auto load(PtrPattern ptr) {
-  return detail::LoadPattern<const Load, PtrPattern>(nullptr, ptr);
+template <typename AddressPattern>
+auto load(AddressPattern address) {
+  return detail::LoadPattern<const Load, AddressPattern>(nullptr, address);
 }
 
-template <typename TInstruction, typename PtrPattern, typename ValuePattern>
-auto store(TInstruction*& instruction, PtrPattern ptr, ValuePattern value) {
+template <typename TInstruction, typename AddressPattern, typename ValuePattern>
+auto store(TInstruction*& instruction, AddressPattern address, ValuePattern value) {
   static_assert(std::is_same_v<Store, std::remove_cv_t<TInstruction>>,
                 "Expected Store instruction in this pattern");
-  return detail::StorePattern<TInstruction, PtrPattern, ValuePattern>(&instruction, ptr, value);
+  return detail::StorePattern<TInstruction, AddressPattern, ValuePattern>(&instruction, address,
+                                                                          value);
 }
 
-template <typename PtrPattern, typename ValuePattern>
-auto store(PtrPattern ptr, ValuePattern value) {
-  return detail::StorePattern<const Store, PtrPattern, ValuePattern>(nullptr, ptr, value);
+template <typename AddressPattern, typename ValuePattern>
+auto store(AddressPattern address, ValuePattern value) {
+  return detail::StorePattern<const Store, AddressPattern, ValuePattern>(nullptr, address, value);
 }
 
 template <typename TInstruction, typename CalleePattern>

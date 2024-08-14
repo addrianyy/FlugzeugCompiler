@@ -36,7 +36,7 @@ struct PRInstruction {
   std::string_view specific_name{};
 
   void add_operand(PRInstructionOperand operand) { operands.push_back(operand); }
-  const PRInstructionOperand& get_operand(size_t index) const { return operands[index]; }
+  const PRInstructionOperand& operand(size_t index) const { return operands[index]; }
 };
 
 struct PRFunctionBlock {

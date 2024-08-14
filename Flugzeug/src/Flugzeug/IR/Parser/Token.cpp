@@ -164,14 +164,14 @@ std::optional<CastKind> Token::keyword_to_cast(Token::Keyword keyword) {
 }
 
 std::string Token::format() const {
-  std::string result = std::string(stringify_kind(kind));
-  if (kind == Kind::Keyword) {
+  std::string result = std::string(stringify_kind(kind_));
+  if (kind_ == Kind::Keyword) {
     result = fmt::format("{}({})", result, stringify_keyword(keyword));
   }
-  if (kind == Kind::NumberLiteral) {
+  if (kind_ == Kind::NumberLiteral) {
     result = fmt::format("{}({})", result, literal);
   }
-  if (kind == Kind::Identifier) {
+  if (kind_ == Kind::Identifier) {
     result = fmt::format("{}({})", result, identifier);
   }
 

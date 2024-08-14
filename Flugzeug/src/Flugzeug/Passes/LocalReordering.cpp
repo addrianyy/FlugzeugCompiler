@@ -47,7 +47,7 @@ class Reorderer : InstructionVisitor {
     return nullptr;
   }
 
-  Instruction* visit_load_store(Value* ptr) { return cast<Offset>(ptr); }
+  Instruction* visit_load_store(Value* address) { return cast<Offset>(address); }
   Instruction* visit_select_cond_branch(Value* cond) { return cast<IntCompare>(cond); }
 
   Instruction* visit_load(Argument<Load> load) { return visit_load_store(load->address()); }

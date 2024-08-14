@@ -24,14 +24,14 @@ class Loop {
     Function* function,
     const DominatorTree& dominator_tree);
 
-  Block* header = nullptr;
-  std::unordered_set<Block*> blocks;
-  std::unordered_set<Block*> blocks_without_sub_loops;
+  Block* header_ = nullptr;
+  std::unordered_set<Block*> blocks_;
+  std::unordered_set<Block*> blocks_without_sub_loops_;
 
-  std::unordered_set<Block*> back_edges_from;
-  std::vector<std::pair<Block*, Block*>> exiting_edges;
+  std::unordered_set<Block*> back_edges_from_;
+  std::vector<std::pair<Block*, Block*>> exiting_edges_;
 
-  std::vector<std::unique_ptr<Loop>> sub_loops;
+  std::vector<std::unique_ptr<Loop>> sub_loops_;
 
   static bool find_loops_in_scc(Function* function,
                                 const std::vector<Block*>& scc_vector,
@@ -42,22 +42,22 @@ class Loop {
   void debug_print_internal(const std::string& indentation) const;
 
  public:
-  Block* get_header() const;
+  Block* header() const;
 
-  const std::unordered_set<Block*>& get_blocks() const;
-  const std::unordered_set<Block*>& get_blocks_without_sub_loops() const;
+  const std::unordered_set<Block*>& blocks() const;
+  const std::unordered_set<Block*>& blocks_without_sub_loops() const;
 
-  const std::unordered_set<Block*>& get_back_edges_from() const;
-  const std::vector<std::pair<Block*, Block*>>& get_exiting_edges() const;
+  const std::unordered_set<Block*>& back_edges_from() const;
+  const std::vector<std::pair<Block*, Block*>>& exiting_edges() const;
 
-  Block* get_single_back_edge() const;
-  std::pair<Block*, Block*> get_single_exiting_edge() const;
-  Block* get_single_exit_target() const;
+  Block* single_back_edge() const;
+  std::pair<Block*, Block*> single_exiting_edge() const;
+  Block* single_exit_target() const;
 
   bool contains_block(Block* block) const;
   bool contains_block_skipping_sub_loops(Block* block) const;
 
-  const std::vector<std::unique_ptr<Loop>>& get_sub_loops() const;
+  const std::vector<std::unique_ptr<Loop>>& sub_loops() const;
 
   void debug_print(const std::string& start_indentation = std::string()) const;
 };

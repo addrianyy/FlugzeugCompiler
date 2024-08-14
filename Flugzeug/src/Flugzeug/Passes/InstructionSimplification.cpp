@@ -836,25 +836,25 @@ class Simplifier : public InstructionVisitor {
   OptimizationResult visit_select(Argument<Select> select) {
     PROPAGATE_RESULT(simplify_selected_arithmetic(select));
 
-    const auto true_val = select->true_value();
-    const auto false_val = select->false_value();
+    const auto true_value = select->true_value();
+    const auto false_value = select->false_value();
 
     // Return whichever value we want when condition is undefined.
     if (select->condition()->is_undef()) {
-      return false_val;
+      return false_value;
     }
 
     // Select only non-undefined value.
-    if (true_val->is_undef()) {
-      return false_val;
+    if (true_value->is_undef()) {
+      return false_value;
     }
-    if (false_val->is_undef()) {
-      return true_val;
+    if (false_value->is_undef()) {
+      return true_value;
     }
 
     // We can remove this select if both values are the same.
-    if (true_val == false_val) {
-      return true_val;
+    if (true_value == false_value) {
+      return true_value;
     }
 
     // Remove sequences like this (some optimizations can create them).
@@ -871,9 +871,9 @@ class Simplifier : public InstructionVisitor {
 
         Value* replacement = nullptr;
 
-        if (true_val == lhs && false_val == rhs) {
+        if (true_value == lhs && false_value == rhs) {
           replacement = equal ? rhs : lhs;
-        } else if (true_val == rhs && false_val == lhs) {
+        } else if (true_value == rhs && false_value == lhs) {
           replacement = equal ? lhs : rhs;
         }
 
@@ -987,7 +987,7 @@ bool opt::InstructionSimplification::run(Function* function) {
       if (const auto result = visitor::visit_instruction(current_instruction, simplifier)) {
         current_instruction = nullptr;
 
-        if (const auto replacement = result.get_replacement()) {
+        if (const auto replacement = result.replacement()) {
           if (const auto new_instruction = cast<Instruction>(replacement)) {
             if (!new_instruction->block()) {
               // Try to simplify newly added instruction in the next iteration.

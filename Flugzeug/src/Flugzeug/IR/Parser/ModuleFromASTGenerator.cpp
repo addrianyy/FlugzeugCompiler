@@ -9,7 +9,7 @@ void insert_no_duplicates(Map& map, const K& key, const V& value) {
   verify(map.insert({key, value}).second, "{} is already defined", key);
 }
 
-const PRInstruction* ModuleFromASTGenerator::get_instruction_from_name(std::string_view name) {
+const PRInstruction* ModuleFromASTGenerator::find_instruction_by_name(std::string_view name) {
   const auto it = fn_ctx.name_to_instruction_map.find(name);
   if (it == fn_ctx.name_to_instruction_map.end()) {
     return nullptr;
@@ -42,7 +42,7 @@ Type* ModuleFromASTGenerator::convert_type(PRType type) {
 
 Block* ModuleFromASTGenerator::operand_to_block(const PRInstruction* instruction,
                                                 size_t operand_index) {
-  return operand_to_block(instruction->get_operand(operand_index));
+  return operand_to_block(instruction->operand(operand_index));
 }
 
 Block* ModuleFromASTGenerator::operand_to_block(const PRInstructionOperand& operand) {
@@ -56,7 +56,7 @@ Block* ModuleFromASTGenerator::operand_to_block(const PRInstructionOperand& oper
 
 Value* ModuleFromASTGenerator::operand_to_value(const PRInstruction* instruction,
                                                 size_t operand_index) {
-  return operand_to_value(instruction->get_operand(operand_index));
+  return operand_to_value(instruction->operand(operand_index));
 }
 
 Value* ModuleFromASTGenerator::operand_to_value(const PRInstructionOperand& operand) {
@@ -205,8 +205,7 @@ void ModuleFromASTGenerator::generate_function_body() {
   {
     size_t index = 0;
     for (const auto& parameter : fn_ctx.pr_function->parameters) {
-      insert_no_duplicates(fn_ctx.ir_value_map, parameter.name,
-                           fn_ctx.function->parameter(index));
+      insert_no_duplicates(fn_ctx.ir_value_map, parameter.name, fn_ctx.function->parameter(index));
 
       index++;
     }
@@ -247,7 +246,7 @@ void ModuleFromASTGenerator::generate_function_body() {
             continue;
           }
 
-          const auto instruction_operand = get_instruction_from_name(operand.name);
+          const auto instruction_operand = find_instruction_by_name(operand.name);
           if (!instruction_operand) {
             continue;
           }
@@ -297,7 +296,7 @@ void ModuleFromASTGenerator::generate_function_body() {
             return true;
           }
 
-          const auto instruction_operand = get_instruction_from_name(operand.name);
+          const auto instruction_operand = find_instruction_by_name(operand.name);
           if (!instruction_operand) {
             return true;
           }

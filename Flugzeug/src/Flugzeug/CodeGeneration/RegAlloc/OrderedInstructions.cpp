@@ -15,7 +15,7 @@ DebugRepresentation::DebugRepresentation(OrderedInstructions& ordered_instructio
       continue;
     }
 
-    represents[instruction.get_representative()].push_back(&instruction);
+    represents[instruction.representative()].push_back(&instruction);
   }
 }
 
@@ -44,38 +44,38 @@ BlockInstructionsRange::BlockInstructionsRange(OrderedInstructions& ordered_inst
     first_instruction = first_instruction->next();
   }
 
-  first = ordered_instructions.get(first_instruction)->get_index();
-  last = ordered_instructions.get(block->last_instruction())->get_index();
+  first = ordered_instructions.get(first_instruction)->index();
+  last = ordered_instructions.get(block->last_instruction())->index();
 }
 
 bool OrderedInstruction::has_value() const {
   return !instruction->is_void();
 }
 bool OrderedInstruction::is_joined() const {
-  return representative != nullptr && representative != this;
+  return representative_ != nullptr && representative_ != this;
 }
 
-OrderedInstruction* OrderedInstruction::get_representative() {
-  if (!representative || representative == this) {
+OrderedInstruction* OrderedInstruction::representative() {
+  if (!representative_ || representative_ == this) {
     return this;
   }
 
-  return representative->get_representative();
+  return representative_->representative();
 }
 
-const LiveInterval& OrderedInstruction::get_live_interval() {
-  return get_representative()->live_interval;
+const LiveInterval& OrderedInstruction::live_interval() {
+  return representative()->live_interval_;
 }
 
 void OrderedInstruction::add_live_range(Range range) {
   verify(!is_joined(), "Cannot add live range to joined value");
 
-  live_interval.add(range);
+  live_interval_.add(range);
 }
 
 bool OrderedInstruction::join_to(OrderedInstruction* other) {
-  const auto this_i = get_representative();
-  const auto other_i = other->get_representative();
+  const auto this_i = representative();
+  const auto other_i = other->representative();
 
   // Already joined - return true.
   if (this_i == other_i) {
@@ -83,14 +83,14 @@ bool OrderedInstruction::join_to(OrderedInstruction* other) {
   }
 
   // Make sure that instruction live intervals don't overlap. If they do we cannot join them.
-  if (LiveInterval::are_overlapping(this_i->get_live_interval(), other_i->get_live_interval())) {
+  if (LiveInterval::are_overlapping(this_i->live_interval(), other_i->live_interval())) {
     return false;
   }
 
-  other_i->live_interval =
-    LiveInterval::merge(this_i->get_live_interval(), other_i->get_live_interval());
-  this_i->live_interval.clear();
-  representative = other_i;
+  other_i->live_interval_ =
+    LiveInterval::merge(this_i->live_interval(), other_i->live_interval());
+  this_i->live_interval_.clear();
+  representative_ = other_i;
 
   return true;
 }
@@ -140,7 +140,7 @@ void OrderedInstructions::debug_print() {
     }
 
     {
-      const auto prefix = fmt::format("{:>4}: ", instruction.get_index());
+      const auto prefix = fmt::format("{:>4}: ", instruction.index());
       printer.raw_write(prefix);
     }
 
@@ -160,7 +160,7 @@ void OrderedInstructions::debug_print_intervals() {
 
     std::string interval;
 
-    for (const auto range : instruction.get_live_interval().get_ranges()) {
+    for (const auto range : instruction.live_interval().ranges()) {
       interval += fmt::format(" [{}, {})", range.start, range.end);
     }
 
@@ -186,9 +186,9 @@ void OrderedInstructions::debug_print_interference() {
       }
 
       const auto overlap =
-        LiveInterval::are_overlapping(a.get_live_interval(), b.get_live_interval());
+        LiveInterval::are_overlapping(a.live_interval(), b.live_interval());
 
-      verify(LiveInterval::are_overlapping(b.get_live_interval(), a.get_live_interval()) == overlap,
+      verify(LiveInterval::are_overlapping(b.live_interval(), a.live_interval()) == overlap,
              "Non symmetric result of `are_overlapping`");
 
       if (overlap) {

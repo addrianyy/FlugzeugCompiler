@@ -275,7 +275,7 @@ static void build_live_intervals(OrderedInstructions& ordered_instructions,
     const BlockInstructionsRange instructions_range(ordered_instructions, block);
 
     const auto add_last_use_in_block = [&](OrderedInstruction* instruction, size_t last_use) {
-      const auto index = instruction->get_index();
+      const auto index = instruction->index();
       const auto created_in_block =
         index >= instructions_range.first && index <= instructions_range.last;
 
@@ -333,7 +333,7 @@ static void build_live_intervals(OrderedInstructions& ordered_instructions,
 
         // If this operand isn't in the live set yet then it's the last use of this operand so far.
         if (live.insert(operand_o).second) {
-          add_last_use_in_block(operand_o, instruction_o->get_index());
+          add_last_use_in_block(operand_o, instruction_o->index());
         }
       }
     }
@@ -412,20 +412,19 @@ static std::unordered_map<OrderedInstruction*, uint32_t> linear_scan_allocation(
     }
 
     std::sort(begin(unhandled), end(unhandled), [&](OrderedInstruction* a, OrderedInstruction* b) {
-      return a->get_live_interval().first_range_start() >
-             b->get_live_interval().first_range_start();
+      return a->live_interval().first_range_start() > b->live_interval().first_range_start();
     });
   }
 
   while (!unhandled.empty()) {
     // Get unhandled instruction with the lowest starting point.
     const auto current = unhandled.back();
-    const auto& current_li = current->get_live_interval();
+    const auto& current_li = current->live_interval();
     unhandled.pop_back();
 
     // Check for active intervals that expired.
     for_each_erase(active, [&](OrderedInstruction* instruction) {
-      const auto& instruction_li = instruction->get_live_interval();
+      const auto& instruction_li = instruction->live_interval();
       const auto instruction_reg = get_register(instruction);
 
       if (instruction_li.ends_before(current_li)) {
@@ -448,7 +447,7 @@ static std::unordered_map<OrderedInstruction*, uint32_t> linear_scan_allocation(
 
     // Check for inactive intervals that expired or become reactivated.
     for_each_erase(inactive, [&](OrderedInstruction* instruction) {
-      const auto& instruction_li = instruction->get_live_interval();
+      const auto& instruction_li = instruction->live_interval();
       const auto instruction_reg = get_register(instruction);
 
       if (instruction_li.ends_before(current_li)) {
@@ -474,7 +473,7 @@ static std::unordered_map<OrderedInstruction*, uint32_t> linear_scan_allocation(
     // Make sure we don't use any register that is in `inactive` list and overlaps the current
     // interval.
     for (const auto instruction : inactive) {
-      if (LiveInterval::are_overlapping(instruction->get_live_interval(), current_li)) {
+      if (LiveInterval::are_overlapping(instruction->live_interval(), current_li)) {
         tmp_free.erase(get_register(instruction));
       }
     }
@@ -525,8 +524,7 @@ static void debug_verify_allocation(
         continue;
       }
 
-      const auto overlap =
-        LiveInterval::are_overlapping(a.get_live_interval(), b.get_live_interval());
+      const auto overlap = LiveInterval::are_overlapping(a.live_interval(), b.live_interval());
       if (overlap) {
         verify(allocation.find(&a)->second != allocation.find(&b)->second,
                "Instructions have overlapping intervals but the have assigned the same register");
@@ -570,7 +568,7 @@ AllocatedRegisters flugzeug::allocate_registers(Function* function) {
       continue;
     }
 
-    const auto it = allocation.find(instruction.get_representative());
+    const auto it = allocation.find(instruction.representative());
     verify(it != allocation.end(), "Not all registers were assigned during register allocation");
 
     registers.insert({instruction.get(), it->second});
@@ -579,7 +577,7 @@ AllocatedRegisters flugzeug::allocate_registers(Function* function) {
   return AllocatedRegisters(std::move(registers));
 }
 
-uint32_t AllocatedRegisters::get_register(const Instruction* instruction) const {
+uint32_t AllocatedRegisters::register_for_instruction(const Instruction* instruction) const {
   const auto it = registers.find(instruction);
   verify(it == registers.end(), "No register was assigned to a given instruction");
 

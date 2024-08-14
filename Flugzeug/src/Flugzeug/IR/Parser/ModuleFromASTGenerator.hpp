@@ -24,7 +24,7 @@ class ModuleFromASTGenerator {
 
   std::vector<std::unique_ptr<PRFunction>> parsed_functions;
 
-  const PRInstruction* get_instruction_from_name(std::string_view name);
+  const PRInstruction* find_instruction_by_name(std::string_view name);
 
   Type* convert_type(PRType type);
 

@@ -32,7 +32,7 @@ static bool is_memory_access_unconditional(MemoryDfsContext& dfs_context,
   dfs_context.stack.clear();
   dfs_context.visited.clear();
 
-  dfs_context.stack.push_back(loop->get_header());
+  dfs_context.stack.push_back(loop->header());
 
   while (!dfs_context.stack.empty()) {
     const auto block = dfs_context.stack.back();
@@ -129,7 +129,7 @@ static bool optimize_loop(Function* function,
                           DominatorTree& dominator_tree,
                           MemoryDfsContext& dfs_context) {
   // TODO: Check correctness of single exit target. Previous runs may have invalidated it (?).
-  const auto exit_target = loop->get_single_exit_target();
+  const auto exit_target = loop->single_exit_target();
   if (!exit_target) {
     return false;
   }
@@ -141,7 +141,7 @@ static bool optimize_loop(Function* function,
   std::vector<Call*> calls;
 
   // Get list of all pointers that can be extracted and list of all calls.
-  for (const auto block : loop->get_blocks()) {
+  for (const auto block : loop->blocks()) {
     for (Instruction& instruction : *block) {
       if (const auto call = cast<Call>(instruction)) {
         calls.push_back(call);
@@ -164,8 +164,8 @@ static bool optimize_loop(Function* function,
       // it.
       if (const auto creation_instruction = cast<Instruction>(pointer)) {
         const auto creation_block = creation_instruction->block();
-        if (creation_block == loop->get_header() ||
-            !creation_block->dominates(loop->get_header(), dominator_tree)) {
+        if (creation_block == loop->header() ||
+            !creation_block->dominates(loop->header(), dominator_tree)) {
           continue;
         }
       }
@@ -177,7 +177,7 @@ static bool optimize_loop(Function* function,
   {
     std::unordered_set<Value*> invalid_pointers;
 
-    for (const auto block : loop->get_blocks()) {
+    for (const auto block : loop->blocks()) {
       for (Instruction& instruction : *block) {
         const auto accessed_pointer = get_load_store_pointer(&instruction);
         if (!accessed_pointer) {
@@ -278,7 +278,7 @@ static bool optimize_loop_or_sub_loops(Function* function,
   //  // If it didn't work then try optimizing sub-loops.
   bool optimized_subloop = false;
 
-  for (const auto& sub_loop : loop->get_sub_loops()) {
+  for (const auto& sub_loop : loop->sub_loops()) {
     optimized_subloop |= optimize_loop_or_sub_loops(function, sub_loop.get(), alias_analysis,
                                                     dominator_tree, dfs_context);
   }

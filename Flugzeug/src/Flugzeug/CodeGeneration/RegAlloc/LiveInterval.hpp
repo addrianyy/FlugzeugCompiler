@@ -10,14 +10,14 @@ struct Range {
 };
 
 class LiveInterval {
-  std::vector<Range> ranges;
+  std::vector<Range> ranges_;
 
-  explicit LiveInterval(std::vector<Range> ranges) : ranges(std::move(ranges)) {}
+  explicit LiveInterval(std::vector<Range> ranges) : ranges_(std::move(ranges)) {}
 
  public:
   LiveInterval() = default;
 
-  std::span<const Range> get_ranges() const { return ranges; }
+  std::span<const Range> ranges() const { return ranges_; }
 
   size_t first_range_start() const;
   size_t last_range_end() const;

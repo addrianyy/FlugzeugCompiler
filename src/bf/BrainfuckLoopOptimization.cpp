@@ -93,8 +93,8 @@ static bool get_brainfuck_loop(Block* block, BrainfuckLoop& loop) {
 }
 
 static bool optimize_loop(const analysis::Loop* loop) {
-  const auto block = loop->get_header();
-  if (loop->get_blocks().size() != 1) {
+  const auto block = loop->header();
+  if (loop->blocks().size() != 1) {
     return false;
   }
 
@@ -129,7 +129,7 @@ static bool optimize_loop_or_sub_loops(const analysis::Loop* loop) {
 
   bool optimized_sub_loop = false;
 
-  for (const auto& sub_loop : loop->get_sub_loops()) {
+  for (const auto& sub_loop : loop->sub_loops()) {
     optimized_sub_loop |= optimize_loop_or_sub_loops(sub_loop.get());
   }
 

@@ -109,7 +109,7 @@ bool opt::GlobalReordering::run(Function* function) {
   {
     const auto loops = analysis::analyze_function_loops(function, dominator_tree);
     for (const auto& loop : loops) {
-      const auto& blocks = loop->get_blocks();
+      const auto& blocks = loop->blocks();
 
       loop_blocks.reserve(blocks.size());
       for (const auto& block : blocks) {

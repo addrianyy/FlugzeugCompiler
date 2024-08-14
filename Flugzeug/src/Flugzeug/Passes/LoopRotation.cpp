@@ -9,7 +9,7 @@
 using namespace flugzeug;
 
 static Block* get_actual_loop_body(Function* function, const analysis::Loop* loop) {
-  const auto header = loop->get_header();
+  const auto header = loop->header();
   const auto header_branch = cast<CondBranch>(header->last_instruction());
   if (!header_branch) {
     return nullptr;
@@ -44,7 +44,7 @@ static std::unordered_set<Instruction*> get_header_instructions_that_escape_loop
   std::unordered_set<Instruction*> escaping_instructions;
 
   // Go through every instruction in the loop header.
-  for (Instruction& instruction : *loop->get_header()) {
+  for (Instruction& instruction : *loop->header()) {
     if (instruction.is_void()) {
       continue;
     }
@@ -83,13 +83,13 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
   // In short we will do this by cloning the header block and making all back edges point to the
   // cloned block.
 
-  if (loop->get_blocks().size() == 1) {
+  if (loop->blocks().size() == 1) {
     return false;
   }
 
-  const auto header = loop->get_header();
+  const auto header = loop->header();
 
-  const auto exit_target = loop->get_single_exit_target();
+  const auto exit_target = loop->single_exit_target();
   if (!exit_target) {
     return false;
   }
@@ -102,7 +102,7 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
   // If all blocks that contain back edge can also exit the loop it means that loop is in rotated
   // form.
   const auto all_back_edge_blocks_exit_loop =
-    all_of(loop->get_back_edges_from(), [&](Block* block) {
+    all_of(loop->back_edges_from(), [&](Block* block) {
       const auto cond_branch = cast<CondBranch>(block->last_instruction());
       if (!cond_branch) {
         return false;
@@ -275,7 +275,7 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
 static bool rotate_loop_or_sub_loops(Function* function, const analysis::Loop* loop) {
   // Try rotating one of the sub-loops.
   bool rotated_subloop = false;
-  for (const auto& sub_loop : loop->get_sub_loops()) {
+  for (const auto& sub_loop : loop->sub_loops()) {
     rotated_subloop |= rotate_loop_or_sub_loops(function, sub_loop.get());
   }
 

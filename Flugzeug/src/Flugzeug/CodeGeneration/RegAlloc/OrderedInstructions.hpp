@@ -33,26 +33,26 @@ struct BlockInstructionsRange {
 };
 
 class OrderedInstruction {
-  size_t index = 0;
+  size_t index_ = 0;
   Instruction* instruction = nullptr;
 
-  LiveInterval live_interval;
-  OrderedInstruction* representative = nullptr;
+  LiveInterval live_interval_;
+  OrderedInstruction* representative_ = nullptr;
 
  public:
   OrderedInstruction() = default;
 
   OrderedInstruction(size_t index, Instruction* instruction)
-      : index(index), instruction(instruction) {}
+      : index_(index), instruction(instruction) {}
 
-  size_t get_index() const { return index; }
+  size_t index() const { return index_; }
   Instruction* get() const { return instruction; }
 
   bool has_value() const;
   bool is_joined() const;
 
-  OrderedInstruction* get_representative();
-  const LiveInterval& get_live_interval();
+  OrderedInstruction* representative();
+  const LiveInterval& live_interval();
 
   void add_live_range(Range range);
   bool join_to(OrderedInstruction* other);

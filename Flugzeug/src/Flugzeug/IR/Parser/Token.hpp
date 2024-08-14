@@ -94,12 +94,12 @@ class Token {
   };
 
  private:
-  Kind kind;
+  Kind kind_;
   Keyword keyword{};
   uint64_t literal{};
   std::string_view identifier{};
 
-  explicit Token(Kind kind) : kind(kind) {}
+  explicit Token(Kind kind) : kind_(kind) {}
 
  public:
   static std::string_view stringify_kind(Kind kind);
@@ -110,8 +110,8 @@ class Token {
   static std::optional<IntPredicate> keyword_to_int_predicate(Keyword keyword);
   static std::optional<CastKind> keyword_to_cast(Keyword keyword);
 
-  Kind get_kind() const { return kind; }
-  bool is(Kind checked_kind) const { return kind == checked_kind; }
+  Kind kind() const { return kind_; }
+  bool is(Kind checked_kind) const { return kind_ == checked_kind; }
 
   bool is_keyword() const { return is(Kind::Keyword); }
   bool is_literal() const { return is(Kind::NumberLiteral); }

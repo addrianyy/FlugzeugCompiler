@@ -56,24 +56,24 @@ class InstructionInserter {
 
   Block* insertion_block();
 
-  UnaryInstr* unary_instr(UnaryOp op, Value* val);
+  UnaryInstr* unary_instr(UnaryOp op, Value* value);
   BinaryInstr* binary_instr(Value* lhs, BinaryOp op, Value* rhs);
   IntCompare* int_compare(Value* lhs, IntPredicate predicate, Value* rhs);
-  Load* load(Value* ptr);
-  Store* store(Value* ptr, Value* val);
+  Load* load(Value* address);
+  Store* store(Value* address, Value* stored_value);
   Call* call(Function* function, const std::vector<Value*>& arguments);
   Branch* branch(Block* target);
-  CondBranch* cond_branch(Value* cond, Block* true_target, Block* false_target);
+  CondBranch* cond_branch(Value* condition, Block* true_target, Block* false_target);
   StackAlloc* stack_alloc(Type* type, size_t size = 1);
-  Ret* ret(Value* val = nullptr);
+  Ret* ret(Value* value = nullptr);
   Offset* offset(Value* base, Value* index);
-  Cast* cast(CastKind kind, Value* val, Type* target_type);
-  Select* select(Value* cond, Value* true_val, Value* false_val);
+  Cast* cast(CastKind kind, Value* casted_value, Type* target_type);
+  Select* select(Value* condition, Value* true_value, Value* false_value);
   Phi* phi(Type* type);
   Phi* phi(const std::vector<Phi::Incoming>& incoming);
 
 #define UNARY_INSTR(name, op) \
-  UnaryInstr* name(Value* val) { return unary_instr(op, val); }
+  UnaryInstr* name(Value* value) { return unary_instr(op, value); }
 
 #define BINARY_INSTR(name, op) \
   BinaryInstr* name(Value* lhs, Value* rhs) { return binary_instr(lhs, op, rhs); }
@@ -82,7 +82,7 @@ class InstructionInserter {
   IntCompare* name(Value* lhs, Value* rhs) { return int_compare(lhs, pred, rhs); }
 
 #define CAST(name, kind) \
-  Cast* name(Value* val, Type* target_type) { return cast(kind, val, target_type); }
+  Cast* name(Value* value, Type* target_type) { return cast(kind, value, target_type); }
 
   UNARY_INSTR(neg, UnaryOp::Neg)
   UNARY_INSTR(not_, UnaryOp::Not)
