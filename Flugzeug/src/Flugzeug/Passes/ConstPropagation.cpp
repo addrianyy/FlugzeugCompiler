@@ -98,7 +98,7 @@ class Propagator : public InstructionVisitor {
 
     const auto pointer = base + uint64_t(index_constant->get_constant_i());
 
-    return type->get_constant(pointer);
+    return type->constant(pointer);
   }
 
   OptimizationResult visit_stackalloc(Argument<StackAlloc> stackalloc) {

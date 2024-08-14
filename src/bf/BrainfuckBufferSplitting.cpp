@@ -83,7 +83,7 @@ static bool split_stackalloc(StackAlloc* stackalloc) {
     partial_stackalloc->insert_after(stackalloc);
 
     const auto zero_initializer =
-      new Store(stackalloc->get_context(), partial_stackalloc, type->get_zero());
+      new Store(stackalloc->get_context(), partial_stackalloc, type->zero());
     zero_initializer->insert_after(partial_stackalloc);
 
     for (const auto& pointer : pointers) {

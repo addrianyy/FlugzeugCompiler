@@ -114,7 +114,7 @@ static bool generate_phi_moves(Function* function) {
     for (Phi& phi : advance_early(block.instructions<Phi>())) {
       for (const auto incoming : phi) {
         const auto move = new BinaryInstr(function->get_context(), incoming.value, BinaryOp::Add,
-                                          incoming.value->get_type()->get_zero());
+                                          incoming.value->get_type()->zero());
         move->insert_before(incoming.block->get_last_instruction());
 
         phi.replace_incoming_for_block(incoming.block, move);

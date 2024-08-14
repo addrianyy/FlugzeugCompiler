@@ -86,26 +86,26 @@ fz::Type* IRGenerator::convert_type(Type type) {
   switch (type.get_kind()) {
     case Type::Kind::U8:
     case Type::Kind::I8:
-      base = context->get_i8_ty();
+      base = context->i8_ty();
       break;
 
     case Type::Kind::U16:
     case Type::Kind::I16:
-      base = context->get_i16_ty();
+      base = context->i16_ty();
       break;
 
     case Type::Kind::U32:
     case Type::Kind::I32:
-      base = context->get_i32_ty();
+      base = context->i32_ty();
       break;
 
     case Type::Kind::I64:
     case Type::Kind::U64:
-      base = context->get_i64_ty();
+      base = context->i64_ty();
       break;
 
     case Type::Kind::Void:
-      base = context->get_void_ty();
+      base = context->void_ty();
       break;
 
     default:
@@ -114,10 +114,10 @@ fz::Type* IRGenerator::convert_type(Type type) {
 
   if (type.get_indirection() > 0) {
     if (base->is_void()) {
-      base = context->get_i8_ty();
+      base = context->i8_ty();
     }
 
-    return context->get_pointer_type(base, type.get_indirection());
+    return context->pointer_type(base, type.get_indirection());
   }
 
   return base;
@@ -260,8 +260,8 @@ IRGenerator::CodegenValue IRGenerator::generate_binary_op(CodegenValue left,
       const auto [new_left, new_right] = implcit_cast_binary(left, right);
       const auto predicate = convert_to_ir_int_predicate(op, new_left.get_type().is_signed());
 
-      const auto zero = context->get_i8_ty()->get_zero();
-      const auto one = context->get_i8_ty()->get_one();
+      const auto zero = context->i8_ty()->zero();
+      const auto one = context->i8_ty()->one();
 
       const auto result_i1 =
         inserter.int_compare(extract_value(new_left), predicate, extract_value(new_right));
@@ -287,7 +287,7 @@ IRGenerator::CodegenValue IRGenerator::generate_binary_op(CodegenValue left,
 
 fz::Value* IRGenerator::generate_condition(const Expr* condition) {
   const auto condition_v = generate_nonvoid_expression(condition);
-  const auto zero = convert_type(condition_v.get_type())->get_zero();
+  const auto zero = convert_type(condition_v.get_type())->zero();
 
   return inserter.int_compare(extract_value(condition_v), fz::IntPredicate::NotEqual, zero);
 }
@@ -525,7 +525,7 @@ IRGenerator::VisitResult IRGenerator::visit_binary_expr(Argument<BinaryExpr> bin
 
 IRGenerator::VisitResult IRGenerator::visit_number_expr(Argument<NumberExpr> number_expr) {
   const auto type = number_expr->get_type();
-  const auto constant = convert_type(type)->get_constant(number_expr->get_value());
+  const auto constant = convert_type(type)->constant(number_expr->get_value());
 
   return CodegenValue::rvalue(type, constant);
 }
@@ -591,7 +591,7 @@ IRGenerator::VisitResult IRGenerator::visit_cast_expr(Argument<CastExpr> cast_ex
     result = inserter.bitcast(extracted, to_ir_type);
   } else {
     if (from_type.is_pointer()) {
-      const auto x = inserter.bitcast(extracted, context->get_i64_ty());
+      const auto x = inserter.bitcast(extracted, context->i64_ty());
       result = int_cast(x, Type(Type::Kind::U64), to_type);
     } else {
       const auto x = int_cast(extracted, from_type, Type(Type::Kind::U64));

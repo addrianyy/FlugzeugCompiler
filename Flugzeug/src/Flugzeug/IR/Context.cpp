@@ -60,7 +60,7 @@ Context::~Context() {
   verify(refcount == 0, "Context refcount is not zero");
 }
 
-Constant* Context::get_constant(Type* type, uint64_t constant) {
+Constant* Context::make_constant(Type* type, uint64_t constant) {
   verify(!type->is_void() && !type->is_block() && !type->is_function(),
          "Cannot create constant with that type.");
 
@@ -78,7 +78,7 @@ Constant* Context::get_constant(Type* type, uint64_t constant) {
   return result;
 }
 
-Undef* Context::get_undef(Type* type) {
+Undef* Context::make_undef(Type* type) {
   verify(!type->is_void() && !type->is_block() && !type->is_function(),
          "Cannot create undef with that type.");
 
@@ -92,7 +92,7 @@ Undef* Context::get_undef(Type* type) {
   return result;
 }
 
-PointerType* Context::get_pointer_type_internal(Type* base, uint32_t indirection) {
+PointerType* Context::make_pointer_type_internal(Type* base, uint32_t indirection) {
   PointerKey key{base, indirection};
 
   {
@@ -121,7 +121,7 @@ PointerType* Context::get_pointer_type_internal(Type* base, uint32_t indirection
   if (indirection == 1) {
     type = new PointerType(this, base, base, indirection);
   } else {
-    auto pointee = get_pointer_type_internal(base, indirection - 1);
+    auto pointee = make_pointer_type_internal(base, indirection - 1);
     type = new PointerType(this, base, pointee, indirection);
   }
 
@@ -129,14 +129,14 @@ PointerType* Context::get_pointer_type_internal(Type* base, uint32_t indirection
   return type;
 }
 
-PointerType* Context::get_pointer_type(Type* pointee, uint32_t indirection) {
+PointerType* Context::pointer_type(Type* pointee, uint32_t indirection) {
   Type* base = pointee;
   if (const auto pointer = cast<PointerType>(pointee)) {
-    base = pointer->get_base();
-    indirection += pointer->get_indirection();
+    base = pointer->base_type();
+    indirection += pointer->indirection();
   }
 
-  return get_pointer_type_internal(base, indirection);
+  return make_pointer_type_internal(base, indirection);
 }
 
 Module* Context::create_module() {

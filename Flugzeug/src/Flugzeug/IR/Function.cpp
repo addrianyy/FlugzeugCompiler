@@ -63,7 +63,7 @@ Function::Function(Context* context,
                    Type* return_type,
                    std::string name,
                    const std::vector<Type*>& arguments)
-    : Value(context, Value::Kind::Function, context->get_function_ty()),
+    : Value(context, Value::Kind::Function, context->function_ty()),
       blocks(this),
       name(std::move(name)),
       return_type(return_type) {

@@ -64,10 +64,10 @@ class Context {
   BlockType* block_type = nullptr;
   FunctionType* function_type = nullptr;
 
-  PointerType* get_pointer_type_internal(Type* base, uint32_t indirection);
+  PointerType* make_pointer_type_internal(Type* base, uint32_t indirection);
 
-  Constant* get_constant(Type* type, uint64_t constant);
-  Undef* get_undef(Type* type);
+  Constant* make_constant(Type* type, uint64_t constant);
+  Undef* make_undef(Type* type);
 
  public:
   CLASS_NON_MOVABLE_NON_COPYABLE(Context)
@@ -75,16 +75,16 @@ class Context {
   Context();
   ~Context();
 
-  Type* get_i1_ty() const { return i1_type; }
-  Type* get_i8_ty() const { return i8_type; }
-  Type* get_i16_ty() const { return i16_type; }
-  Type* get_i32_ty() const { return i32_type; }
-  Type* get_i64_ty() const { return i64_type; }
-  Type* get_void_ty() const { return void_type; }
-  Type* get_block_ty() const { return block_type; }
-  Type* get_function_ty() const { return function_type; }
+  Type* i1_ty() const { return i1_type; }
+  Type* i8_ty() const { return i8_type; }
+  Type* i16_ty() const { return i16_type; }
+  Type* i32_ty() const { return i32_type; }
+  Type* i64_ty() const { return i64_type; }
+  Type* void_ty() const { return void_type; }
+  Type* block_ty() const { return block_type; }
+  Type* function_ty() const { return function_type; }
 
-  PointerType* get_pointer_type(Type* pointee, uint32_t indirection = 1);
+  PointerType* pointer_type(Type* pointee, uint32_t indirection = 1);
 
   Module* create_module();
   Module* create_module_from_source(std::string source);

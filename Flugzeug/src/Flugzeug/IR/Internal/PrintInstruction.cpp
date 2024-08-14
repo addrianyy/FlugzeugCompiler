@@ -218,7 +218,7 @@ void Ret::print_instruction_internal(IRPrinter::LinePrinter& p) const {
   p.print("ret");
 
   if (is_ret_void()) {
-    p.print(get_context()->get_void_ty());
+    p.print(get_context()->void_ty());
   } else {
     p.print(get_val()->get_type(), get_val());
   }
@@ -338,7 +338,7 @@ void Ret::print_instruction_compact_internal(
   p.print("ret");
 
   if (is_ret_void()) {
-    p.print(get_context()->get_void_ty());
+    p.print(get_context()->void_ty());
   } else {
     p.print(get_val()->get_type());
     print_value_compact(get_val(), p, inlined_values, false);

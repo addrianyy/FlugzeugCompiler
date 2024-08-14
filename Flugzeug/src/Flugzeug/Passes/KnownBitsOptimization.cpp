@@ -12,7 +12,7 @@ struct KnownBits {
   uint64_t value = 0;
 
   std::optional<bool> sign(Type* type) const {
-    const size_t type_size = type->get_bit_size();
+    const size_t type_size = type->bit_size();
 
     if ((mask & (uint64_t(1) << (type_size - 1))) != 0) {
       return (value >> (type_size - 1)) != 0;
@@ -27,7 +27,7 @@ class KnownBitsDatabase {
 
  public:
   KnownBits get(Value* value) {
-    const auto type_bitmask = value->get_type()->get_bit_mask();
+    const auto type_bitmask = value->get_type()->bit_mask();
 
     if (const auto constant = cast<Constant>(value)) {
       return KnownBits{
@@ -52,7 +52,7 @@ class KnownBitsDatabase {
   }
 
   void set(Value* value, const KnownBits& bits) {
-    const auto type_bitmask = value->get_type()->get_bit_mask();
+    const auto type_bitmask = value->get_type()->bit_mask();
 
     verify((~bits.mask & bits.value) == 0 && (bits.mask & ~type_bitmask) == 0 &&
              (bits.value & ~type_bitmask) == 0,
@@ -82,9 +82,9 @@ static KnownBits combine(const KnownBits& a, const KnownBits& b) {
 }
 
 static std::optional<bool> compare_greater(const KnownBits& a, const KnownBits& b, Type* type) {
-  for (size_t ri = 0; ri < type->get_bit_size(); ++ri) {
+  for (size_t ri = 0; ri < type->bit_size(); ++ri) {
     // Go through every bit from MSB to LSB.
-    const size_t i = type->get_bit_size() - 1 - ri;
+    const size_t i = type->bit_size() - 1 - ri;
     const uint64_t m = uint64_t(1) << i;
 
     // If this bit is not known in both operands we cannot continue.
@@ -112,7 +112,7 @@ static KnownBits add(const KnownBits& a, const KnownBits& b, Type* type) {
   if (a.mask != 0 && b.mask != 0) {
     uint64_t carry = 0;
 
-    for (size_t i = 0; i < type->get_bit_size(); ++i) {
+    for (size_t i = 0; i < type->bit_size(); ++i) {
       const uint64_t m = uint64_t(1) << i;
 
       // If this bit is not known in both operands we cannot continue.
@@ -147,12 +147,12 @@ static KnownBits neg(const KnownBits& bits, Type* type) {
   // Add one to known bits.
   auto computed = add(inverted,
                       KnownBits{
-                        .mask = type->get_bit_size(),
+                        .mask = type->bit_size(),
                         .value = 1,
                       },
                       type);
 
-  const uint64_t sign_mask = uint64_t(1) << (type->get_bit_size() - 1);
+  const uint64_t sign_mask = uint64_t(1) << (type->bit_size() - 1);
 
   if (!is_zero && (computed.mask & sign_mask) == 0) {
     // If the value is not zero than change sign bit independently (if its not known).
@@ -229,7 +229,7 @@ class BitOptimizer : InstructionVisitor {
         // `and` and `or` can give us more information about known bits.
         if (op != BinaryOp::Xor) {
           // Check every bit.
-          for (size_t i = 0; i < type->get_bit_size(); ++i) {
+          for (size_t i = 0; i < type->bit_size(); ++i) {
             const uint64_t m = uint64_t(1) << i;
 
             switch (op) {
@@ -265,17 +265,17 @@ class BitOptimizer : InstructionVisitor {
           }
 
           // If one operand is constant maybe we can prove that this operation is unneccesary.
-          if (a.mask == type->get_bit_mask() || b.mask == type->get_bit_mask()) {
+          if (a.mask == type->bit_mask() || b.mask == type->bit_mask()) {
             uint64_t known_value = 0;
             Value* partial_value = nullptr;
             KnownBits partial_bits;
 
             // Get fully known value and partially known value.
-            if (a.mask == type->get_bit_mask()) {
+            if (a.mask == type->bit_mask()) {
               known_value = a.value;
               partial_value = binary->get_rhs();
               partial_bits = b;
-            } else if (b.mask == type->get_bit_mask()) {
+            } else if (b.mask == type->bit_mask()) {
               known_value = b.value;
               partial_value = binary->get_lhs();
               partial_bits = a;
@@ -290,7 +290,7 @@ class BitOptimizer : InstructionVisitor {
               case BinaryOp::Or: {
                 // 1. Make sure that all 1 bits in `value` are known.
                 // 2. Make sure that or doesn't affect known bits.
-                if (((~partial_bits.mask & known_value) & type->get_bit_mask()) == 0 &&
+                if (((~partial_bits.mask & known_value) & type->bit_mask()) == 0 &&
                     (partial_bits.value | known_value) == partial_bits.value) {
                   can_be_optimized = true;
                 }
@@ -300,7 +300,7 @@ class BitOptimizer : InstructionVisitor {
               case BinaryOp::And: {
                 // 1. Make sure that all 0 bits in `value` are known.
                 // 2. Make sure that and doesn't affect known bits.
-                if (((~partial_bits.mask & ~known_value) & type->get_bit_mask()) == 0 &&
+                if (((~partial_bits.mask & ~known_value) & type->bit_mask()) == 0 &&
                     (partial_bits.value & known_value) == partial_bits.value) {
                   can_be_optimized = true;
                 }
@@ -354,8 +354,8 @@ class BitOptimizer : InstructionVisitor {
           }
 
           // Clear out of bounds bits.
-          mask &= type->get_bit_mask();
-          value &= type->get_bit_mask();
+          mask &= type->bit_mask();
+          value &= type->bit_mask();
 
           if (shift_amount != 0) {
             // Some bits after shifting may become known. Calculate mask of shifted out bits.
@@ -364,7 +364,7 @@ class BitOptimizer : InstructionVisitor {
               left_shift_amount_mask = uint64_t(1) << i;
             }
             const uint64_t right_shift_amount_mask = left_shift_amount_mask
-                                                     << (type->get_bit_size() - shift_amount);
+                                                     << (type->bit_size() - shift_amount);
 
             switch (op) {
               case BinaryOp::Shl: {
@@ -537,10 +537,10 @@ class BitOptimizer : InstructionVisitor {
 
   BitOptimizationResult visit_cast(Argument<Cast> cast_instr) {
     const auto input_type = cast_instr->get_val()->get_type();
-    const auto input_bitmask = input_type->get_bit_mask();
+    const auto input_bitmask = input_type->bit_mask();
 
     const auto output_type = cast_instr->get_type();
-    const auto output_bitmask = output_type->get_bit_mask();
+    const auto output_bitmask = output_type->bit_mask();
 
     const auto input = bits_database.get(cast_instr->get_val());
 
@@ -631,7 +631,7 @@ bool opt::KnownBitsOptimization::run(Function* function) {
         case BitOptimizationResult::ModifiedInstruction: {
           const auto bits = bits_database.get(&instruction);
 
-          if (bits.mask == instruction.get_type()->get_bit_mask()) {
+          if (bits.mask == instruction.get_type()->bit_mask()) {
             instruction.replace_uses_with_constant_and_destroy(bits.value);
             did_something = true;
           }

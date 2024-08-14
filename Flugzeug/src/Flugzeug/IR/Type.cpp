@@ -5,12 +5,12 @@
 
 using namespace flugzeug;
 
-Type::Type(Context* context, Type::Kind kind) : context(context), kind(kind) {
-  context->increase_refcount();
+Type::Type(Context* context, Kind kind) : context_(context), kind_(kind) {
+  context_->increase_refcount();
 }
 
 Type::~Type() {
-  context->decrease_refcount();
+  context_->decrease_refcount();
 }
 
 PointerType* Type::ref(uint32_t indirection) const {
@@ -20,17 +20,17 @@ PointerType* Type::ref(uint32_t indirection) const {
 
   if (indirection == 1) {
     if (!pointer_to_this) {
-      pointer_to_this = get_context()->get_pointer_type(non_const, 1);
+      pointer_to_this = context()->pointer_type(non_const, 1);
     }
 
     return pointer_to_this;
   }
 
-  return get_context()->get_pointer_type(non_const, indirection);
+  return context()->pointer_type(non_const, indirection);
 }
 
-size_t Type::get_bit_size() const {
-  switch (kind) {
+size_t Type::bit_size() const {
+  switch (kind_) {
     case Kind::Void:
     case Kind::Block:
     case Kind::Function:
@@ -51,14 +51,14 @@ size_t Type::get_bit_size() const {
   }
 }
 
-size_t Type::get_byte_size() const {
-  const auto bit_size = get_bit_size();
-  verify(bit_size % 8 == 0, "Bit size is not divisible by 8");
-  return bit_size / 8;
+size_t Type::byte_size() const {
+  const auto bit_size_ = bit_size();
+  verify(bit_size_ % 8 == 0, "Bit size is not divisible by 8");
+  return bit_size_ / 8;
 }
 
-uint64_t Type::get_bit_mask() const {
-  switch (get_bit_size()) {
+uint64_t Type::bit_mask() const {
+  switch (bit_size()) {
     case 1:
       return 1ull;
     case 8:
@@ -78,17 +78,17 @@ std::string Type::format() const {
   std::string result;
 
   if (const auto pointer = cast<PointerType>(this)) {
-    result = pointer->get_base()->format();
+    result = pointer->base_type()->format();
 
-    result.reserve(result.size() + pointer->get_indirection());
-    for (size_t i = 0; i < pointer->get_indirection(); ++i) {
+    result.reserve(result.size() + pointer->indirection());
+    for (size_t i = 0; i < pointer->indirection(); ++i) {
       result += '*';
     }
 
     return result;
   }
 
-  switch (kind) {
+  switch (kind_) {
     case Kind::Void:
       return "void";
     case Kind::Block:
@@ -111,45 +111,45 @@ std::string Type::format() const {
   }
 }
 
-Constant* Type::get_constant(uint64_t constant) const {
+Constant* Type::constant(uint64_t constant) const {
   const auto non_const = const_cast<Type*>(this);
 
   if (constant == 0) {
-    if (!zero) {
-      zero = context->get_constant(non_const, 0);
+    if (!zero_) {
+      zero_ = context_->make_constant(non_const, 0);
     }
 
-    return zero;
+    return zero_;
   }
 
   if (constant == 1) {
-    if (!one) {
-      one = context->get_constant(non_const, 1);
+    if (!one_) {
+      one_ = context_->make_constant(non_const, 1);
     }
 
-    return one;
+    return one_;
   }
 
-  return context->get_constant(non_const, constant);
+  return context_->make_constant(non_const, constant);
 }
 
-Constant* Type::get_zero() const {
-  return get_constant(0);
+Constant* Type::zero() const {
+  return constant(0);
 }
-Constant* Type::get_one() const {
-  return get_constant(1);
+Constant* Type::one() const {
+  return constant(1);
 }
 
-Undef* Type::get_undef() const {
-  if (!undef) {
-    undef = context->get_undef(const_cast<Type*>(this));
+Undef* Type::undef() const {
+  if (!undef_) {
+    undef_ = context_->make_undef(const_cast<Type*>(this));
   }
 
-  return undef;
+  return undef_;
 }
 
 bool Type::is_arithmetic() const {
-  return kind == Kind::I8 || kind == Kind::I16 || kind == Kind::I32 || kind == Kind::I64;
+  return kind_ == Kind::I8 || kind_ == Kind::I16 || kind_ == Kind::I32 || kind_ == Kind::I64;
 }
 
 bool Type::is_arithmetic_or_pointer() const {
@@ -157,13 +157,9 @@ bool Type::is_arithmetic_or_pointer() const {
 }
 
 PointerType::PointerType(Context* context, Type* base, Type* pointee, uint32_t indirection)
-    : Type(context, Kind::Pointer), base(base), pointee(pointee), indirection(indirection) {
+    : Type(context, Kind::Pointer), base_(base), pointee_(pointee), indirection_(indirection) {
   if (const auto pointee_p = cast<PointerType>(pointee)) {
-    verify(pointee_p->get_indirection() + 1 == indirection, "Invalid pointee");
-    verify(pointee_p->get_base() == base, "Invalid base");
+    verify(pointee_p->indirection() + 1 == indirection, "Invalid pointee");
+    verify(pointee_p->base_type() == base, "Invalid base");
   }
-}
-
-Type* PointerType::deref() const {
-  return pointee;
 }

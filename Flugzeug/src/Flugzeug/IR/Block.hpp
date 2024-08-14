@@ -57,7 +57,7 @@ class Block final : public Value, public ll::IntrusiveNode<Block, Function> {
   std::unordered_set<const Value*> get_inlinable_values() const;
 
   explicit Block(Context* context)
-      : Value(context, Value::Kind::Block, context->get_block_ty()), instruction_list(this) {}
+      : Value(context, Value::Kind::Block, context->block_ty()), instruction_list(this) {}
 
  public:
   ~Block() override;

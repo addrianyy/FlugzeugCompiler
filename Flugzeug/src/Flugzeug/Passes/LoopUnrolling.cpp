@@ -550,7 +550,7 @@ static void perform_unrolling(Function* function,
       // Containing block is dead and we will replace instruction with a return.
       new_instruction = new Ret(context, function->get_return_type()->is_void()
                                            ? nullptr
-                                           : function->get_return_type()->get_undef());
+                                           : function->get_return_type()->undef());
     }
 
     back_edge_instruction->replace_with_instruction_and_destroy(new_instruction);

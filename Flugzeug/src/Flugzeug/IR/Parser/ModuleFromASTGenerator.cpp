@@ -23,12 +23,12 @@ Type* ModuleFromASTGenerator::convert_type(PRType type) {
 
   // clang-format off
   switch (type.base_kw) {
-    case Token::Keyword::I1: result = context->get_i1_ty(); break;
-    case Token::Keyword::I8: result = context->get_i8_ty(); break;
-    case Token::Keyword::I16: result = context->get_i16_ty(); break;
-    case Token::Keyword::I32: result = context->get_i32_ty(); break;
-    case Token::Keyword::I64: result = context->get_i64_ty(); break;
-    case Token::Keyword::Void: result = context->get_void_ty(); break;
+    case Token::Keyword::I1: result = context->i1_ty(); break;
+    case Token::Keyword::I8: result = context->i8_ty(); break;
+    case Token::Keyword::I16: result = context->i16_ty(); break;
+    case Token::Keyword::I32: result = context->i32_ty(); break;
+    case Token::Keyword::I64: result = context->i64_ty(); break;
+    case Token::Keyword::Void: result = context->void_ty(); break;
     default: unreachable();
   }
   // clang-format on
@@ -73,12 +73,12 @@ Value* ModuleFromASTGenerator::operand_to_value(const PRInstructionOperand& oper
     }
 
     case PRInstructionOperand::Kind::Constant: {
-      result = type->get_constant(operand.constant);
+      result = type->constant(operand.constant);
       break;
     }
 
     case PRInstructionOperand::Kind::Undef: {
-      result = type->get_undef();
+      result = type->undef();
       break;
     }
 

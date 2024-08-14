@@ -209,8 +209,8 @@ class Validator : public ConstInstructionVisitor {
     validation_check(val_type->is_arithmetic_or_pointer(),
                      "Cast operand ({}) is not arithmetic or pointer", Format(val_type));
 
-    const auto from_bit_size = val_type->get_bit_size();
-    const auto to_bit_size = type->get_bit_size();
+    const auto from_bit_size = val_type->bit_size();
+    const auto to_bit_size = type->bit_size();
     const auto both_arithmetic = val_type->is_arithmetic() && type->is_arithmetic();
 
     switch (kind) {

@@ -45,7 +45,7 @@ static Value* get_value_for_first_use(Block* block,
   const auto type = stackalloc->get_allocated_type();
 
   if (block->is_entry_block()) {
-    return type->get_undef();
+    return type->undef();
   } else {
     auto phi = new Phi(block->get_context(), type);
 
@@ -101,7 +101,7 @@ static void optimize_stackalloc(StackAlloc* stackalloc) {
     for (Block* pred : block->predecessors()) {
       const auto it = block_values.find(pred);
       const auto value =
-        it != block_values.end() ? it->second : stackalloc->get_allocated_type()->get_undef();
+        it != block_values.end() ? it->second : stackalloc->get_allocated_type()->undef();
 
       phi->add_incoming(pred, value);
     }

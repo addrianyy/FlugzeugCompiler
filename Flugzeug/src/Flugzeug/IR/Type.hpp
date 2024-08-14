@@ -28,14 +28,14 @@ class Type {
   };
 
  private:
-  const Kind kind;
-  Context* const context;
+  const Kind kind_;
+  Context* const context_;
 
   mutable PointerType* pointer_to_this = nullptr;
 
-  mutable Constant* zero = nullptr;
-  mutable Constant* one = nullptr;
-  mutable Undef* undef = nullptr;
+  mutable Constant* zero_ = nullptr;
+  mutable Constant* one_ = nullptr;
+  mutable Undef* undef_ = nullptr;
 
  protected:
   Type(Context* context, Kind kind);
@@ -45,33 +45,33 @@ class Type {
 
   virtual ~Type();
 
-  Context* get_context() const { return context; }
-  Kind get_kind() const { return kind; }
+  Context* context() const { return context_; }
+  Kind get_kind() const { return kind_; }
 
   PointerType* ref(uint32_t indirection = 1) const;
 
-  bool is_i1() const { return kind == Kind::I1; }
-  bool is_i8() const { return kind == Kind::I8; }
-  bool is_i16() const { return kind == Kind::I16; }
-  bool is_i32() const { return kind == Kind::I32; }
-  bool is_i64() const { return kind == Kind::I64; }
-  bool is_void() const { return kind == Kind::Void; }
-  bool is_block() const { return kind == Kind::Block; }
-  bool is_function() const { return kind == Kind::Function; }
-  bool is_pointer() const { return kind == Kind::Pointer; }
+  bool is_i1() const { return kind_ == Kind::I1; }
+  bool is_i8() const { return kind_ == Kind::I8; }
+  bool is_i16() const { return kind_ == Kind::I16; }
+  bool is_i32() const { return kind_ == Kind::I32; }
+  bool is_i64() const { return kind_ == Kind::I64; }
+  bool is_void() const { return kind_ == Kind::Void; }
+  bool is_block() const { return kind_ == Kind::Block; }
+  bool is_function() const { return kind_ == Kind::Function; }
+  bool is_pointer() const { return kind_ == Kind::Pointer; }
 
   bool is_arithmetic() const;
   bool is_arithmetic_or_pointer() const;
 
-  Constant* get_constant(uint64_t constant) const;
-  Constant* get_zero() const;
-  Constant* get_one() const;
+  Constant* constant(uint64_t constant) const;
+  Constant* zero() const;
+  Constant* one() const;
 
-  Undef* get_undef() const;
+  Undef* undef() const;
 
-  size_t get_bit_size() const;
-  size_t get_byte_size() const;
-  uint64_t get_bit_mask() const;
+  size_t bit_size() const;
+  size_t byte_size() const;
+  uint64_t bit_mask() const;
 
   std::string format() const;
 };
@@ -81,19 +81,19 @@ class PointerType final : public Type {
 
   friend class Context;
 
-  Type* base;
-  Type* pointee;
-  uint32_t indirection;
+  Type* base_;
+  Type* pointee_;
+  uint32_t indirection_;
 
   PointerType(Context* context, Type* base, Type* pointee, uint32_t indirection);
 
  public:
-  Type* get_base() const { return base; }
-  Type* get_pointee() const { return pointee; }
+  Type* base_type() const { return base_; }
+  Type* pointee() const { return pointee_; }
 
-  uint32_t get_indirection() const { return indirection; }
+  uint32_t indirection() const { return indirection_; }
 
-  Type* deref() const;
+  Type* deref() const { return pointee_; }
 };
 
 #define DEFINE_SIMPLE_TYPE(type_name, kind_name)                                   \

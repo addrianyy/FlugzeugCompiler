@@ -71,7 +71,7 @@ void Value::deduplicate_phi_incoming_blocks(Block* block, User* user) {
 
 Value::Value(Context* context, Value::Kind kind, Type* type)
     : context(context), kind(kind), type(type), uses(this) {
-  verify(type->get_context() == context, "Context mismatch");
+  verify(type->context() == context, "Context mismatch");
   context->increase_refcount();
 }
 
@@ -165,16 +165,16 @@ void Value::replace_uses_with(Value* new_value) {
 }
 
 void Value::replace_uses_with_constant(uint64_t constant) {
-  replace_uses_with(get_type()->get_constant(constant));
+  replace_uses_with(get_type()->constant(constant));
 }
 
 void Value::replace_uses_with_undef() {
-  replace_uses_with(get_type()->get_undef());
+  replace_uses_with(get_type()->undef());
 }
 
 void Constant::constrain_constant(Type* type, uint64_t c, uint64_t* u, int64_t* i) {
-  const auto bit_size = type->get_bit_size();
-  const auto bit_mask = type->get_bit_mask();
+  const auto bit_size = type->bit_size();
+  const auto bit_mask = type->bit_mask();
 
   if (bit_size == 1) {
     const bool b = c != 0;

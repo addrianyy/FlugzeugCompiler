@@ -9,10 +9,10 @@ using namespace flugzeug;
 Module* bf::Compiler::compile_from_file(Context* context, const std::string& source_path) {
   const std::string source = File::read_to_string(source_path);
 
-  const auto void_ty = context->get_void_ty();
-  const auto i8 = context->get_i8_ty();
+  const auto void_ty = context->void_ty();
+  const auto i8 = context->i8_ty();
   const auto i8_ptr = i8->ref();
-  const auto i64 = context->get_i64_ty();
+  const auto i64 = context->i64_ty();
 
   const auto module = context->create_module();
   const auto get_char = module->create_function(i8, "get_char", {});
@@ -24,11 +24,11 @@ Module* bf::Compiler::compile_from_file(Context* context, const std::string& sou
 
   const auto buffer = ins.stack_alloc(i8, 30'000);
   const auto index = ins.stack_alloc(i64);
-  ins.store(index, i64->get_zero());
+  ins.store(index, i64->zero());
   ins.call(zero_buffer, {buffer});
 
   for (size_t i = 0; i < 16; ++i) {
-    ins.store(ins.offset(buffer, i64->get_constant(i)), i8->get_zero());
+    ins.store(ins.offset(buffer, i64->constant(i)), i8->zero());
   }
 
   const auto get_pointer = [&]() { return ins.offset(buffer, ins.load(index)); };
@@ -44,7 +44,7 @@ Module* bf::Compiler::compile_from_file(Context* context, const std::string& sou
     switch (c) {
       case '<':
       case '>': {
-        const auto amount = i64->get_constant(c == '>' ? 1 : -1);
+        const auto amount = i64->constant(c == '>' ? 1 : -1);
         ins.store(index, ins.add(ins.load(index), amount));
         break;
       }
@@ -52,7 +52,7 @@ Module* bf::Compiler::compile_from_file(Context* context, const std::string& sou
       case '+':
       case '-': {
         const auto pointer = get_pointer();
-        const auto amount = i8->get_constant(c == '+' ? 1 : -1);
+        const auto amount = i8->constant(c == '+' ? 1 : -1);
         ins.store(pointer, ins.add(ins.load(pointer), amount));
         break;
       }
@@ -75,7 +75,7 @@ Module* bf::Compiler::compile_from_file(Context* context, const std::string& sou
         ins.branch(header);
 
         ins.set_insertion_block(header);
-        ins.cond_branch(ins.compare_ne(ins.load(get_pointer()), i8->get_zero()), body, after);
+        ins.cond_branch(ins.compare_ne(ins.load(get_pointer()), i8->zero()), body, after);
 
         ins.set_insertion_block(body);
 

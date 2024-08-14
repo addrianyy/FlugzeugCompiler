@@ -136,7 +136,7 @@ class IntCompare final : public Instruction {
 
  public:
   IntCompare(Context* context, Value* lhs, IntPredicate pred, Value* rhs)
-      : Instruction(context, Value::Kind::IntCompare, context->get_i1_ty()), pred(pred) {
+      : Instruction(context, Value::Kind::IntCompare, context->i1_ty()), pred(pred) {
     set_operand_count(2);
     set_lhs(lhs);
     set_rhs(rhs);
@@ -206,7 +206,7 @@ class Store final : public Instruction {
 
  public:
   Store(Context* context, Value* ptr, Value* val)
-      : Instruction(context, Value::Kind::Store, context->get_void_ty()) {
+      : Instruction(context, Value::Kind::Store, context->void_ty()) {
     set_operand_count(2);
     set_ptr(ptr);
     set_val(val);
@@ -270,7 +270,7 @@ class Branch final : public Instruction {
 
  public:
   explicit Branch(Context* context, Block* target)
-      : Instruction(context, Value::Kind::Branch, context->get_void_ty()) {
+      : Instruction(context, Value::Kind::Branch, context->void_ty()) {
     set_operand_count(1);
     set_target(target);
   }
@@ -296,7 +296,7 @@ class CondBranch final : public Instruction {
 
  public:
   explicit CondBranch(Context* context, Value* cond, Block* true_target, Block* false_target)
-      : Instruction(context, Value::Kind::CondBranch, context->get_void_ty()) {
+      : Instruction(context, Value::Kind::CondBranch, context->void_ty()) {
     set_operand_count(3);
     set_cond(cond);
     set_true_target(true_target);
@@ -364,7 +364,7 @@ class Ret final : public Instruction {
 
  public:
   explicit Ret(Context* context, Value* val = nullptr)
-      : Instruction(context, Value::Kind::Ret, context->get_void_ty()) {
+      : Instruction(context, Value::Kind::Ret, context->void_ty()) {
     if (val) {
       set_operand_count(1);
       set_val(val);

@@ -143,10 +143,10 @@ bool utils::evaluate_int_compare(Type* type, uint64_t lhs, IntPredicate predicat
 }
 
 uint64_t utils::evaluate_cast(uint64_t from, Type* from_type, Type* to_type, CastKind cast_kind) {
-  const uint64_t from_mask = from_type->get_bit_mask();
-  const uint64_t to_mask = to_type->get_bit_mask();
+  const uint64_t from_mask = from_type->bit_mask();
+  const uint64_t to_mask = to_type->bit_mask();
 
-  const bool sign_bit = (from & (1ull << (from_type->get_bit_size() - 1))) != 0;
+  const bool sign_bit = (from & (1ull << (from_type->bit_size() - 1))) != 0;
 
   switch (cast_kind) {
     case CastKind::Bitcast:
