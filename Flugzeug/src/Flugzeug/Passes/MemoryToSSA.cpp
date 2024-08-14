@@ -7,24 +7,20 @@
 
 using namespace flugzeug;
 
+struct MemoryToSsaContext {
+  std::vector<Phi*> inserted_phis;
+  std::unordered_map<Block*, Value*> values_at_blocks;
+};
+
 static bool is_stackalloc_optimizable(const StackAlloc* stackalloc) {
-  // We cannot optimize out arrays.
-  if (stackalloc->size() != 1) {
-    return false;
-  }
+  // Stackalloc is optimizable if it's scalar and it's only used by Load and Store instructions.
 
-  for (const User& user : stackalloc->users()) {
-    // Stackalloc is optimizable if it's only used by Load and Store instructions.
-    const auto store = cast<Store>(user);
-    const auto load = cast<Load>(user);
+  return stackalloc->is_scalar() && all_of(stackalloc->users(), [&](const User& user) {
+           const auto load = cast<Load>(user);
+           const auto store = cast<Store>(user);
 
-    const auto valid_use = load || (store && store->address() == stackalloc);
-    if (!valid_use) {
-      return false;
-    }
-  }
-
-  return true;
+           return load || (store && store->address() == stackalloc);
+         });
 }
 
 static std::vector<StackAlloc*> find_optimizable_stackallocs(Function* function) {
@@ -39,27 +35,23 @@ static std::vector<StackAlloc*> find_optimizable_stackallocs(Function* function)
   return stackallocs;
 }
 
-static Value* get_value_for_first_use(Block* block,
-                                      StackAlloc* stackalloc,
-                                      std::vector<Phi*>& inserted_phis) {
-  const auto type = stackalloc->allocated_type();
-
+static Value* get_value_for_first_block_use(Type* type,
+                                            Block* block,
+                                            std::vector<Phi*>& inserted_phis) {
   if (block->is_entry_block()) {
     return type->undef();
-  } else {
-    auto phi = new Phi(block->context(), type);
-
-    block->push_instruction_front(phi);
-    inserted_phis.push_back(phi);
-
-    return phi;
   }
+
+  const auto phi = new Phi(block->context(), type);
+
+  block->push_instruction_front(phi);
+  inserted_phis.push_back(phi);
+
+  return phi;
 }
 
-static void optimize_stackalloc(StackAlloc* stackalloc) {
-  std::unordered_map<Block*, Value*> block_values;
-  std::vector<Phi*> inserted_phis;
-
+static void optimize_stackalloc(MemoryToSsaContext& ctx, StackAlloc* stackalloc) {
+  const auto type = stackalloc->allocated_type();
   const auto reachable = stackalloc->block()->reachable_blocks_set(IncludeStart::Yes);
 
   for (Block* block : reachable) {
@@ -68,10 +60,10 @@ static void optimize_stackalloc(StackAlloc* stackalloc) {
     for (Instruction& instruction : advance_early(*block)) {
       if (const auto load = cast<Load>(instruction)) {
         if (load->address() == stackalloc) {
-          // Pointer wasn't written to in this block. We will need to take value from PHI
+          // Address wasn't written to in this block. We will need to take value from Phi
           // instruction (or make it undef for entry block).
           if (!current_value) {
-            current_value = get_value_for_first_use(block, stackalloc, inserted_phis);
+            current_value = get_value_for_first_block_use(type, block, ctx.inserted_phis);
           }
 
           // This load will use currently known value.
@@ -79,36 +71,35 @@ static void optimize_stackalloc(StackAlloc* stackalloc) {
         }
       } else if (const auto store = cast<Store>(instruction)) {
         if (store->address() == stackalloc) {
-          // Source next loads of pointer from stored value.
+          // Source next loads of this address from stored value.
           current_value = store->value();
           store->destroy();
         }
       }
     }
 
-    // Even if we didn't use pointer in this block it may be needed in our successors.
+    // Even if we didn't use the address in this block it may be needed in our successors.
     if (!current_value) {
-      current_value = get_value_for_first_use(block, stackalloc, inserted_phis);
+      current_value = get_value_for_first_block_use(type, block, ctx.inserted_phis);
     }
 
-    block_values.insert(std::pair{block, current_value});
+    ctx.values_at_blocks.insert(std::pair{block, current_value});
   }
 
   // Go through all inserted Phis and add proper incoming values.
-  for (Phi* phi : inserted_phis) {
+  for (Phi* phi : ctx.inserted_phis) {
     Block* block = phi->block();
 
-    for (Block* pred : block->predecessors()) {
-      const auto it = block_values.find(pred);
-      const auto value =
-        it != block_values.end() ? it->second : stackalloc->allocated_type()->undef();
+    for (Block* predecessor : block->predecessors()) {
+      const auto it = ctx.values_at_blocks.find(predecessor);
+      const auto value = it != ctx.values_at_blocks.end() ? it->second : type->undef();
 
-      phi->add_incoming(pred, value);
+      phi->add_incoming(predecessor, value);
     }
   }
 
   // Remove unused Phis and optimize Phis with zero or one incoming values.
-  for (Phi* phi : inserted_phis) {
+  for (Phi* phi : ctx.inserted_phis) {
     utils::simplify_phi(phi, true);
   }
 
@@ -117,8 +108,16 @@ static void optimize_stackalloc(StackAlloc* stackalloc) {
 
 bool opt::MemoryToSSA::run(Function* function) {
   const auto optimizable = find_optimizable_stackallocs(function);
-  for (StackAlloc* stackalloc : optimizable) {
-    optimize_stackalloc(stackalloc);
+
+  if (!optimizable.empty()) {
+    MemoryToSsaContext context{};
+
+    for (StackAlloc* stackalloc : optimizable) {
+      context.inserted_phis.clear();
+      context.values_at_blocks.clear();
+
+      optimize_stackalloc(context, stackalloc);
+    }
   }
 
   return !optimizable.empty();
