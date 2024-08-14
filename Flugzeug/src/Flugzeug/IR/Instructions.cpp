@@ -83,18 +83,18 @@ Call::Call(Context* context, Function* function, const std::vector<Value*>& argu
 }
 
 Function* Call::get_callee() {
-  return cast<Function>(get_operand(0));
+  return cast<Function>(operand(0));
 }
 
 const Function* Call::get_callee() const {
-  return cast<Function>(get_operand(0));
+  return cast<Function>(operand(0));
 }
 
 bool Phi::index_for_block(const Block* block, size_t& index) const {
   index = 0;
 
   for (size_t i = 0; i < get_incoming_count(); ++i) {
-    if (get_operand(get_block_index(i)) == block) {
+    if (operand(get_block_index(i)) == block) {
       index = i;
       return true;
     }
@@ -147,7 +147,7 @@ Value* Phi::remove_incoming(const Block* block) {
 void Phi::add_incoming(Block* block, Value* value) {
   size_t prev_index;
   if (index_for_block(block, prev_index)) {
-    verify(get_operand(get_value_index(prev_index)) == value,
+    verify(operand(get_value_index(prev_index)) == value,
            "Tried to add 2 same blocks to the Phi instruction.");
     return;
   }
@@ -163,7 +163,7 @@ Value* Phi::get_incoming_by_block(const Block* block) {
   if (!index_for_block(block, index)) {
     return nullptr;
   }
-  return get_operand(get_value_index(index));
+  return operand(get_value_index(index));
 }
 
 const Value* Phi::get_incoming_by_block(const Block* block) const {
@@ -171,7 +171,7 @@ const Value* Phi::get_incoming_by_block(const Block* block) const {
   if (!index_for_block(block, index)) {
     return nullptr;
   }
-  return get_operand(get_value_index(index));
+  return operand(get_value_index(index));
 }
 
 void Phi::replace_incoming_for_block(const Block* block, Value* new_incoming) {
@@ -192,8 +192,8 @@ bool Phi::replace_incoming_block_opt(const Block* old_incoming, Block* new_incom
 
   size_t new_incoming_index;
   if (index_for_block(new_incoming, new_incoming_index)) {
-    verify(get_operand(get_value_index(new_incoming_index)) ==
-             get_operand(get_value_index(old_incoming_index)),
+    verify(operand(get_value_index(new_incoming_index)) ==
+             operand(get_value_index(old_incoming_index)),
            "Cannot duplicate blocks in Phi.");
     remove_incoming_by_index(old_incoming_index);
     return true;

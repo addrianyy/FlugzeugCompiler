@@ -22,65 +22,47 @@ class Use {
   friend class flugzeug::User;
 
 #ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
-  Value* used_value = nullptr;
+  Value* used_value_ = nullptr;
 #endif
 
-  User* user = nullptr;
+  User* user_ = nullptr;
 
-  Use* next = nullptr;
-  Use* previous = nullptr;
+  Use* next_ = nullptr;
+  Use* previous_ = nullptr;
 
-  uint32_t operand_index = 0;
+  uint32_t operand_index_ = 0;
 
-  bool heap_allocated = false;
+  bool heap_allocated_ = false;
 
  public:
   Use() = default;
-  Use(User* user, size_t operand_index) : user(user), operand_index(uint32_t(operand_index)) {}
+  Use(User* user, size_t operand_index) : user_(user), operand_index_(uint32_t(operand_index)) {}
 
-  size_t get_operand_index() const {
-    return size_t(operand_index);
-  }
+  size_t operand_index() const { return size_t(operand_index_); }
 
-  User* get_user() {
-    return user;
-  }
-  const User* get_user() const {
-    return user;
-  }
+  User* user() { return user_; }
+  const User* user() const { return user_; }
 
-  Use* get_previous() {
-    return previous;
-  }
-  const Use* get_previous() const {
-    return previous;
-  }
+  Use* previous() { return previous_; }
+  const Use* previous() const { return previous_; }
 
-  Use* get_next() {
-    return next;
-  }
-  const Use* get_next() const {
-    return next;
-  }
+  Use* next() { return next_; }
+  const Use* next() const { return next_; }
 
 #ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
-  Value* get_used_value() {
-    return used_value;
-  }
-  const Value* get_used_value() const {
-    return used_value;
-  }
+  Value* used_value() { return used_value_; }
+  const Value* used_value() const { return used_value_; }
 #endif
 };
 
 class ValueUses {
 #ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
-  Value* value;
+  Value* value_;
 #endif
 
-  Use* first = nullptr;
-  Use* last = nullptr;
-  size_t size = 0;
+  Use* first_ = nullptr;
+  Use* last_ = nullptr;
+  size_t size_ = 0;
 
   template <typename TUse, typename TUser>
   class UserIteratorInternal {
@@ -99,7 +81,7 @@ class ValueUses {
     explicit UserIteratorInternal(TUse* current) : current(current) {
 #ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
       if (current) {
-        used_value = current->get_used_value();
+        used_value = current->used_value();
       }
 #endif
     }
@@ -109,7 +91,7 @@ class ValueUses {
       validate_use(used_value, current);
 #endif
 
-      current = current->get_next();
+      current = current->next();
       return *this;
     }
 
@@ -119,61 +101,37 @@ class ValueUses {
       return before;
     }
 
-    reference operator*() const {
-      return *current->get_user();
-    }
-    pointer operator->() const {
-      return current ? current->get_user() : nullptr;
-    }
+    reference operator*() const { return *current->user(); }
+    pointer operator->() const { return current ? current->user() : nullptr; }
 
-    bool operator==(const UserIteratorInternal& rhs) const {
-      return current == rhs.current;
-    }
-    bool operator!=(const UserIteratorInternal& rhs) const {
-      return current != rhs.current;
-    }
+    bool operator==(const UserIteratorInternal& rhs) const { return current == rhs.current; }
+    bool operator!=(const UserIteratorInternal& rhs) const { return current != rhs.current; }
   };
 
  public:
   explicit ValueUses(Value* value) {
 #ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
-    this->value = value;
+    value_ = value;
 #endif
   }
 
   void add_use(Use* use);
   void remove_use(Use* use);
 
-  Use* get_first() {
-    return first;
-  }
-  Use* get_last() {
-    return last;
-  }
+  Use* first() { return first_; }
+  Use* last() { return last_; }
 
   using iterator = UserIteratorInternal<Use, User>;
   using const_iterator = UserIteratorInternal<const Use, const User>;
 
-  size_t get_size() const {
-    return size;
-  }
-  bool is_empty() const {
-    return size == 0;
-  }
+  size_t size() const { return size_; }
+  bool empty() const { return size_ == 0; }
 
-  iterator begin() {
-    return iterator(first);
-  }
-  iterator end() {
-    return iterator(nullptr);
-  }
+  iterator begin() { return iterator(first_); }
+  iterator end() { return iterator(nullptr); }
 
-  const_iterator begin() const {
-    return const_iterator(first);
-  }
-  const_iterator end() const {
-    return const_iterator(nullptr);
-  }
+  const_iterator begin() const { return const_iterator(first_); }
+  const_iterator end() const { return const_iterator(nullptr); }
 };
 
 }  // namespace detail

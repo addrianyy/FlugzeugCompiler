@@ -28,8 +28,8 @@ static bool try_to_eliminate(Instruction* instruction, std::vector<Instruction*>
     return false;
   }
 
-  for (size_t i = 0; i < instruction->get_operand_count(); ++i) {
-    Value* operand = instruction->get_operand(i);
+  for (size_t i = 0; i < instruction->operand_count(); ++i) {
+    Value* operand = instruction->operand(i);
     instruction->set_operand(i, nullptr);
 
     // Check if by removing instruction operand we have made operand dead too.

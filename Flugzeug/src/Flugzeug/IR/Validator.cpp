@@ -267,8 +267,8 @@ class Validator : public ConstInstructionVisitor {
   void check_instruction(const Instruction* instruction) {
     const auto phi = cast<Phi>(instruction);
 
-    for (size_t i = 0; i < instruction->get_operand_count(); ++i) {
-      const auto operand = instruction->get_operand(i);
+    for (size_t i = 0; i < instruction->operand_count(); ++i) {
+      const auto operand = instruction->operand(i);
       if (!validation_check(operand, "Instruction operand nr {} is null", i)) {
         continue;
       }

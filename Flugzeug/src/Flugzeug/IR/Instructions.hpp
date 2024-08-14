@@ -64,8 +64,8 @@ class UnaryInstr final : public Instruction {
   UnaryOp get_op() const { return op; }
   bool is(UnaryOp other) const { return op == other; }
 
-  Value* get_val() { return get_operand(0); }
-  const Value* get_val() const { return get_operand(0); }
+  Value* get_val() { return operand(0); }
+  const Value* get_val() const { return operand(0); }
 
   void set_val(Value* val) { return set_operand(0, val); }
   void set_op(UnaryOp new_op) { op = new_op; }
@@ -100,11 +100,11 @@ class BinaryInstr final : public Instruction {
   BinaryOp get_op() const { return op; }
   bool is(BinaryOp other) const { return op == other; }
 
-  Value* get_lhs() { return get_operand(0); }
-  const Value* get_lhs() const { return get_operand(0); }
+  Value* get_lhs() { return operand(0); }
+  const Value* get_lhs() const { return operand(0); }
 
-  Value* get_rhs() { return get_operand(1); }
-  const Value* get_rhs() const { return get_operand(1); }
+  Value* get_rhs() { return operand(1); }
+  const Value* get_rhs() const { return operand(1); }
 
   void set_lhs(Value* lhs) { return set_operand(0, lhs); }
   void set_rhs(Value* rhs) { return set_operand(1, rhs); }
@@ -145,11 +145,11 @@ class IntCompare final : public Instruction {
   IntPredicate get_pred() const { return pred; }
   bool is(IntPredicate other) const { return pred == other; }
 
-  Value* get_lhs() { return get_operand(0); }
-  const Value* get_lhs() const { return get_operand(0); }
+  Value* get_lhs() { return operand(0); }
+  const Value* get_lhs() const { return operand(0); }
 
-  Value* get_rhs() { return get_operand(1); }
-  const Value* get_rhs() const { return get_operand(1); }
+  Value* get_rhs() { return operand(1); }
+  const Value* get_rhs() const { return operand(1); }
 
   void set_lhs(Value* lhs) { return set_operand(0, lhs); }
   void set_rhs(Value* rhs) { return set_operand(1, rhs); }
@@ -185,8 +185,8 @@ class Load final : public Instruction {
     set_ptr(ptr);
   }
 
-  Value* get_ptr() { return get_operand(0); }
-  const Value* get_ptr() const { return get_operand(0); }
+  Value* get_ptr() { return operand(0); }
+  const Value* get_ptr() const { return operand(0); }
 
   void set_ptr(Value* ptr) { return set_operand(0, ptr); }
 
@@ -212,11 +212,11 @@ class Store final : public Instruction {
     set_val(val);
   }
 
-  Value* get_ptr() { return get_operand(0); }
-  const Value* get_ptr() const { return get_operand(0); }
+  Value* get_ptr() { return operand(0); }
+  const Value* get_ptr() const { return operand(0); }
 
-  Value* get_val() { return get_operand(1); }
-  const Value* get_val() const { return get_operand(1); }
+  Value* get_val() { return operand(1); }
+  const Value* get_val() const { return operand(1); }
 
   void set_ptr(Value* ptr) { return set_operand(0, ptr); }
   void set_val(Value* val) { return set_operand(1, val); }
@@ -241,10 +241,10 @@ class Call final : public Instruction {
  public:
   Call(Context* context, Function* function, const std::vector<Value*>& arguments);
 
-  size_t get_arg_count() const { return get_operand_count() - 1; }
+  size_t get_arg_count() const { return operand_count() - 1; }
 
-  Value* get_arg(size_t i) { return get_operand(i + 1); }
-  const Value* get_arg(size_t i) const { return get_operand(i + 1); }
+  Value* get_arg(size_t i) { return operand(i + 1); }
+  const Value* get_arg(size_t i) const { return operand(i + 1); }
 
   Function* get_callee();
   const Function* get_callee() const;
@@ -275,8 +275,8 @@ class Branch final : public Instruction {
     set_target(target);
   }
 
-  Block* get_target() { return cast<Block>(get_operand(0)); }
-  const Block* get_target() const { return cast<Block>(get_operand(0)); }
+  Block* get_target() { return cast<Block>(operand(0)); }
+  const Block* get_target() const { return cast<Block>(operand(0)); }
 
   void set_target(Block* target) { set_operand(0, target); }
 
@@ -303,14 +303,14 @@ class CondBranch final : public Instruction {
     set_false_target(false_target);
   }
 
-  Value* get_cond() { return get_operand(0); }
-  const Value* get_cond() const { return get_operand(0); }
+  Value* get_cond() { return operand(0); }
+  const Value* get_cond() const { return operand(0); }
 
-  Block* get_true_target() { return cast<Block>(get_operand(1)); }
-  const Block* get_true_target() const { return cast<Block>(get_operand(1)); }
+  Block* get_true_target() { return cast<Block>(operand(1)); }
+  const Block* get_true_target() const { return cast<Block>(operand(1)); }
 
-  Block* get_false_target() { return cast<Block>(get_operand(2)); }
-  const Block* get_false_target() const { return cast<Block>(get_operand(2)); }
+  Block* get_false_target() { return cast<Block>(operand(2)); }
+  const Block* get_false_target() const { return cast<Block>(operand(2)); }
 
   Block* get_target(bool b) { return b ? get_true_target() : get_false_target(); }
   const Block* get_target(bool b) const { return b ? get_true_target() : get_false_target(); }
@@ -371,10 +371,10 @@ class Ret final : public Instruction {
     }
   }
 
-  bool is_ret_void() const { return get_operand_count() == 0; }
+  bool is_ret_void() const { return operand_count() == 0; }
 
-  Value* get_val() { return is_ret_void() ? nullptr : get_operand(0); }
-  const Value* get_val() const { return is_ret_void() ? nullptr : get_operand(0); }
+  Value* get_val() { return is_ret_void() ? nullptr : operand(0); }
+  const Value* get_val() const { return is_ret_void() ? nullptr : operand(0); }
 
   void set_val(Value* val) {
     verify(!is_ret_void(), "Cannot set value for ret void.");
@@ -403,11 +403,11 @@ class Offset final : public Instruction {
     set_index(index);
   }
 
-  Value* get_base() { return get_operand(0); }
-  const Value* get_base() const { return get_operand(0); }
+  Value* get_base() { return operand(0); }
+  const Value* get_base() const { return operand(0); }
 
-  Value* get_index() { return get_operand(1); }
-  const Value* get_index() const { return get_operand(1); }
+  Value* get_index() { return operand(1); }
+  const Value* get_index() const { return operand(1); }
 
   void set_base(Value* base) { return set_operand(0, base); }
   void set_index(Value* index) { return set_operand(1, index); }
@@ -441,8 +441,8 @@ class Cast final : public Instruction {
   CastKind get_cast_kind() const { return cast_kind; }
   bool is(CastKind other) const { return cast_kind == other; }
 
-  Value* get_val() { return get_operand(0); }
-  const Value* get_val() const { return get_operand(0); }
+  Value* get_val() { return operand(0); }
+  const Value* get_val() const { return operand(0); }
 
   void set_val(Value* val) { return set_operand(0, val); }
   void set_cast_kind(CastKind new_cast_kind) { cast_kind = new_cast_kind; }
@@ -470,14 +470,14 @@ class Select final : public Instruction {
     set_false_val(false_val);
   }
 
-  Value* get_cond() { return get_operand(0); }
-  const Value* get_cond() const { return get_operand(0); }
+  Value* get_cond() { return operand(0); }
+  const Value* get_cond() const { return operand(0); }
 
-  Value* get_true_val() { return get_operand(1); }
-  const Value* get_true_val() const { return get_operand(1); }
+  Value* get_true_val() { return operand(1); }
+  const Value* get_true_val() const { return operand(1); }
 
-  Value* get_false_val() { return get_operand(2); }
-  const Value* get_false_val() const { return get_operand(2); }
+  Value* get_false_val() { return operand(2); }
+  const Value* get_false_val() const { return operand(2); }
 
   Value* get_val(bool b) { return b ? get_true_val() : get_false_val(); }
   const Value* get_val(bool b) const { return b ? get_true_val() : get_false_val(); }
@@ -568,20 +568,20 @@ class Phi final : public Instruction {
   void remove_incoming_by_index(size_t index);
 
   Incoming get_incoming(size_t i) {
-    const auto value = get_operand(get_value_index(i));
-    const auto block = cast<Block>(get_operand(get_block_index(i)));
+    const auto value = operand(get_value_index(i));
+    const auto block = cast<Block>(operand(get_block_index(i)));
 
     return Incoming{block, value};
   }
   ConstIncoming get_incoming(size_t i) const {
-    const auto value = get_operand(get_value_index(i));
-    const auto block = cast<Block>(get_operand(get_block_index(i)));
+    const auto value = operand(get_value_index(i));
+    const auto block = cast<Block>(operand(get_block_index(i)));
 
     return ConstIncoming{block, value};
   }
 
-  Value* get_incoming_value(size_t i) { return get_operand(get_value_index(i)); }
-  const Value* get_incoming_value(size_t i) const { return get_operand(get_value_index(i)); }
+  Value* get_incoming_value(size_t i) { return operand(get_value_index(i)); }
+  const Value* get_incoming_value(size_t i) const { return operand(get_value_index(i)); }
 
  public:
   explicit Phi(Context* context, Type* type) : Instruction(context, Instruction::Kind::Phi, type) {}
@@ -594,8 +594,8 @@ class Phi final : public Instruction {
     }
   }
 
-  size_t get_incoming_count() const { return get_operand_count() / 2; }
-  bool is_empty() const { return get_operand_count() == 0; }
+  size_t get_incoming_count() const { return operand_count() / 2; }
+  bool is_empty() const { return operand_count() == 0; }
 
   Value* get_single_incoming_value();
 

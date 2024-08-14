@@ -7,52 +7,52 @@ using namespace flugzeug::detail;
 
 #ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
 void flugzeug::detail::validate_use(const Value* used_value, const detail::Use* use) {
-  verify(use->get_used_value() == used_value, "Use iterator was invalidated");
+  verify(use->used_value() == used_value, "Use iterator was invalidated");
 }
 #endif
 
 void ValueUses::add_use(Use* use) {
-  verify(!use->next && !use->previous, "This use is already inserted");
+  verify(!use->next_ && !use->previous_, "This use is already inserted");
 
 #ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
-  verify(!use->used_value, "Used value is already set.");
-  use->used_value = value;
+  verify(!use->used_value_, "Used value is already set.");
+  use->used_value_ = value_;
 #endif
 
   // Insert at the end of the list.
-  if (first == nullptr) {
-    use->previous = use->next = nullptr;
-    first = last = use;
+  if (first_ == nullptr) {
+    use->previous_ = use->next_ = nullptr;
+    first_ = last_ = use;
   } else {
-    use->previous = last;
-    use->next = nullptr;
+    use->previous_ = last_;
+    use->next_ = nullptr;
 
-    last->next = use;
-    last = use;
+    last_->next_ = use;
+    last_ = use;
   }
 
-  size++;
+  size_++;
 }
 
 void ValueUses::remove_use(Use* use) {
 #ifdef FLUGZEUG_VALIDATE_USE_ITERATORS
-  verify(use->used_value == value, "Used value is invalid.");
-  use->used_value = nullptr;
+  verify(use->used_value_ == value_, "Used value is invalid.");
+  use->used_value_ = nullptr;
 #endif
 
-  if (use->previous) {
-    use->previous->next = use->next;
+  if (use->previous_) {
+    use->previous_->next_ = use->next_;
   } else {
-    first = use->next;
+    first_ = use->next_;
   }
 
-  if (use->next) {
-    use->next->previous = use->previous;
+  if (use->next_) {
+    use->next_->previous_ = use->previous_;
   } else {
-    last = use->previous;
+    last_ = use->previous_;
   }
 
-  use->next = use->previous = nullptr;
+  use->next_ = use->previous_ = nullptr;
 
-  size--;
+  size_--;
 }

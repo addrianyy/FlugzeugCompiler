@@ -70,10 +70,10 @@ class User : public Value {
  public:
   ~User() override;
 
-  size_t get_operand_count() const;
+  size_t operand_count() const;
 
-  Value* get_operand(size_t index);
-  const Value* get_operand(size_t index) const;
+  Value* operand(size_t index);
+  const Value* operand(size_t index) const;
 
   void set_operand(size_t index, Value* operand);
 
@@ -87,7 +87,7 @@ class User : public Value {
     std::vector<Block*> new_blocks;
     const auto phi = is_phi();
 
-    for (size_t i = 0; i < get_operand_count(); ++i) {
+    for (size_t i = 0; i < operand_count(); ++i) {
       Value* operand = used_operands[i];
       Value* new_operand = transform(operand);
       if (new_operand && new_operand != operand) {

@@ -111,13 +111,13 @@ class Value {
 
     const auto block = cast<Block>(new_value);
 
-    auto current_use = uses.get_first();
+    auto current_use = uses.first();
     while (current_use) {
-      auto next_use = current_use->get_next();
+      auto next_use = current_use->next();
 
-      User* user = current_use->get_user();
+      User* user = current_use->user();
       if (predicate(user)) {
-        set_user_operand(user, current_use->get_operand_index(), new_value);
+        set_user_operand(user, current_use->operand_index(), new_value);
 
         if (block) {
           deduplicate_phi_incoming_blocks(block, user);
@@ -136,7 +136,7 @@ class Value {
   std::optional<uint64_t> get_constant_u_opt() const;
   std::optional<int64_t> get_constant_i_opt() const;
 
-  size_t get_user_count() const { return uses.get_size(); }
+  size_t get_user_count() const { return uses.size(); }
   size_t get_user_count_excluding_self() const { return user_count_excluding_self; }
 
   bool is_used() const { return get_user_count_excluding_self() > 0; }

@@ -360,11 +360,11 @@ static void coalesce(OrderedInstructions& ordered_instructions) {
   // Try to coalesce instruction result with first argument. This is done for speed.
   for (OrderedInstruction& instruction : ordered_instructions.instructions()) {
     if (!instruction.has_value() || cast<Phi>(instruction.get()) ||
-        instruction.get()->get_operand_count() == 0) {
+        instruction.get()->operand_count() == 0) {
       continue;
     }
 
-    const auto operand = cast<Instruction>(instruction.get()->get_operand(0));
+    const auto operand = cast<Instruction>(instruction.get()->operand(0));
     if (operand) {
       const auto result = instruction.join_to(ordered_instructions.get(operand));
 

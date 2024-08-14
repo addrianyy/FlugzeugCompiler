@@ -16,24 +16,24 @@ void Value::set_user_operand(User* user, size_t operand_index, Value* value) {
 void Value::add_use(detail::Use* use) {
   uses.add_use(use);
 
-  if (use->get_user() != this) {
+  if (use->user() != this) {
     user_count_excluding_self++;
   }
 
   if (const auto block = cast<Block>(this)) {
-    block->on_added_block_user(use->get_user());
+    block->on_added_block_user(use->user());
   }
 }
 
 void Value::remove_use(detail::Use* use) {
   uses.remove_use(use);
 
-  if (use->get_user() != this) {
+  if (use->user() != this) {
     user_count_excluding_self--;
   }
 
   if (const auto block = cast<Block>(this)) {
-    block->on_removed_block_user(use->get_user());
+    block->on_removed_block_user(use->user());
   }
 }
 
@@ -76,7 +76,7 @@ Value::Value(Context* context, Value::Kind kind, Type* type)
 }
 
 Value::~Value() {
-  verify(uses.get_size() == 0, "Cannot destroy value that has active users.");
+  verify(uses.size() == 0, "Cannot destroy value that has active users.");
   context->decrease_refcount();
 }
 
@@ -153,10 +153,10 @@ void Value::replace_uses_with(Value* new_value) {
 
   const auto block = cast<Block>(new_value);
 
-  while (!uses.is_empty()) {
-    auto use = uses.get_first();
-    User* user = use->get_user();
-    user->set_operand(use->get_operand_index(), new_value);
+  while (!uses.empty()) {
+    auto use = uses.first();
+    User* user = use->user();
+    user->set_operand(use->operand_index(), new_value);
 
     if (block) {
       deduplicate_phi_incoming_blocks(block, user);
