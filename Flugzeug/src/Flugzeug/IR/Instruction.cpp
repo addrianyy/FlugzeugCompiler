@@ -46,9 +46,9 @@ void Instruction::print_value_compact(const Value* value,
   printer.print(value);
 }
 
-size_t Instruction::get_order_in_block() const {
-  get_block()->update_instruction_order();
-  return order_in_block;
+size_t Instruction::order_in_block() const {
+  block()->update_instruction_order();
+  return order_in_block_;
 }
 
 bool Instruction::print_compact(IRPrinter& printer,
@@ -86,12 +86,12 @@ void Instruction::debug_print() const {
   print(printer);
 }
 
-Function* Instruction::get_function() {
-  return get_block() ? get_block()->get_function() : nullptr;
+Function* Instruction::function() {
+  return block() ? block()->function() : nullptr;
 }
 
-const Function* Instruction::get_function() const {
-  return get_block() ? get_block()->get_function() : nullptr;
+const Function* Instruction::function() const {
+  return block() ? block()->function() : nullptr;
 }
 
 void Instruction::destroy() {
@@ -136,7 +136,7 @@ void Instruction::replace_instruction_or_uses_and_destroy(Value* new_value) {
   verify(new_value != this, "Cannot replace instruction with itself");
 
   const auto other = cast<Instruction>(new_value);
-  if (other && !other->get_block()) {
+  if (other && !other->block()) {
     replace_with_instruction_and_destroy(other);
   } else {
     replace_uses_with_and_destroy(new_value);
@@ -152,19 +152,17 @@ BlockTargets<const Block> Instruction::targets() const {
 }
 
 bool Instruction::is_before(const Instruction* other) const {
-  verify(get_block() == other->get_block(),
-         "Cannot call `is_before` on instructions in different blocks");
-  return get_order_in_block() < other->get_order_in_block();
+  verify(block() == other->block(), "Cannot call `is_before` on instructions in different blocks");
+  return order_in_block() < other->order_in_block();
 }
 
 bool Instruction::is_after(const Instruction* other) const {
-  verify(get_block() == other->get_block(),
-         "Cannot call `is_after` on instructions in different blocks");
-  return get_order_in_block() > other->get_order_in_block();
+  verify(block() == other->block(), "Cannot call `is_after` on instructions in different blocks");
+  return order_in_block() > other->order_in_block();
 }
 
-bool Instruction::is_dominated_by(const Block* block, const DominatorTree& dominator_tree) const {
-  return get_block()->is_dominated_by(block, dominator_tree);
+bool Instruction::is_dominated_by(const Block* block_, const DominatorTree& dominator_tree) const {
+  return block()->is_dominated_by(block_, dominator_tree);
 }
 
 bool Instruction::dominates(const Instruction* other, const DominatorTree& dominator_tree) const {
@@ -172,8 +170,8 @@ bool Instruction::dominates(const Instruction* other, const DominatorTree& domin
     return true;
   }
 
-  const auto this_block = get_block();
-  const auto other_block = other->get_block();
+  const auto this_block = block();
+  const auto other_block = other->block();
 
   if (this_block == other_block) {
     return is_before(other);

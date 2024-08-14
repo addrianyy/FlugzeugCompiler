@@ -4,23 +4,23 @@
 using namespace flugzeug;
 
 void Module::on_added_node(Function* function) {
-  const auto name = function->get_name();
+  const auto name = function->name();
   verify(function_map.insert({name, function}).second,
          "Function with name {} already exists in the module", name);
 }
 
 void Module::on_removed_node(Function* function) {
-  const auto name = function->get_name();
+  const auto name = function->name();
   verify(function_map.erase(name) > 0, "Cannot find function with name {} in the module.", name);
 }
 
-Module::Module(Context* context) : context(context), function_list(this) {
-  context->increase_refcount();
+Module::Module(Context* context) : context_(context), function_list_(this) {
+  context_->increase_refcount();
 }
 
 Module::~Module() {
-  verify(function_list.empty(), "Cannot remove non-empty module.");
-  context->decrease_refcount();
+  verify(function_list_.empty(), "Cannot remove non-empty module.");
+  context_->decrease_refcount();
 }
 
 void Module::print(IRPrinter& printer, IRPrintingMethod method) const {
@@ -64,7 +64,7 @@ std::unordered_map<const Function*, ValidationResults> Module::validate(
   for (const Function& function : local_functions()) {
     auto results = function.validate(new_behaviour);
     if (results.has_errors()) {
-      total_erors += results.get_errors().size();
+      total_erors += results.errors().size();
       all_results.insert({&function, std::move(results)});
     }
   }
@@ -83,12 +83,12 @@ std::unordered_map<const Function*, ValidationResults> Module::validate(
 Function* Module::create_function(Type* return_type,
                                   std::string name,
                                   const std::vector<Type*>& arguments) {
-  auto function = new Function(context, return_type, std::move(name), arguments);
-  function_list.push_back(function);
+  auto function = new Function(context_, return_type, std::move(name), arguments);
+  function_list_.push_back(function);
   return function;
 }
 
-Function* Module::get_function(std::string_view name) {
+Function* Module::find_function(std::string_view name) {
   const auto it = function_map.find(name);
   if (it != function_map.end()) {
     return it->second;
@@ -96,7 +96,7 @@ Function* Module::get_function(std::string_view name) {
   return nullptr;
 }
 
-const Function* Module::get_function(std::string_view name) const {
+const Function* Module::find_function(std::string_view name) const {
   const auto it = function_map.find(name);
   if (it != function_map.end()) {
     return it->second;

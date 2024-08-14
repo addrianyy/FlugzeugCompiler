@@ -27,7 +27,7 @@ struct BrainfuckLoop {
 };
 
 static bool get_brainfuck_loop(Block* block, BrainfuckLoop& loop) {
-  loop.branch = cast<CondBranch>(block->get_last_instruction());
+  loop.branch = cast<CondBranch>(block->last_instruction());
   if (!loop.branch || loop.branch->get_true_target() != block) {
     return false;
   }
@@ -39,7 +39,7 @@ static bool get_brainfuck_loop(Block* block, BrainfuckLoop& loop) {
     return false;
   }
 
-  if (loop.compare->get_block() != block || loop.iteration_count->get_block() != block) {
+  if (loop.compare->block() != block || loop.iteration_count->block() != block) {
     return false;
   }
 
@@ -52,7 +52,7 @@ static bool get_brainfuck_loop(Block* block, BrainfuckLoop& loop) {
 
   const auto is_foreign = [&](Value* value) {
     if (const auto instruction = cast<Instruction>(value)) {
-      return instruction->get_block() != block;
+      return instruction->block() != block;
     }
 
     return true;

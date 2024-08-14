@@ -51,7 +51,7 @@ static bool order_phis(Function* function) {
 
       if (previous && !cast<Phi>(previous)) {
         if (!last_phi) {
-          phi.move_before(block.get_first_instruction());
+          phi.move_before(block.first_instruction());
         } else {
           phi.move_after(last_phi);
         }
@@ -97,7 +97,7 @@ static bool split_critical_edges(Function* function) {
       const auto mid_block = function->create_block();
       mid_block->push_instruction_front(new Branch(function->context(), &block));
 
-      predecessor->get_last_instruction()->replace_operands(&block, mid_block);
+      predecessor->last_instruction()->replace_operands(&block, mid_block);
       block.replace_incoming_blocks_in_phis(predecessor, mid_block);
 
       did_something = true;
@@ -115,7 +115,7 @@ static bool generate_phi_moves(Function* function) {
       for (const auto incoming : phi) {
         const auto move = new BinaryInstr(function->context(), incoming.value, BinaryOp::Add,
                                           incoming.value->type()->zero());
-        move->insert_before(incoming.block->get_last_instruction());
+        move->insert_before(incoming.block->last_instruction());
 
         phi.replace_incoming_for_block(incoming.block, move);
 
@@ -150,9 +150,9 @@ static std::vector<Block*> toposort_blocks(Function* function, const BackEdges& 
   std::vector<Block*> sorted;
   std::unordered_set<Block*> visited;
 
-  stack.reserve(function->get_block_count() / 4);
-  sorted.reserve(function->get_block_count());
-  visited.reserve(function->get_block_count());
+  stack.reserve(function->block_count() / 4);
+  sorted.reserve(function->block_count());
+  visited.reserve(function->block_count());
 
   const auto are_predecessors_processed = [&](Block* block) {
     return all_of(block->predecessors(), [&](Block* predecessor) {
@@ -192,7 +192,7 @@ static std::vector<Block*> toposort_blocks(Function* function, const BackEdges& 
     }
   }
 
-  verify(sorted.size() == function->get_block_count(),
+  verify(sorted.size() == function->block_count(),
          "Topological sorting that skips back edges missed some blocks");
 
   return sorted;

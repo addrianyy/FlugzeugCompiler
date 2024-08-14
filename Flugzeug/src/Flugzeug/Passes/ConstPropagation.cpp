@@ -14,7 +14,7 @@ class Propagator : public InstructionVisitor {
   static bool get_constant(const Value* value, uint64_t& result) {
     const auto c = cast<Constant>(value);
     if (c) {
-      result = c->get_u();
+      result = c->value_u();
     }
     return c;
   }
@@ -69,7 +69,7 @@ class Propagator : public InstructionVisitor {
     const auto actual_target = cond_branch->get_target(cond);
     const auto removed_target = cond_branch->get_target(!cond);
 
-    const auto block = cond_branch->get_block();
+    const auto block = cond_branch->block();
     const auto branch = new Branch(cond_branch->context(), actual_target);
 
     cond_branch->replace_with_instruction_and_destroy(branch);
@@ -96,7 +96,7 @@ class Propagator : public InstructionVisitor {
       return OptimizationResult::unchanged();
     }
 
-    const auto pointer = base + uint64_t(index_constant->get_i());
+    const auto pointer = base + uint64_t(index_constant->value_i());
 
     return type->constant(pointer);
   }

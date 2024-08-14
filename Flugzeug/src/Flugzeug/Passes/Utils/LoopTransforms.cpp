@@ -9,7 +9,7 @@ using namespace flugzeug;
 
 static Block* add_intermediate_block_between_edges(const std::unordered_set<Block*>& from,
                                                    Block* to) {
-  const auto function = to->get_function();
+  const auto function = to->function();
 
   // Create an intermediate block and make it branch to the `to` block.
   const auto intermediate_block = function->create_block();
@@ -17,7 +17,7 @@ static Block* add_intermediate_block_between_edges(const std::unordered_set<Bloc
 
   // Make every `from` block branch to the `intermediate_block` instead of `to`.
   for (const auto from_block : from) {
-    verify(from_block->get_last_instruction()->replace_operands(to, intermediate_block),
+    verify(from_block->last_instruction()->replace_operands(to, intermediate_block),
            "There is no edge from `from` to `to`");
   }
 

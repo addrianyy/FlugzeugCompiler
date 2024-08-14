@@ -5,24 +5,24 @@ using namespace flugzeug;
 void InstructionInserter::insert_internal(Instruction* instruction) {
   switch (insert_type) {
     case InsertType::BlockFront:
-      insertion_block->push_instruction_front(instruction);
+      insertion_block_->push_instruction_front(instruction);
       break;
 
     case InsertType::BlockBack:
-      insertion_block->push_instruction_back(instruction);
+      insertion_block_->push_instruction_back(instruction);
       break;
 
     case InsertType::BeforeInstruction:
-      instruction->insert_before(insertion_instruction);
-      if (follow_instruction) {
-        insertion_instruction = instruction;
+      instruction->insert_before(insertion_instruction_);
+      if (follow_instruction_) {
+        insertion_instruction_ = instruction;
       }
       break;
 
     case InsertType::AfterInstruction:
-      instruction->insert_after(insertion_instruction);
-      if (follow_instruction) {
-        insertion_instruction = instruction;
+      instruction->insert_after(insertion_instruction_);
+      if (follow_instruction_) {
+        insertion_instruction_ = instruction;
       }
       break;
   }
@@ -31,30 +31,30 @@ void InstructionInserter::insert_internal(Instruction* instruction) {
 void InstructionInserter::set_insertion_block(Block* block, InsertDestination destination) {
   insert_type =
     destination == InsertDestination::Back ? InsertType::BlockBack : InsertType::BlockFront;
-  follow_instruction = false;
-  insertion_instruction = nullptr;
-  insertion_block = block;
+  follow_instruction_ = false;
+  insertion_instruction_ = nullptr;
+  insertion_block_ = block;
   context = block ? block->context() : nullptr;
 }
 
 void InstructionInserter::set_insertion_instruction(Instruction* instruction,
                                                     InsertDestination destination,
-                                                    bool follow_instruction_) {
+                                                    bool follow_instruction) {
   insert_type = destination == InsertDestination::Back ? InsertType::AfterInstruction
                                                        : InsertType::BeforeInstruction;
-  follow_instruction = follow_instruction_;
-  insertion_instruction = instruction;
-  insertion_block = nullptr;
+  follow_instruction_ = follow_instruction;
+  insertion_instruction_ = instruction;
+  insertion_block_ = nullptr;
   context = instruction ? instruction->context() : nullptr;
 }
 
-Block* InstructionInserter::get_insertion_block() {
-  if (insertion_block) {
-    return insertion_block;
+Block* InstructionInserter::insertion_block() {
+  if (insertion_block_) {
+    return insertion_block_;
   }
 
-  if (insertion_instruction) {
-    return insertion_instruction->get_block();
+  if (insertion_instruction_) {
+    return insertion_instruction_->block();
   }
 
   return nullptr;

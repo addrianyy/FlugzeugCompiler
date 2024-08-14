@@ -20,9 +20,9 @@ class InstructionInserter {
 
   InsertType insert_type = InsertType::BlockBack;
 
-  Block* insertion_block = nullptr;
-  Instruction* insertion_instruction = nullptr;
-  bool follow_instruction = false;
+  Block* insertion_block_ = nullptr;
+  Instruction* insertion_instruction_ = nullptr;
+  bool follow_instruction_ = false;
 
   Context* context = nullptr;
 
@@ -54,7 +54,7 @@ class InstructionInserter {
                                  InsertDestination destination = InsertDestination::Back,
                                  bool follow_instruction = true);
 
-  Block* get_insertion_block();
+  Block* insertion_block();
 
   UnaryInstr* unary_instr(UnaryOp op, Value* val);
   BinaryInstr* binary_instr(Value* lhs, BinaryOp op, Value* rhs);
@@ -72,25 +72,17 @@ class InstructionInserter {
   Phi* phi(Type* type);
   Phi* phi(const std::vector<Phi::Incoming>& incoming);
 
-#define UNARY_INSTR(name, op)    \
-  UnaryInstr* name(Value* val) { \
-    return unary_instr(op, val); \
-  }
+#define UNARY_INSTR(name, op) \
+  UnaryInstr* name(Value* val) { return unary_instr(op, val); }
 
-#define BINARY_INSTR(name, op)                \
-  BinaryInstr* name(Value* lhs, Value* rhs) { \
-    return binary_instr(lhs, op, rhs);        \
-  }
+#define BINARY_INSTR(name, op) \
+  BinaryInstr* name(Value* lhs, Value* rhs) { return binary_instr(lhs, op, rhs); }
 
-#define INT_COMPARE(name, pred)              \
-  IntCompare* name(Value* lhs, Value* rhs) { \
-    return int_compare(lhs, pred, rhs);      \
-  }
+#define INT_COMPARE(name, pred) \
+  IntCompare* name(Value* lhs, Value* rhs) { return int_compare(lhs, pred, rhs); }
 
-#define CAST(name, kind)                      \
-  Cast* name(Value* val, Type* target_type) { \
-    return cast(kind, val, target_type);      \
-  }
+#define CAST(name, kind) \
+  Cast* name(Value* val, Type* target_type) { return cast(kind, val, target_type); }
 
   UNARY_INSTR(neg, UnaryOp::Neg)
   UNARY_INSTR(not_, UnaryOp::Not)

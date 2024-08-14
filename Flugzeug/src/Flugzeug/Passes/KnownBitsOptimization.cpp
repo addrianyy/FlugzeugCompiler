@@ -32,7 +32,7 @@ class KnownBitsDatabase {
     if (const auto constant = cast<Constant>(value)) {
       return KnownBits{
         .mask = type_bitmask,
-        .value = constant->get_u(),
+        .value = constant->value_u(),
       };
     }
 
@@ -329,7 +329,7 @@ class BitOptimizer : InstructionVisitor {
       case BinaryOp::Sar: {
         const auto shift_amount_constant = cast<Constant>(binary->get_rhs());
         if (shift_amount_constant) {
-          const auto shift_amount = shift_amount_constant->get_u();
+          const auto shift_amount = shift_amount_constant->value_u();
 
           auto mask = a.mask;
           auto value = a.value;
@@ -616,8 +616,7 @@ bool opt::KnownBitsOptimization::run(Function* function) {
   bool did_something = false;
 
   // We need to traverse blocks in the DFS order.
-  const auto blocks =
-    function->get_entry_block()->get_reachable_blocks(TraversalType::DFS_WithStart);
+  const auto blocks = function->entry_block()->reachable_blocks(TraversalType::DFS_WithStart);
 
   KnownBitsDatabase bits_database;
 

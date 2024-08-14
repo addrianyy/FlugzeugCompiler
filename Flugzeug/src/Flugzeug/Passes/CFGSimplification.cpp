@@ -8,11 +8,11 @@
 using namespace flugzeug;
 
 static Block* get_intermediate_block_target(Block* block) {
-  if (block->get_instruction_count() != 1) {
+  if (block->instruction_count() != 1) {
     return nullptr;
   }
 
-  if (const auto branch = cast<Branch>(block->get_last_instruction())) {
+  if (const auto branch = cast<Branch>(block->last_instruction())) {
     const auto target = branch->get_target();
 
     // Skip infinite loops.
@@ -72,7 +72,7 @@ static bool thread_jumps(Function* function) {
       continue;
     }
 
-    const auto last_instruction = block.get_last_instruction();
+    const auto last_instruction = block.last_instruction();
 
     if (const auto branch = cast<Branch>(last_instruction)) {
       if (const auto new_target = thread_jump(&block, branch->get_target(), &did_something)) {
@@ -105,19 +105,19 @@ static bool merge_blocks(Function* function) {
   bool did_something = false;
 
   for (Block& block : advance_early(*function)) {
-    const auto predecessor = block.get_single_predecessor();
+    const auto predecessor = block.single_predecessor();
     if (block.is_entry_block() || !predecessor || predecessor == &block) {
       continue;
     }
 
-    const auto branch_to_block = cast<Branch>(predecessor->get_last_instruction());
+    const auto branch_to_block = cast<Branch>(predecessor->last_instruction());
     if (!branch_to_block) {
       continue;
     }
 
     // Move all instructions from `block` to `predecessor`.
-    while (!block.is_empty()) {
-      const auto instruction = block.get_first_instruction();
+    while (!block.empty()) {
+      const auto instruction = block.first_instruction();
       instruction->move_before(branch_to_block);
 
       if (const auto phi = cast<Phi>(instruction)) {

@@ -27,7 +27,7 @@ static bool is_instruction_loop_invariant(Instruction* instruction,
   }
 
   if (const auto phi = cast<Phi>(instruction)) {
-    if (phi->get_block() != loop->get_header()) {
+    if (phi->block() != loop->get_header()) {
       return false;
     }
 
@@ -104,7 +104,7 @@ static bool optimize_invariants(Function* function, const analysis::Loop* loop) 
 
   // Move all invariants out of the loop.
   for (Instruction* invariant : invariants) {
-    invariant->move_before(preheader->get_last_instruction());
+    invariant->move_before(preheader->last_instruction());
 
     if (const auto phi = cast<Phi>(invariant)) {
       verify(utils::simplify_phi(phi, true), "Failed to simplify Phi");

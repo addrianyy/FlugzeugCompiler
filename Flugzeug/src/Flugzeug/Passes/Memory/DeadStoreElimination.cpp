@@ -84,7 +84,7 @@ static bool is_store_dead(const Store* store, const analysis::PointerAliasing& a
   };
 
   const auto check_block = [&](const Block* block) -> CheckResult {
-    return check_instruction_range(block->get_first_instruction(), nullptr);
+    return check_instruction_range(block->first_instruction(), nullptr);
   };
 
   {
@@ -102,7 +102,7 @@ static bool is_store_dead(const Store* store, const analysis::PointerAliasing& a
   std::vector<const Block*> stack;
 
   // Start from store block and traverse down.
-  stack.push_back(store->get_block());
+  stack.push_back(store->block());
 
   bool can_reach_itself = false;
 
@@ -114,7 +114,7 @@ static bool is_store_dead(const Store* store, const analysis::PointerAliasing& a
       continue;
     }
 
-    if (block != store->get_block()) {
+    if (block != store->block()) {
       const auto result = check_block(block);
       if (result == CheckResult::Ok) {
         continue;
@@ -133,7 +133,7 @@ static bool is_store_dead(const Store* store, const analysis::PointerAliasing& a
     }
 
     for (const auto successor : successors) {
-      if (successor == store->get_block()) {
+      if (successor == store->block()) {
         can_reach_itself = true;
         continue;
       }
@@ -147,7 +147,7 @@ static bool is_store_dead(const Store* store, const analysis::PointerAliasing& a
   if (can_reach_itself) {
     // Store block can reach itself. Make sure that nothing in the initial part of the store block
     // can observe the pointer.
-    const auto first_instruction = store->get_block()->get_first_instruction();
+    const auto first_instruction = store->block()->first_instruction();
     if (check_instruction_range(first_instruction, store) == CheckResult::Invalid) {
       return false;
     }

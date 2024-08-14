@@ -186,7 +186,7 @@ void Store::print_instruction_internal(IRPrinter::LinePrinter& p) const {
 }
 
 void Call::print_instruction_internal(IRPrinter::LinePrinter& p) const {
-  p.print("call", type(), IRPrinter::NonKeywordWord{get_callee()->get_name()},
+  p.print("call", type(), IRPrinter::NonKeywordWord{get_callee()->name()},
           SpecialItem::ParenOpen);
 
   for (size_t i = 0; i < get_arg_count(); ++i) {
@@ -297,7 +297,7 @@ void Store::print_instruction_compact_internal(
 void Call::print_instruction_compact_internal(
   IRPrinter::LinePrinter& p,
   const std::unordered_set<const Value*>& inlined_values) const {
-  p.print("call", type(), IRPrinter::NonKeywordWord{get_callee()->get_name()},
+  p.print("call", type(), IRPrinter::NonKeywordWord{get_callee()->name()},
           SpecialItem::ParenOpen);
 
   for (size_t i = 0; i < get_arg_count(); ++i) {

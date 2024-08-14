@@ -88,27 +88,27 @@ void Value::set_display_index(size_t index) {
 
 bool Value::is_zero() const {
   const auto c = cast<Constant>(this);
-  return c && c->get_u() == 0;
+  return c && c->value_u() == 0;
 }
 
 bool Value::is_one() const {
   const auto c = cast<Constant>(this);
-  return c && c->get_u() == 1;
+  return c && c->value_u() == 1;
 }
 
 bool Value::is_all_ones() const {
   const auto c = cast<Constant>(this);
-  return c && c->get_i() == -1;
+  return c && c->value_i() == -1;
 }
 
 std::optional<uint64_t> Value::constant_u_opt() const {
   const auto c = cast<Constant>(this);
-  return c ? std::optional(c->get_u()) : std::nullopt;
+  return c ? std::optional(c->value_u()) : std::nullopt;
 }
 
 std::optional<int64_t> Value::constant_i_opt() const {
   const auto c = cast<Constant>(this);
-  return c ? std::optional(c->get_i()) : std::nullopt;
+  return c ? std::optional(c->value_i()) : std::nullopt;
 }
 
 bool Value::is_same_type_as(const Value* other) const {
@@ -123,17 +123,17 @@ bool Value::is_same_type_as(const Value* other) const {
   if (const auto other_function = cast<Function>(other)) {
     const auto function = cast<Function>(this);
 
-    if (other_function->get_return_type() != function->get_return_type()) {
+    if (other_function->return_type() != function->return_type()) {
       return false;
     }
 
-    if (other_function->get_parameter_count() != function->get_parameter_count()) {
+    if (other_function->parameter_count() != function->parameter_count()) {
       return false;
     }
 
-    for (size_t i = 0; i < function->get_parameter_count(); ++i) {
-      const auto t1 = function->get_parameter(i)->type();
-      const auto t2 = other_function->get_parameter(i)->type();
+    for (size_t i = 0; i < function->parameter_count(); ++i) {
+      const auto t1 = function->parameter(i)->type();
+      const auto t2 = other_function->parameter(i)->type();
       if (t1 != t2) {
         return false;
       }

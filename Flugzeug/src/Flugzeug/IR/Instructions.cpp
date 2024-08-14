@@ -72,7 +72,7 @@ IntPredicate IntCompare::swapped_order_predicate(IntPredicate pred) {
 }
 
 Call::Call(Context* context, Function* function, const std::vector<Value*>& arguments)
-    : Instruction(context, Value::Kind::Call, function->get_return_type()) {
+    : Instruction(context, Value::Kind::Call, function->return_type()) {
   set_operand_count(arguments.size() + 1);
 
   set_operand(0, function);

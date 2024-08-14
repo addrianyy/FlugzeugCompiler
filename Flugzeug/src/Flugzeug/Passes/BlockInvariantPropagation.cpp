@@ -10,7 +10,7 @@ static std::optional<std::pair<Value*, Value*>> get_edge_invariant(Block* from, 
   // a result from `cmp ne` or `cmp eq` instruction.
 
   // Get the conditional branch at the end of `from`.
-  const auto cond_branch = cast<CondBranch>(from->get_last_instruction());
+  const auto cond_branch = cast<CondBranch>(from->last_instruction());
   if (!cond_branch) {
     return std::nullopt;
   }
@@ -66,8 +66,7 @@ bool opt::BlockInvariantPropagation::run(Function* function) {
   bool did_something = false;
 
   // We need to traverse blocks in the DFS order.
-  const auto blocks =
-    function->get_entry_block()->get_reachable_blocks(TraversalType::DFS_WithStart);
+  const auto blocks = function->entry_block()->reachable_blocks(TraversalType::DFS_WithStart);
 
   std::unordered_map<Block*, std::unordered_map<Value*, Value*>> block_invariants;
   std::vector<std::unordered_map<Value*, Value*>> predecessor_invariants;

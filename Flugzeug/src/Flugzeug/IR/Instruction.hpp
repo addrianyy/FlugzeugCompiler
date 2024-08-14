@@ -23,9 +23,9 @@ class Instruction : public User, public ll::IntrusiveNode<Instruction, Block> {
   friend class Block;
   friend class Function;
 
-  mutable size_t order_in_block = 0;
+  mutable size_t order_in_block_ = 0;
 
-  size_t get_order_in_block() const;
+  size_t order_in_block() const;
 
  protected:
   using User::User;
@@ -60,11 +60,11 @@ class Instruction : public User, public ll::IntrusiveNode<Instruction, Block> {
   void print() const;
   void debug_print() const;
 
-  Block* get_block() { return owner(); }
-  const Block* get_block() const { return owner(); }
+  Block* block() { return owner(); }
+  const Block* block() const { return owner(); }
 
-  Function* get_function();
-  const Function* get_function() const;
+  Function* function();
+  const Function* function() const;
 
   void destroy();
   bool destroy_if_unused();

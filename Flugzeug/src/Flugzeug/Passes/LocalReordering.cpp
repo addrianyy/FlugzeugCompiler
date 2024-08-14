@@ -31,7 +31,7 @@ class Reorderer : InstructionVisitor {
     }
 
     for (Instruction& instruction :
-         instruction_range(binary->get_block()->get_first_instruction(), previous)) {
+         instruction_range(binary->block()->first_instruction(), previous)) {
       if (match_pattern(&instruction,
                         pat::binary_specific(pat::exact(binary->get_lhs()), *corresponding_op,
                                              pat::exact(binary->get_rhs())))) {
@@ -97,7 +97,7 @@ bool opt::LocalReordering::run(Function* function) {
     // We want to move earlier instruction just before later instruction.
 
     // Local reorder can only reorder within one block.
-    if (earlier_instruction->get_block() != later_instruction->get_block()) {
+    if (earlier_instruction->block() != later_instruction->block()) {
       continue;
     }
 

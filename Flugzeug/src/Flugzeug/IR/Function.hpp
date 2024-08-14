@@ -30,11 +30,11 @@ class Function final : public Value, public ll::IntrusiveNode<Function, Module> 
     TBlock* current_block;
     TInstruction* current_instruction;
 
-    void get_instruction_for_current_block() {
+    void visit_block() {
       current_instruction = nullptr;
 
       while (current_block) {
-        current_instruction = current_block->get_first_instruction();
+        current_instruction = current_block->first_instruction();
         if (current_instruction) {
           break;
         }
@@ -52,7 +52,7 @@ class Function final : public Value, public ll::IntrusiveNode<Function, Module> 
 
     explicit InstructionIteratorInternal(TBlock* current_block)
         : current_block(current_block), current_instruction(nullptr) {
-      get_instruction_for_current_block();
+      visit_block();
     }
 
     InstructionIteratorInternal& operator++() {
@@ -60,7 +60,7 @@ class Function final : public Value, public ll::IntrusiveNode<Function, Module> 
         current_instruction = next;
       } else {
         current_block = current_block->next();
-        get_instruction_for_current_block();
+        visit_block();
       }
 
       return *this;
@@ -81,12 +81,12 @@ class Function final : public Value, public ll::IntrusiveNode<Function, Module> 
     bool operator!=(const InstructionIteratorInternal& rhs) const { return !(*this == rhs); }
   };
 
-  Type* const return_type;
-  const std::string name;
-  std::vector<Parameter*> parameters;
+  Type* const return_type_;
+  const std::string name_;
+  std::vector<Parameter*> parameters_;
 
   /// Entry block is always first block in the list.
-  BlockList blocks;
+  BlockList blocks_;
 
   size_t next_value_index = 0;
   size_t next_block_index = 0;
@@ -94,7 +94,7 @@ class Function final : public Value, public ll::IntrusiveNode<Function, Module> 
   size_t allocate_value_index() { return next_value_index++; }
   size_t allocate_block_index() { return next_block_index++; }
 
-  BlockList& intrusive_list() { return blocks; }
+  BlockList& intrusive_list() { return blocks_; }
 
   void on_added_node(Block* block);
   void on_removed_node(Block* block);
@@ -125,41 +125,41 @@ class Function final : public Value, public ll::IntrusiveNode<Function, Module> 
   void debug_graph() const;
 
 #pragma region block_list
-  Block* get_first_block() { return blocks.first(); }
-  Block* get_last_block() { return blocks.last(); }
+  Block* first_block() { return blocks_.first(); }
+  Block* last_block() { return blocks_.last(); }
 
-  const Block* get_first_block() const { return blocks.first(); }
-  const Block* get_last_block() const { return blocks.last(); }
+  const Block* first_block() const { return blocks_.first(); }
+  const Block* last_block() const { return blocks_.last(); }
 
-  size_t get_block_count() const { return blocks.size(); }
-  bool is_empty() const { return blocks.empty(); }
+  size_t block_count() const { return blocks_.size(); }
+  bool empty() const { return blocks_.empty(); }
 
   using const_iterator = BlockList::const_iterator;
   using iterator = BlockList::iterator;
 
-  iterator begin() { return blocks.begin(); }
-  iterator end() { return blocks.end(); }
+  iterator begin() { return blocks_.begin(); }
+  iterator end() { return blocks_.end(); }
 
-  const_iterator begin() const { return blocks.begin(); }
-  const_iterator end() const { return blocks.end(); }
+  const_iterator begin() const { return blocks_.begin(); }
+  const_iterator end() const { return blocks_.end(); }
 #pragma endregion
 
-  Module* get_module() { return owner(); }
-  const Module* get_module() const { return owner(); }
+  Module* module() { return owner(); }
+  const Module* module() const { return owner(); }
 
-  Type* get_return_type() const { return return_type; }
-  std::string_view get_name() const { return name; }
+  Type* return_type() const { return return_type_; }
+  std::string_view name() const { return name_; }
 
-  size_t get_parameter_count() const { return parameters.size(); }
+  size_t parameter_count() const { return parameters_.size(); }
 
-  Parameter* get_parameter(size_t i) { return parameters[i]; }
-  const Parameter* get_parameter(size_t i) const { return parameters[i]; }
+  Parameter* parameter(size_t i) { return parameters_[i]; }
+  const Parameter* parameter(size_t i) const { return parameters_[i]; }
 
-  Block* get_entry_block() { return get_first_block(); }
-  const Block* get_entry_block() const { return get_first_block(); }
+  Block* entry_block() { return first_block(); }
+  const Block* entry_block() const { return first_block(); }
 
-  bool is_extern() const { return is_empty(); }
-  bool is_local() const { return !is_empty(); }
+  bool is_extern() const { return empty(); }
+  bool is_local() const { return !empty(); }
 
   void reassign_display_indices();
 
@@ -180,22 +180,21 @@ class Function final : public Value, public ll::IntrusiveNode<Function, Module> 
     detail::TypeFilteringIterator<const TInstruction, ConstInstructionIterator>;
 
   IteratorRange<InstructionIterator> instructions() {
-    return {InstructionIterator(get_first_block()), InstructionIterator(nullptr)};
+    return {InstructionIterator(first_block()), InstructionIterator(nullptr)};
   }
   IteratorRange<ConstInstructionIterator> instructions() const {
-    return {ConstInstructionIterator(get_first_block()), ConstInstructionIterator(nullptr)};
+    return {ConstInstructionIterator(first_block()), ConstInstructionIterator(nullptr)};
   }
 
   template <typename TInstruction>
   IteratorRange<SpecificInstructionIterator<TInstruction>> instructions() {
-    return {SpecificInstructionIterator<TInstruction>(InstructionIterator(get_first_block())),
+    return {SpecificInstructionIterator<TInstruction>(InstructionIterator(first_block())),
             SpecificInstructionIterator<TInstruction>(InstructionIterator(nullptr))};
   }
   template <typename TInstruction>
   IteratorRange<ConstSpecificInstructionIterator<TInstruction>> instructions() const {
-    return {
-      ConstSpecificInstructionIterator<TInstruction>(ConstInstructionIterator(get_first_block())),
-      ConstSpecificInstructionIterator<TInstruction>(ConstInstructionIterator(nullptr))};
+    return {ConstSpecificInstructionIterator<TInstruction>(ConstInstructionIterator(first_block())),
+            ConstSpecificInstructionIterator<TInstruction>(ConstInstructionIterator(nullptr))};
   }
 };
 

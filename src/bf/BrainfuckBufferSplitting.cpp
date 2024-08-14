@@ -24,7 +24,7 @@ static bool process_pointer(Instruction* pointer,
         return false;
       }
 
-      worklist.emplace_back(offset, offset_from_stackalloc + constant_index->get_i());
+      worklist.emplace_back(offset, offset_from_stackalloc + constant_index->value_i());
       continue;
     }
 
@@ -52,7 +52,7 @@ static bool split_stackalloc(StackAlloc* stackalloc) {
   const auto type = stackalloc->get_allocated_type();
 
   auto zero_buffer_call = cast<Call>(stackalloc->next());
-  if (zero_buffer_call && (zero_buffer_call->get_callee()->get_name() != "zero_buffer" ||
+  if (zero_buffer_call && (zero_buffer_call->get_callee()->name() != "zero_buffer" ||
                            zero_buffer_call->get_arg(0) != stackalloc)) {
     zero_buffer_call = nullptr;
   }

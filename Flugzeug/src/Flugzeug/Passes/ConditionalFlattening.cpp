@@ -28,11 +28,11 @@ static bool speculate_instructions(const std::array<Block*, N>& from, Block* to)
   // Count all instructions in the `from` blocks and make sure that they all are movable.
   for (Block* from_block : from) {
     // Count all instructions except the last branch.
-    total_instructions += from_block->get_instruction_count() - 1;
+    total_instructions += from_block->instruction_count() - 1;
 
     for (Instruction& instruction : *from_block) {
       // Skip last instruction in the block (branch).
-      if (&instruction == from_block->get_last_instruction()) {
+      if (&instruction == from_block->last_instruction()) {
         continue;
       }
 
@@ -56,7 +56,7 @@ static bool speculate_instructions(const std::array<Block*, N>& from, Block* to)
   for (Block* from_block : from) {
     for (Instruction& instruction : advance_early(*from_block)) {
       // Skip last instruction in the block (branch).
-      if (&instruction == from_block->get_last_instruction()) {
+      if (&instruction == from_block->last_instruction()) {
         continue;
       }
 
@@ -66,7 +66,7 @@ static bool speculate_instructions(const std::array<Block*, N>& from, Block* to)
         continue;
       }
 
-      instruction.move_before(to->get_last_instruction());
+      instruction.move_before(to->last_instruction());
     }
 
     from_block->clear();
@@ -81,11 +81,11 @@ static bool flatten(const std::array<Block*, N>& speculated_blocks,
                     Block* true_block,
                     Block* false_block,
                     Block* exit) {
-  const auto block = cond_branch->get_block();
+  const auto block = cond_branch->block();
 
   // All speculated blocks must have only `block` as predecessor.
   for (const auto speculated : speculated_blocks) {
-    if (speculated->get_single_predecessor() != block) {
+    if (speculated->single_predecessor() != block) {
       return false;
     }
   }
@@ -117,7 +117,7 @@ static bool flatten(const std::array<Block*, N>& speculated_blocks,
 }
 
 static bool try_flatten_block(Block* block) {
-  const auto cond_branch = cast<CondBranch>(block->get_last_instruction());
+  const auto cond_branch = cast<CondBranch>(block->last_instruction());
   if (!cond_branch) {
     return false;
   }
@@ -130,8 +130,8 @@ static bool try_flatten_block(Block* block) {
     return false;
   }
 
-  const auto on_true_exit = on_true->get_single_successor();
-  const auto on_false_exit = on_false->get_single_successor();
+  const auto on_true_exit = on_true->single_successor();
+  const auto on_false_exit = on_false->single_successor();
 
   // Skewed case:
   //   A

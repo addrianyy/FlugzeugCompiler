@@ -458,7 +458,7 @@ IRGenerator::VisitResult IRGenerator::visit_return_stmt(Argument<ReturnStmt> ret
 
     inserter.ret(casted);
   } else {
-    verify(current_ir_function->get_return_type()->is_void(),
+    verify(current_ir_function->return_type()->is_void(),
            "Cannot return void from non-void function");
 
     inserter.ret();
@@ -551,7 +551,7 @@ IRGenerator::VisitResult IRGenerator::visit_call_expr(Argument<CallExpr> call_ex
   verify(it != function_map.end(), "Called unknown function {}", call_expr->get_function_name());
 
   const auto& target_prototype = it->second->get_prototype();
-  const auto target_ir_function = module->get_function(call_expr->get_function_name());
+  const auto target_ir_function = module->find_function(call_expr->get_function_name());
 
   std::vector<fz::Value*> arguments(call_expr->get_arguments().size());
   verify(arguments.size() == target_prototype.get_arguments().size(),
@@ -625,7 +625,7 @@ bool IRGenerator::generate_body(const BodyStmt* body) {
   for (const auto& stmt : body->get_statements()) {
     generate_statement(stmt.get());
 
-    if (inserter.get_insertion_block()->is_terminated()) {
+    if (inserter.insertion_block()->is_terminated()) {
       terminated = true;
       break;
     }
@@ -650,14 +650,14 @@ void IRGenerator::generate_local_function(const Function& function, fz::Function
     size_t parameter_index = 0;
     for (const auto& [type, name] : function.get_prototype().get_arguments()) {
       const auto storage = inserter.stack_alloc(convert_type(type));
-      const auto parameter = ir_function->get_parameter(parameter_index++);
+      const auto parameter = ir_function->parameter(parameter_index++);
       inserter.store(storage, parameter);
 
       variables.insert(name, CodegenValue::lvalue(type, storage));
     }
 
     if (!generate_body(function.get_body())) {
-      if (ir_function->get_return_type()->is_void()) {
+      if (ir_function->return_type()->is_void()) {
         inserter.ret();
       } else {
         fatal_error("No return statement in non-void function.");
@@ -695,7 +695,7 @@ void IRGenerator::generate_ir_for_functions(const std::vector<Function>& functio
   for (const Function& function : functions) {
     if (function.get_body()) {
       const auto& name = function.get_prototype().get_name();
-      generate_local_function(function, module->get_function(name));
+      generate_local_function(function, module->find_function(name));
     }
   }
 

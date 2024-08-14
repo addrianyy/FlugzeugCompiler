@@ -108,7 +108,7 @@ static void rewrite_pointer(Value* pointer,
 
   load_pointer_to_stackalloc_after(stackalloc);
   if (has_stores) {
-    store_stackalloc_to_pointer_before(dedicated_exit->get_first_instruction());
+    store_stackalloc_to_pointer_before(dedicated_exit->first_instruction());
   }
 
   // Insert additional loads and stores around aliasing calls.
@@ -163,7 +163,7 @@ static bool optimize_loop(Function* function,
       // If a pointer is an instruction then it must dominate this loop. Otherwise we cannot extract
       // it.
       if (const auto creation_instruction = cast<Instruction>(pointer)) {
-        const auto creation_block = creation_instruction->get_block();
+        const auto creation_block = creation_instruction->block();
         if (creation_block == loop->get_header() ||
             !creation_block->dominates(loop->get_header(), dominator_tree)) {
           continue;

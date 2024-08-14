@@ -25,9 +25,9 @@ static void destroy_dead_block(Block* block) {
 bool opt::DeadBlockElimination::run(Function* function) {
   // Do DFS traversal on the CFG to find blocks reachable from entry block.
   const auto reachable_blocks =
-    function->get_entry_block()->get_reachable_blocks_set(IncludeStart::Yes);
+    function->entry_block()->reachable_blocks_set(IncludeStart::Yes);
 
-  const bool dead_blocks_found = reachable_blocks.size() != function->get_block_count();
+  const bool dead_blocks_found = reachable_blocks.size() != function->block_count();
   if (dead_blocks_found) {
     for (Block& block : advance_early(*function)) {
       if (!reachable_blocks.contains(&block)) {

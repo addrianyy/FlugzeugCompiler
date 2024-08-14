@@ -67,14 +67,14 @@ class Block final : public Value, public ll::IntrusiveNode<Block, Function> {
   void debug_print() const;
 
 #pragma region instruction_list
-  Instruction* get_first_instruction() { return instruction_list.first(); }
-  Instruction* get_last_instruction() { return instruction_list.last(); }
+  Instruction* first_instruction() { return instruction_list.first(); }
+  Instruction* last_instruction() { return instruction_list.last(); }
 
-  const Instruction* get_first_instruction() const { return instruction_list.first(); }
-  const Instruction* get_last_instruction() const { return instruction_list.last(); }
+  const Instruction* first_instruction() const { return instruction_list.first(); }
+  const Instruction* last_instruction() const { return instruction_list.last(); }
 
-  size_t get_instruction_count() const { return instruction_list.size(); }
-  bool is_empty() const { return instruction_list.empty(); }
+  size_t instruction_count() const { return instruction_list.size(); }
+  bool empty() const { return instruction_list.empty(); }
 
   void push_instruction_front(Instruction* instruction) {
     instruction_list.push_front(instruction);
@@ -118,8 +118,8 @@ class Block final : public Value, public ll::IntrusiveNode<Block, Function> {
 
   bool is_entry_block() const { return is_entry; }
 
-  Function* get_function() { return owner(); }
-  const Function* get_function() const { return owner(); }
+  Function* function() { return owner(); }
+  const Function* function() const { return owner(); }
 
   std::string format() const override;
 
@@ -144,11 +144,11 @@ class Block final : public Value, public ll::IntrusiveNode<Block, Function> {
   bool has_successor(const Block* successor) const;
   bool has_predecessor(const Block* predecessor) const;
 
-  Block* get_single_successor();
-  const Block* get_single_successor() const;
+  Block* single_successor();
+  const Block* single_successor() const;
 
-  Block* get_single_predecessor();
-  const Block* get_single_predecessor() const;
+  Block* single_predecessor();
+  const Block* single_predecessor() const;
 
   BlockTargets<Block> successors();
   BlockTargets<const Block> successors() const;
@@ -159,11 +159,11 @@ class Block final : public Value, public ll::IntrusiveNode<Block, Function> {
   std::unordered_set<Block*> predecessors_set();
   std::unordered_set<const Block*> predecessors_set() const;
 
-  std::vector<Block*> get_reachable_blocks(TraversalType traversal);
-  std::vector<const Block*> get_reachable_blocks(TraversalType traversal) const;
+  std::vector<Block*> reachable_blocks(TraversalType traversal);
+  std::vector<const Block*> reachable_blocks(TraversalType traversal) const;
 
-  std::unordered_set<Block*> get_reachable_blocks_set(IncludeStart include_start);
-  std::unordered_set<const Block*> get_reachable_blocks_set(IncludeStart include_start) const;
+  std::unordered_set<Block*> reachable_blocks_set(IncludeStart include_start);
+  std::unordered_set<const Block*> reachable_blocks_set(IncludeStart include_start) const;
 };
 
 template <typename TInstruction1, typename TInstruction2>

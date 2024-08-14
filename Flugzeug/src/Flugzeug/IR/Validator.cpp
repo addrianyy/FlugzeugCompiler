@@ -144,16 +144,16 @@ class Validator : public ConstInstructionVisitor {
     const auto type = call->type();
     const auto called_function = call->get_callee();
 
-    validation_check(called_function->get_module() == function->get_module(),
+    validation_check(called_function->module() == function->module(),
                      "Call instruction crosses module boundary.");
-    validation_check(type == called_function->get_return_type(),
+    validation_check(type == called_function->return_type(),
                      "Call return type ({}) differs from functon return type", Format(type),
-                     Format(called_function->get_return_type()));
-    validation_check(called_function->get_parameter_count() == call->get_arg_count(),
+                     Format(called_function->return_type()));
+    validation_check(called_function->parameter_count() == call->get_arg_count(),
                      "Call parameter count mismatch");
 
-    for (size_t i = 0; i < called_function->get_parameter_count(); ++i) {
-      const auto func_type = called_function->get_parameter(i)->type();
+    for (size_t i = 0; i < called_function->parameter_count(); ++i) {
+      const auto func_type = called_function->parameter(i)->type();
       const auto call_type = call->get_arg(i)->type();
 
       validation_check(call_type == func_type, "Call argument {}: expected {}, found {}", i,
@@ -178,7 +178,7 @@ class Validator : public ConstInstructionVisitor {
     const auto type = ret->type();
     const auto val_type = ret->get_val() ? ret->get_val()->type() : nullptr;
 
-    const auto return_type = current_block->get_function()->get_return_type();
+    const auto return_type = current_block->function()->return_type();
     if (return_type->is_void()) {
       validation_check(!ret->get_val(), "Void functions return non-void value");
     } else {
@@ -283,7 +283,7 @@ class Validator : public ConstInstructionVisitor {
       } else if (const auto block = cast<Block>(operand)) {
         validation_check(blocks.contains(block), "Instruction uses block outside of the function");
       } else if (const auto other = cast<Instruction>(operand)) {
-        const auto is_inserted = other->get_block();
+        const auto is_inserted = other->block();
         validation_check(is_inserted, "Using uninserted instruction as operand");
 
         if (!phi) {
@@ -319,11 +319,10 @@ class Validator : public ConstInstructionVisitor {
         }
 
         if (const auto incoming_instruction = cast<Instruction>(incoming.value)) {
-          if (incoming_instruction->get_block()) {
+          if (incoming_instruction->block()) {
             // Simulate usage at the end of predecessor.
             validation_check(
-              incoming_instruction->dominates(incoming.block->get_last_instruction(),
-                                              dominator_tree),
+              incoming_instruction->dominates(incoming.block->last_instruction(), dominator_tree),
               "Phi has incoming value `{}` which doesn't dominate the last instruction of `{}`",
               Format(incoming.value), Format(incoming.block));
           }
@@ -337,8 +336,8 @@ class Validator : public ConstInstructionVisitor {
 
  public:
   explicit Validator(const Function* function) : function(function), dominator_tree(function) {
-    for (size_t i = 0; i < function->get_parameter_count(); ++i) {
-      parameters.insert(function->get_parameter(i));
+    for (size_t i = 0; i < function->parameter_count(); ++i) {
+      parameters.insert(function->parameter(i));
     }
 
     for (const Block& block : *function) {
@@ -361,7 +360,7 @@ class Validator : public ConstInstructionVisitor {
       }
 
       // Empty blocks are invalid.
-      if (!validation_check(!block.is_empty(), "Block is empty")) {
+      if (!validation_check(!block.empty(), "Block is empty")) {
         continue;
       }
 
@@ -373,7 +372,7 @@ class Validator : public ConstInstructionVisitor {
 
         check_instruction(&instruction);
 
-        if (block.get_last_instruction() == &instruction) {
+        if (block.last_instruction() == &instruction) {
           validation_check(instruction.is_terminator(), "Block doesn't end in terminator");
         } else {
           validation_check(!instruction.is_terminator(),
@@ -421,7 +420,7 @@ static void print_error(const Function* function,
   set_console_color(stream, key_color);
   stream << "  Function:    ";
   reset_console_color(stream);
-  stream << function->get_name() << std::endl;
+  stream << function->name() << std::endl;
 
   if (error.block) {
     set_console_color(stream, key_color);
@@ -463,12 +462,12 @@ ValidationResults validate_function(const Function* function, ValidationBehaviou
     stream.flush();
 
     if (behaviour == ValidationBehaviour::ErrorsAreFatal && results.has_errors()) {
-      const auto error_count = results.get_errors().size();
+      const auto error_count = results.errors().size();
       if (error_count == 1) {
-        fatal_error("Encountered 1 validation error in function {}.", function->get_name());
+        fatal_error("Encountered 1 validation error in function {}.", function->name());
       } else {
         fatal_error("Encountered {} validation errors in function {}.", error_count,
-                    function->get_name());
+                    function->name());
       }
     }
   }

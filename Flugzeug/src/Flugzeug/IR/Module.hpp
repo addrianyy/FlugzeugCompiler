@@ -56,12 +56,12 @@ class Module {
     bool operator!=(const FunctionFilteringIterator& rhs) const { return iterator != rhs.iterator; }
   };
 
-  Context* context;
-  FunctionList function_list;
+  Context* context_;
+  FunctionList function_list_;
 
   std::unordered_map<std::string_view, Function*> function_map;
 
-  FunctionList& intrusive_list() { return function_list; }
+  FunctionList& intrusive_list() { return function_list_; }
 
   void on_added_node(Function* function);
   void on_removed_node(Function* function);
@@ -78,21 +78,21 @@ class Module {
 
   void destroy();
 
-  size_t get_function_count() const { return function_list.size(); }
-  bool is_empty() const { return function_list.empty(); }
+  size_t function_count() const { return function_list_.size(); }
+  bool empty() const { return function_list_.empty(); }
+
+  Context* context() { return context_; }
+  const Context* context() const { return context_; }
 
   std::unordered_map<const Function*, ValidationResults> validate(
     ValidationBehaviour behaviour) const;
-
-  Context* get_context() { return context; }
-  const Context* get_context() const { return context; }
 
   Function* create_function(Type* return_type,
                             std::string name,
                             const std::vector<Type*>& arguments);
 
-  Function* get_function(std::string_view name);
-  const Function* get_function(std::string_view name) const;
+  Function* find_function(std::string_view name);
+  const Function* find_function(std::string_view name) const;
 
   using const_iterator = FunctionList::const_iterator;
   using iterator = FunctionList::iterator;
@@ -103,11 +103,11 @@ class Module {
   using ExternFunctionIterator = FunctionFilteringIterator<iterator, true>;
   using ConstExternFunctionIterator = FunctionFilteringIterator<const_iterator, true>;
 
-  iterator begin() { return function_list.begin(); }
-  iterator end() { return function_list.end(); }
+  iterator begin() { return function_list_.begin(); }
+  iterator end() { return function_list_.end(); }
 
-  const_iterator begin() const { return function_list.begin(); }
-  const_iterator end() const { return function_list.end(); }
+  const_iterator begin() const { return function_list_.begin(); }
+  const_iterator end() const { return function_list_.end(); }
 
   IteratorRange<LocalFunctionIterator> local_functions() {
     return {LocalFunctionIterator(begin()), LocalFunctionIterator(end())};

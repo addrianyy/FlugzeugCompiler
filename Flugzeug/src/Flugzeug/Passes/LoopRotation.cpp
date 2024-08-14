@@ -10,7 +10,7 @@ using namespace flugzeug;
 
 static Block* get_actual_loop_body(Function* function, const analysis::Loop* loop) {
   const auto header = loop->get_header();
-  const auto header_branch = cast<CondBranch>(header->get_last_instruction());
+  const auto header_branch = cast<CondBranch>(header->last_instruction());
   if (!header_branch) {
     return nullptr;
   }
@@ -54,11 +54,11 @@ static std::unordered_set<Instruction*> get_header_instructions_that_escape_loop
       any_of(instruction.users<Instruction>(), [&](Instruction& user) {
         // If this instruction is used as incoming value in the Phi that is in the exit target block
         // then skip it - it's fine.
-        if (user.get_block() == exit_target && cast<Phi>(user)) {
+        if (user.block() == exit_target && cast<Phi>(user)) {
           return false;
         }
 
-        return !loop->contains_block(user.get_block());
+        return !loop->contains_block(user.block());
       });
 
     if (is_used_outside_loop) {
@@ -103,7 +103,7 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
   // form.
   const auto all_back_edge_blocks_exit_loop =
     all_of(loop->get_back_edges_from(), [&](Block* block) {
-      const auto cond_branch = cast<CondBranch>(block->get_last_instruction());
+      const auto cond_branch = cast<CondBranch>(block->last_instruction());
       if (!cond_branch) {
         return false;
       }
@@ -127,7 +127,7 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
   // Clone the loop header as it contains the exit condition.
   const auto jump_back_block = function->create_block();
   {
-    jump_back_mapping.reserve(header->get_instruction_count());
+    jump_back_mapping.reserve(header->instruction_count());
 
     for (Instruction& instruction : *header) {
       const auto cloned = instruction.clone();
@@ -165,7 +165,7 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
   };
 
   // Make the back edge jump to the `jump_back_block` instead of the header.
-  back_edge_block->get_last_instruction()->replace_operands(header, jump_back_block);
+  back_edge_block->last_instruction()->replace_operands(header, jump_back_block);
 
   // Merge values in the actual loop body.
   for (const auto& [header_instruction, jump_back_instruction] : jump_back_mapping) {
@@ -206,7 +206,7 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
         return false;
       }
 
-      const auto block = instruction->get_block();
+      const auto block = instruction->block();
 
       return block != header && instruction != merging_phi && is_loop_block(block);
     });
@@ -246,7 +246,7 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
         return false;
       }
 
-      const auto block = instruction->get_block();
+      const auto block = instruction->block();
 
       // Don't replace uses inside the loop.
       if (is_loop_block(block)) {

@@ -46,9 +46,9 @@ class ConstantBindingPattern {
     }
 
     if constexpr (Unsigned) {
-      bind_constant = constant->get_u();
+      bind_constant = constant->value_u();
     } else {
-      bind_constant = constant->get_i();
+      bind_constant = constant->value_i();
     }
 
     return true;
@@ -110,9 +110,9 @@ class ExactConstantPattern {
     }
 
     if constexpr (Unsigned) {
-      return constant->get_u() == exact_constant;
+      return constant->value_u() == exact_constant;
     } else {
-      return constant->get_i() == exact_constant;
+      return constant->value_i() == exact_constant;
     }
   }
 };

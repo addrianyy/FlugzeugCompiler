@@ -27,7 +27,7 @@ static bool do_users_allow_reordering(Instruction* instruction,
                                       const std::unordered_set<Block*>& loop_blocks) {
   for (Instruction& user : instruction->users<Instruction>()) {
     // We cannot reorder within the same block.
-    if (user.get_block() == instruction->get_block()) {
+    if (user.block() == instruction->block()) {
       return false;
     }
 
@@ -38,7 +38,7 @@ static bool do_users_allow_reordering(Instruction* instruction,
 
     // We cannot reorder anything that is in the loop as that would interfere with loop invariant
     // optimization.
-    if (loop_blocks.contains(user.get_block())) {
+    if (loop_blocks.contains(user.block())) {
       return false;
     }
   }
@@ -123,7 +123,7 @@ bool opt::GlobalReordering::run(Function* function) {
 
   for (Instruction& instruction : advance_early(function->instructions())) {
     if (!can_be_reordered(&instruction) || reordered.contains(&instruction) ||
-        loop_blocks.contains(instruction.get_block())) {
+        loop_blocks.contains(instruction.block())) {
       continue;
     }
 

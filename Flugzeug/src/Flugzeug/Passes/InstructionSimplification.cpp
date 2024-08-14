@@ -244,7 +244,7 @@ static OptimizationResult simplify_selected_arithmetic_2(Value* cmp_value,
   if (!on_constant_instruction) {
     return OptimizationResult::unchanged();
   }
-  const auto on_constant = on_constant_instruction->get_i();
+  const auto on_constant = on_constant_instruction->value_i();
 
   if (!is_value_compared_to(on_non_constant->get_lhs(), cmp_value, cmp_constant) &&
       !is_value_compared_to(on_non_constant->get_rhs(), cmp_value, cmp_constant)) {
@@ -418,7 +418,7 @@ static OptimizationResult bitcasts_to_offset(Cast* cast_instr) {
   Value* offset_by = nullptr;
   if (const auto added_constant = cast<Constant>(added_amount)) {
     // (ptr + X) offsets ptr by (X / pointee_size) if X is divisible by it
-    const auto v = added_constant->get_u();
+    const auto v = added_constant->value_u();
     if ((v % pointee_size) == 0) {
       offset_by = i64->constant(v / pointee_size);
     }
@@ -530,7 +530,7 @@ class Simplifier : public InstructionVisitor {
 
           // We do these casts to avoid compiler warning.
           const auto negated_constant =
-            type->constant(uint64_t(-int64_t(constant->get_u())));
+            type->constant(uint64_t(-int64_t(constant->value_u())));
           return new BinaryInstr(context, lhs, BinaryOp::Add, negated_constant);
         }
 
@@ -611,7 +611,7 @@ class Simplifier : public InstructionVisitor {
         }
 
         if (const auto multiplier_v = cast<Constant>(rhs)) {
-          const auto multiplier = multiplier_v->get_u();
+          const auto multiplier = multiplier_v->value_u();
           if (is_pow2(multiplier)) {
             // X * Y (if Y is power of 2) == X << log2(Y)
             const auto shift_amount = type->constant(bin_log2(multiplier));
@@ -741,7 +741,7 @@ class Simplifier : public InstructionVisitor {
 
       if (match_pattern(int_compare, pat::compare_eq_or_ne(added, pat::constant(compared_to)))) {
         const auto new_constant = compared_to->type()->constant(
-          compared_to->get_u() - add_const->get_u());
+          compared_to->value_u() - add_const->value_u());
 
         int_compare->replace_operands(add, add_unknown);
         int_compare->replace_operands(compared_to, new_constant);
@@ -816,7 +816,7 @@ class Simplifier : public InstructionVisitor {
 
     // Branch to whatever target we want when condition is undefined.
     if (cond_branch->get_cond()->is_undef()) {
-      const auto block = cond_branch->get_block();
+      const auto block = cond_branch->block();
       const auto other = cond_branch->get_true_target();
 
       cond_branch->replace_with_instruction_and_destroy(new Branch(context, false_target));
@@ -990,7 +990,7 @@ bool opt::InstructionSimplification::run(Function* function) {
 
         if (const auto replacement = result.get_replacement()) {
           if (const auto new_instruction = cast<Instruction>(replacement)) {
-            if (!new_instruction->get_block()) {
+            if (!new_instruction->block()) {
               // Try to simplify newly added instruction in the next iteration.
               current_instruction = new_instruction;
             }

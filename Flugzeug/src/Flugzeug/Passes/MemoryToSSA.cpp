@@ -60,7 +60,7 @@ static void optimize_stackalloc(StackAlloc* stackalloc) {
   std::unordered_map<Block*, Value*> block_values;
   std::vector<Phi*> inserted_phis;
 
-  const auto reachable = stackalloc->get_block()->get_reachable_blocks_set(IncludeStart::Yes);
+  const auto reachable = stackalloc->block()->reachable_blocks_set(IncludeStart::Yes);
 
   for (Block* block : reachable) {
     Value* current_value = nullptr;
@@ -96,7 +96,7 @@ static void optimize_stackalloc(StackAlloc* stackalloc) {
 
   // Go through all inserted Phis and add proper incoming values.
   for (Phi* phi : inserted_phis) {
-    Block* block = phi->get_block();
+    Block* block = phi->block();
 
     for (Block* pred : block->predecessors()) {
       const auto it = block_values.find(pred);

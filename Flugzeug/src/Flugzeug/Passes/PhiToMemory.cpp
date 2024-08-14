@@ -14,7 +14,7 @@ static void convert_phi_to_memory(Phi* phi) {
   }
 
   Context* context = phi->context();
-  Block* entry_block = phi->get_function()->get_entry_block();
+  Block* entry_block = phi->function()->entry_block();
   Type* type = phi->type();
 
   const auto stackalloc = new StackAlloc(context, type);
@@ -22,7 +22,7 @@ static void convert_phi_to_memory(Phi* phi) {
 
   for (const auto incoming : *phi) {
     const auto store = new Store(context, stackalloc, incoming.value);
-    store->insert_before(incoming.block->get_last_instruction());
+    store->insert_before(incoming.block->last_instruction());
   }
 
   entry_block->push_instruction_front(stackalloc);

@@ -5,7 +5,7 @@
 using namespace flugzeug;
 
 static std::vector<const Block*> traverse_dfs_postorder(const Block* entry_block) {
-  const size_t block_count = entry_block->get_function()->get_block_count();
+  const size_t block_count = entry_block->function()->block_count();
 
   std::vector<const Block*> result;
   std::vector<const Block*> stack;
@@ -161,7 +161,7 @@ bool DominatorTree::first_dominates_second(const Block* dominator, const Block* 
     return true;
   }
 
-  verify(dominator->get_function() == block->get_function(),
+  verify(dominator->function() == block->function(),
          "`first_dominates_second` works only on blocks that belong to the same function");
 
   if (dominator->is_entry_block()) {
@@ -180,8 +180,8 @@ bool DominatorTree::first_dominates_second(const Block* dominator, const Block* 
 }
 
 DominatorTree::DominatorTree(const Function* function)
-    : immediate_dominators(calculate_immediate_dominators(function->get_entry_block())) {
-  verify(!get_immediate_dominator(function->get_entry_block()),
+    : immediate_dominators(calculate_immediate_dominators(function->entry_block())) {
+  verify(!get_immediate_dominator(function->entry_block()),
          "Entry block shouldn't have immediate dominator");
 }
 

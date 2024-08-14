@@ -36,8 +36,8 @@ class InlinedFunction {
 
 /// Split block at `instruction`. `instruction` will be the last instruction of the old block.
 static Block* split_block(Instruction* instruction) {
-  const auto old_block = instruction->get_block();
-  const auto new_block = old_block->get_function()->create_block();
+  const auto old_block = instruction->block();
+  const auto new_block = old_block->function()->create_block();
 
   // Move all instructions after `instruction` to the new block.
   Instruction* current = instruction->next();
@@ -59,7 +59,7 @@ static Block* split_block(Instruction* instruction) {
 
 void flugzeug::utils::inline_call(Call* call) {
   const auto context = call->context();
-  const auto caller = call->get_function();
+  const auto caller = call->function();
   const auto callee = call->get_callee();
 
   verify(!callee->is_extern(), "Cannot inline external call");
@@ -78,14 +78,14 @@ void flugzeug::utils::inline_call(Call* call) {
   const auto return_block = split_block(call);
 
   // Create Phi for getting inlined function return value.
-  const auto return_type = callee->get_return_type();
+  const auto return_type = callee->return_type();
   const auto return_phi = return_type->is_void() ? nullptr : new Phi(context, return_type);
 
   InlinedFunction inlined_function;
 
   // Create mapping from function parameter to passed argument.
-  for (size_t i = 0; i < callee->get_parameter_count(); ++i) {
-    const auto callee_value = callee->get_parameter(i);
+  for (size_t i = 0; i < callee->parameter_count(); ++i) {
+    const auto callee_value = callee->parameter(i);
     const auto caller_value = call->get_arg(i);
 
     inlined_function.add_mapping(callee_value, caller_value);

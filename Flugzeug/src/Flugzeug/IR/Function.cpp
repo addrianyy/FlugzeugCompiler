@@ -38,9 +38,9 @@ void Function::print_prototype(IRPrinter& printer, bool end_line) const {
     p.print("extern");
   }
 
-  p.print(return_type, IRPrinter::NonKeywordWord{name}, IRPrinter::Item::ParenOpen);
+  p.print(return_type_, IRPrinter::NonKeywordWord{name_}, IRPrinter::Item::ParenOpen);
 
-  for (auto param : parameters) {
+  for (auto param : parameters_) {
     p.print(param->type(), param, IRPrinter::Item::Comma);
   }
 
@@ -52,11 +52,11 @@ void Function::print_prototype(IRPrinter& printer, bool end_line) const {
 }
 
 void Function::insert_block(Block* block) {
-  if (blocks.empty()) {
+  if (blocks_.empty()) {
     block->is_entry = true;
   }
 
-  blocks.push_back(block);
+  blocks_.push_back(block);
 }
 
 Function::Function(Context* context,
@@ -64,9 +64,9 @@ Function::Function(Context* context,
                    std::string name,
                    const std::vector<Type*>& arguments)
     : Value(context, Value::Kind::Function, context->function_ty()),
-      blocks(this),
-      name(std::move(name)),
-      return_type(return_type) {
+      blocks_(this),
+      name_(std::move(name)),
+      return_type_(return_type) {
   verify(return_type->is_arithmetic_or_pointer() || return_type->is_void(),
          "Function return type must be arithmetic or pointer or void");
 
@@ -77,12 +77,12 @@ Function::Function(Context* context,
     auto parameter = new Parameter(context, type);
     parameter->set_display_index(allocate_value_index());
 
-    parameters.push_back(parameter);
+    parameters_.push_back(parameter);
   }
 }
 
 Function::~Function() {
-  verify(blocks.empty(), "Block list must be empty before removing function.");
+  verify(blocks_.empty(), "Block list must be empty before removing function.");
 }
 
 ValidationResults Function::validate(ValidationBehaviour behaviour) const {
@@ -97,7 +97,7 @@ void Function::print(IRPrinter& printer, IRPrintingMethod method) const {
   print_prototype(printer, true);
 
   if (!is_extern()) {
-    auto printing_order = get_entry_block()->get_reachable_blocks(TraversalType::BFS_WithStart);
+    auto printing_order = entry_block()->reachable_blocks(TraversalType::BFS_WithStart);
 
     std::unordered_set<const Block*> reachable_blocks;
     reachable_blocks.reserve(printing_order.size());
@@ -138,7 +138,7 @@ void Function::reassign_display_indices() {
   next_block_index = 0;
   next_value_index = 0;
 
-  for (Parameter* parameter : parameters) {
+  for (Parameter* parameter : parameters_) {
     parameter->set_display_index(allocate_value_index());
   }
 
@@ -165,11 +165,11 @@ void Function::destroy() {
   }
 
   // Remove from last block so entry block will be removed last.
-  while (!is_empty()) {
-    get_last_block()->destroy();
+  while (!empty()) {
+    last_block()->destroy();
   }
 
-  for (Parameter* param : parameters) {
+  for (Parameter* param : parameters_) {
     delete param;
   }
 
@@ -177,5 +177,5 @@ void Function::destroy() {
 }
 
 std::string Function::format() const {
-  return name;
+  return name_;
 }

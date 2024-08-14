@@ -125,12 +125,12 @@ int main() {
 
   if (true) {
     for (Function& f : module->local_functions()) {
-      f.generate_graph(fmt::format("Graphs/{}.svg", f.get_name()), printing_method);
+      f.generate_graph(fmt::format("Graphs/{}.svg", f.name()), printing_method);
     }
   }
 
   if (false) {
-    allocate_registers(module->get_function("test"));
+    allocate_registers(module->find_function("test"));
   }
 
   module->validate(ValidationBehaviour::ErrorsAreFatal);

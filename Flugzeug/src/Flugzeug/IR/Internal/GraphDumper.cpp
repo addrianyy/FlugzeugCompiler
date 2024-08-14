@@ -160,8 +160,8 @@ void Function::generate_dot_graph_source(std::ostream& output,
     output << ">];\n";
   }
 
-  for (const Block& block : blocks) {
-    const Instruction* last_instruction = block.get_last_instruction();
+  for (const Block& block : blocks_) {
+    const Instruction* last_instruction = block.last_instruction();
 
     const auto make_edge = [&output](const Block* from, const Block* to,
                                      const std::string_view color) {
@@ -199,7 +199,7 @@ void Function::generate_graph(const std::string& graph_path, IRPrintingMethod me
 void Function::debug_graph() const {
   const auto graph_path =
     std::filesystem::temp_directory_path() /
-    fmt::format("{}_{}_{}_{}.svg", get_name(), Environment::current_process_id(),
+    fmt::format("{}_{}_{}_{}.svg", name(), Environment::current_process_id(),
                 Environment::current_thread_id(), Environment::monotonic_timestamp(), (void*)this);
   const auto graph_path_string = graph_path.string();
 

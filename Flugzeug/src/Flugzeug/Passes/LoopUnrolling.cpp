@@ -85,7 +85,7 @@ static bool get_loop_count_related_instructions(Instruction* instruction,
   if (const auto phi = cast<Phi>(instruction)) {
     // Because we are copying from previous iteration to current one, Phis must be placed in the
     // loop header (as this is where the back edge jumps to).
-    if (phi->get_block() != loop->get_header()) {
+    if (phi->block() != loop->get_header()) {
       return false;
     }
 
@@ -144,12 +144,12 @@ static bool get_loop_count_related_instructions(Instruction* instruction,
   }
 
   // This instruction must be part of the loop.
-  if (!loop->contains_block_skipping_sub_loops(instruction->get_block())) {
+  if (!loop->contains_block_skipping_sub_loops(instruction->block())) {
     return false;
   }
 
   // This instruction must be executed unconditionally in the loop.
-  if (!instruction->get_block()->dominates(back_edge_from, dominator_tree)) {
+  if (!instruction->block()->dominates(back_edge_from, dominator_tree)) {
     return false;
   }
 
@@ -223,7 +223,7 @@ static std::optional<size_t> get_unroll_count(const std::vector<Instruction*>& i
   const auto get_constant_from_map = [&](const std::unordered_map<Value*, uint64_t>& value_map,
                                          Value* value, uint64_t& constant) -> bool {
     if (const auto constant_value = cast<Constant>(value)) {
-      constant = constant_value->get_u();
+      constant = constant_value->value_u();
       return true;
     }
 
@@ -364,7 +364,7 @@ static void perform_unrolling(Function* function,
 
   // (Step 1) Change edge (`exit_from` -> `exit_to`) into (`exit_from` -> `new_loop_exit`) and fixup
   // Phis.
-  replace_branch(exit_from->get_last_instruction(), exit_to, new_loop_exit);
+  replace_branch(exit_from->last_instruction(), exit_to, new_loop_exit);
   exit_to->replace_incoming_blocks_in_phis(exit_from, new_loop_exit);
 
   std::unordered_map<Instruction*, Phi*> values_escaping_loop;
@@ -380,7 +380,7 @@ static void perform_unrolling(Function* function,
       // Go through every value user to find if it's used outside the loop.
       const bool is_used_outside_loop =
         any_of(instruction.users<Instruction>(),
-               [&](Instruction& user) { return !loop->contains_block(user.get_block()); });
+               [&](Instruction& user) { return !loop->contains_block(user.block()); });
 
       if (is_used_outside_loop) {
         // Before unrolling all instructions outside the loop used the last iteration value.
@@ -402,8 +402,8 @@ static void perform_unrolling(Function* function,
   for (const auto& [value, phi] : values_escaping_loop) {
     value->replace_uses_with_predicated(phi, [&](User* user) -> bool {
       const auto instruction = cast<Instruction>(user);
-      return instruction && !loop->contains_block(instruction->get_block()) &&
-             instruction->get_block() != new_loop_exit;
+      return instruction && !loop->contains_block(instruction->block()) &&
+             instruction->block() != new_loop_exit;
     });
   }
 
@@ -500,13 +500,13 @@ static void perform_unrolling(Function* function,
     const auto old_target = loop->get_header();
     const auto new_target = unrolls.front().map(loop->get_header());
 
-    replace_branch(back_edge_from->get_last_instruction(), old_target, new_target);
+    replace_branch(back_edge_from->last_instruction(), old_target, new_target);
   }
   if (unroll_count > 2) {
     for (size_t unroll = 0; unroll < unroll_count - 2; ++unroll) {
       // Get back edge instruction for this unroll instance.
       const auto back_edge_instruction =
-        unrolls[unroll].map(back_edge_from->get_last_instruction());
+        unrolls[unroll].map(back_edge_from->last_instruction());
 
       // Change edge from (this instance exiting block -> this instance header) to
       // (this instance exiting block -> next instance header).
@@ -519,7 +519,7 @@ static void perform_unrolling(Function* function,
 
   // (Step 8) Back edge in the last unrolled iteration is unreachable. We will remove it.
   {
-    Instruction* back_edge_instruction = back_edge_from->get_last_instruction();
+    Instruction* back_edge_instruction = back_edge_from->last_instruction();
     Block* loop_header = loop->get_header();
 
     // Get actual back edge instruction and loop header for the last unrolled iteration.
@@ -548,9 +548,9 @@ static void perform_unrolling(Function* function,
       new_instruction = new Branch(context, new_target);
     } else {
       // Containing block is dead and we will replace instruction with a return.
-      new_instruction = new Ret(context, function->get_return_type()->is_void()
+      new_instruction = new Ret(context, function->return_type()->is_void()
                                            ? nullptr
-                                           : function->get_return_type()->undef());
+                                           : function->return_type()->undef());
     }
 
     back_edge_instruction->replace_with_instruction_and_destroy(new_instruction);
@@ -588,12 +588,12 @@ static bool unroll_loop(Function* function,
   }
 
   // (Step 2) Get comparison instruction which determines if loop continues or exists.
-  const auto exit_instruction = cast<CondBranch>(exit_from->get_last_instruction());
+  const auto exit_instruction = cast<CondBranch>(exit_from->last_instruction());
   if (!exit_instruction) {
     return false;
   }
   const auto exit_condition = cast<IntCompare>(exit_instruction->get_cond());
-  if (!exit_condition || !loop->contains_block_skipping_sub_loops(exit_condition->get_block())) {
+  if (!exit_condition || !loop->contains_block_skipping_sub_loops(exit_condition->block())) {
     return false;
   }
 

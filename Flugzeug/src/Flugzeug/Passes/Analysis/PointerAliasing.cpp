@@ -159,12 +159,12 @@ static void process_offset_instruction(
   const auto index = offset->get_index();
 
   if (const auto c_index = cast<Constant>(index)) {
-    std::pair result = {base, c_index->get_i()};
+    std::pair result = {base, c_index->value_i()};
 
     const auto it = constant_offset_db.find(base);
     if (it != constant_offset_db.end()) {
       const auto parent = it->second;
-      result = {parent.first, parent.second + c_index->get_i()};
+      result = {parent.first, parent.second + c_index->value_i()};
     }
 
     constant_offset_db.insert({offset, result});
@@ -190,8 +190,7 @@ static void process_offset_instruction(
     const auto it = constant_offset_db.find(other_offset);
     if (it != constant_offset_db.end()) {
       const auto parent = it->second;
-      result = {parent.first,
-                Constant::constrain_i(index_base->type(), parent.second + index_add)};
+      result = {parent.first, Constant::constrain_i(index_base->type(), parent.second + index_add)};
     }
 
     constant_offset_db.insert({offset, result});
@@ -208,8 +207,7 @@ std::pair<const Value*, int64_t> PointerAliasing::get_constant_offset(const Valu
 }
 
 PointerAliasing::PointerAliasing(const Function* function) {
-  const auto traversal =
-    function->get_entry_block()->get_reachable_blocks(TraversalType::DFS_WithStart);
+  const auto traversal = function->entry_block()->reachable_blocks(TraversalType::DFS_WithStart);
 
   size_t offset_instruction_count = 0;
   size_t pointer_instruction_count = 0;
@@ -298,8 +296,7 @@ PointerAliasing::PointerAliasing(const Function* function) {
 Aliasing PointerAliasing::can_alias(const Instruction* instruction,
                                     const Value* v1,
                                     const Value* v2) const {
-  verify(v1->type()->is_pointer() && v2->type()->is_pointer(),
-         "Provided values aren't pointers");
+  verify(v1->type()->is_pointer() && v2->type()->is_pointer(), "Provided values aren't pointers");
 
   // More advanced alias analysis would make use of this instruction.
   (void)instruction;
@@ -437,7 +434,7 @@ bool PointerAliasing::is_pointer_accessed_inbetween(const Value* pointer,
                                                     const Instruction* begin,
                                                     const Instruction* end,
                                                     PointerAliasing::AccessType access_type) const {
-  verify(begin->get_block() == end->get_block(), "Instructions are in different blocks");
+  verify(begin->block() == end->block(), "Instructions are in different blocks");
 
   for (const Instruction& instruction : instruction_range(begin, end)) {
     if (can_instruction_access_pointer(&instruction, pointer, access_type) != Aliasing::Never) {

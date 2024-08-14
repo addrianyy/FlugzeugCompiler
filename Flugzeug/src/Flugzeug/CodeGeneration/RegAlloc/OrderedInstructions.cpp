@@ -39,13 +39,13 @@ std::string DebugRepresentation::format(OrderedInstruction* instruction) const {
 BlockInstructionsRange::BlockInstructionsRange(OrderedInstructions& ordered_instructions,
                                                Block* block) {
   // Skip Phi instructions.
-  Instruction* first_instruction = block->get_first_instruction();
+  Instruction* first_instruction = block->first_instruction();
   while (cast<Phi>(first_instruction)) {
     first_instruction = first_instruction->next();
   }
 
   first = ordered_instructions.get(first_instruction)->get_index();
-  last = ordered_instructions.get(block->get_last_instruction())->get_index();
+  last = ordered_instructions.get(block->last_instruction())->get_index();
 }
 
 bool OrderedInstruction::has_value() const {
@@ -98,7 +98,7 @@ bool OrderedInstruction::join_to(OrderedInstruction* other) {
 OrderedInstructions::OrderedInstructions(const std::vector<Block*>& toposort) {
   {
     for (Block* block : toposort) {
-      instruction_count += block->get_instruction_count();
+      instruction_count += block->instruction_count();
     }
     order = std::make_unique<OrderedInstruction[]>(instruction_count);
     map.reserve(instruction_count);
@@ -132,7 +132,7 @@ void OrderedInstructions::debug_print() {
   ConsolePrinter printer(ConsolePrinter::Variant::ColorfulIfSupported);
 
   for (const auto& instruction : instructions()) {
-    const auto block = instruction.get()->get_block();
+    const auto block = instruction.get()->block();
 
     if (block != current_block) {
       printer.create_line_printer().print(block, IRPrinter::Item::Colon);

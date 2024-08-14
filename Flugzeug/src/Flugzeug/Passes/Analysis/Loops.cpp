@@ -222,8 +222,7 @@ std::vector<std::unique_ptr<Loop>> flugzeug::analysis::analyze_function_loops(
   Function* function,
   const DominatorTree& dominator_tree) {
   // Loops are defined only for reachable blocks.
-  const auto reachable_blocks =
-    function->get_entry_block()->get_reachable_blocks_set(IncludeStart::Yes);
+  const auto reachable_blocks = function->entry_block()->reachable_blocks_set(IncludeStart::Yes);
 
   std::vector<std::unique_ptr<Loop>> loops;
   SccContext<Block*> scc_context{};

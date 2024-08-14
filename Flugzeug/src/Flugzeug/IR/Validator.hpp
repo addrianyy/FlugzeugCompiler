@@ -26,18 +26,18 @@ class ValidationResults {
   };
 
  private:
-  std::vector<Error> errors;
+  std::vector<Error> errors_;
 
  public:
-  explicit ValidationResults(std::vector<Error> errors) : errors(std::move(errors)) {}
+  explicit ValidationResults(std::vector<Error> errors) : errors_(std::move(errors)) {}
 
   using iterator = std::vector<Error>::const_iterator;
 
-  iterator begin() const { return errors.begin(); }
-  iterator end() const { return errors.end(); }
+  iterator begin() const { return errors_.begin(); }
+  iterator end() const { return errors_.end(); }
 
-  bool has_errors() const { return !errors.empty(); }
-  const std::vector<Error>& get_errors() const { return errors; }
+  bool has_errors() const { return !errors_.empty(); }
+  const std::vector<Error>& errors() const { return errors_; }
 };
 
 }  // namespace flugzeug

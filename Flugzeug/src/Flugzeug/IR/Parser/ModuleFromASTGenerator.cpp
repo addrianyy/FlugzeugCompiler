@@ -139,13 +139,13 @@ Instruction* ModuleFromASTGenerator::generate_instruction(const PRInstruction* i
       const auto return_type = convert_type(instruction->specific_type);
       const auto callee_name = instruction->specific_name;
 
-      const auto callee = module->get_function(callee_name);
+      const auto callee = module->find_function(callee_name);
       verify(callee, "Undefined function `{}` called", callee_name);
 
-      if (return_type != callee->get_return_type()) {
+      if (return_type != callee->return_type()) {
         fatal_error("{}: Type mismatch for `{}` call result. Expected `{}`, found `{}`.",
-                    fn_ctx.pr_function->name, callee->get_name(), return_type->format(),
-                    callee->get_return_type()->format());
+                    fn_ctx.pr_function->name, callee->name(), return_type->format(),
+                    callee->return_type()->format());
       }
 
       std::vector<Value*> arguments;
@@ -206,7 +206,7 @@ void ModuleFromASTGenerator::generate_function_body() {
     size_t index = 0;
     for (const auto& parameter : fn_ctx.pr_function->parameters) {
       insert_no_duplicates(fn_ctx.ir_value_map, parameter.name,
-                           fn_ctx.function->get_parameter(index));
+                           fn_ctx.function->parameter(index));
 
       index++;
     }
@@ -346,10 +346,8 @@ void ModuleFromASTGenerator::generate_function_body() {
 ModuleFromASTGenerator::ModuleFromASTGenerator(
   Module* module,
   std::vector<std::unique_ptr<PRFunction>> parsed_functions)
-    : context(module->get_context()),
-      module(module),
-      parsed_functions(std::move(parsed_functions)) {
-  verify(module->is_empty(), "Module passed to ModuleFromASTGenerator must be empty");
+    : context(module->context()), module(module), parsed_functions(std::move(parsed_functions)) {
+  verify(module->empty(), "Module passed to ModuleFromASTGenerator must be empty");
 }
 
 void ModuleFromASTGenerator::generate() {
@@ -372,7 +370,7 @@ void ModuleFromASTGenerator::generate() {
 
     verify(!pr_function->blocks.empty(), "Non-extern functions must contain blocks");
 
-    const auto function = module->get_function(pr_function->name);
+    const auto function = module->find_function(pr_function->name);
     verify(function, "Failed to get the IR function");
 
     fn_ctx = FunctionGenerationContext{pr_function.get(), function};

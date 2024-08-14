@@ -182,8 +182,8 @@ class Constant final : public Value {
   static uint64_t constrain_u(Type* type, uint64_t value);
   static int64_t constrain_i(Type* type, int64_t value);
 
-  uint64_t get_u() const { return constant_u; }
-  int64_t get_i() const { return constant_i; }
+  uint64_t value_u() const { return constant_u; }
+  int64_t value_i() const { return constant_i; }
 
   std::string format() const override;
 };

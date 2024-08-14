@@ -11,9 +11,9 @@ using namespace flugzeug;
 
 template <typename TBlock>
 TBlock* get_single_successor_generic(TBlock* block) {
-  if (const auto branch = cast<Branch>(block->get_last_instruction())) {
+  if (const auto branch = cast<Branch>(block->last_instruction())) {
     return branch->get_target();
-  } else if (const auto cond_branch = cast<CondBranch>(block->get_last_instruction())) {
+  } else if (const auto cond_branch = cast<CondBranch>(block->last_instruction())) {
     const auto on_true = cond_branch->get_true_target();
     const auto on_false = cond_branch->get_false_target();
 
@@ -28,11 +28,11 @@ TBlock* get_single_successor_generic(TBlock* block) {
 template <typename TBlock, bool ReturnVector>
 std::conditional_t<ReturnVector, std::vector<TBlock*>, std::unordered_set<TBlock*>>
 traverse_generic(TBlock* start_block, TraversalType traversal) {
-  const size_t block_count = start_block->get_function()->get_block_count();
+  const size_t block_count = start_block->function()->block_count();
 
-  size_t reserve_count = start_block->get_function()->get_block_count() / 8;
+  size_t reserve_count = start_block->function()->block_count() / 8;
   if (reserve_count < 4) {
-    reserve_count = start_block->get_function()->get_block_count();
+    reserve_count = start_block->function()->block_count();
   }
 
   std::vector<TBlock*> result;
@@ -124,7 +124,7 @@ traverse_generic(TBlock* start_block, TraversalType traversal) {
 static Block* get_branch_block(User* user) {
   if (const auto instruction = cast<Instruction>(user)) {
     if (instruction->is_branching()) {
-      return instruction->get_block();
+      return instruction->block();
     }
   }
 
@@ -146,8 +146,8 @@ static void remove_block_from_vector(std::vector<Block*>& blocks, Block* block) 
 }
 
 void Block::on_added_node(Instruction* instruction) {
-  if (get_function() && !instruction->is_void()) {
-    instruction->set_display_index(get_function()->allocate_value_index());
+  if (function() && !instruction->is_void()) {
+    instruction->set_display_index(function()->allocate_value_index());
   }
 
   if (instruction->is_branching()) {
@@ -206,7 +206,7 @@ void Block::update_instruction_order() const {
   if (invalid_instruction_order) {
     size_t index = 0;
     for (const Instruction& instruction : *this) {
-      instruction.order_in_block = index++;
+      instruction.order_in_block_ = index++;
     }
 
     invalid_instruction_order = false;
@@ -230,7 +230,7 @@ std::unordered_set<const Value*> Block::get_inlinable_values() const {
     bool non_inlineable = false;
 
     for (const Instruction& user : instruction.users<Instruction>()) {
-      if (user.get_block() != this) {
+      if (user.block() != this) {
         non_inlineable = true;
         break;
       }
@@ -261,7 +261,7 @@ std::unordered_set<const Value*> Block::get_inlinable_values() const {
 
 Block::~Block() {
   verify(instruction_list.empty(), "Cannot remove non-empty block.");
-  verify(!get_function(), "Cannot remove block that is attached to the function.");
+  verify(!function(), "Cannot remove block that is attached to the function.");
 
   verify(predecessors_list.empty(), "Predecessors list is not empty.");
   verify(predecessors_list_unique.empty(), "Unique predecessors list is not empty.");
@@ -307,8 +307,8 @@ std::string Block::format() const {
 }
 
 void Block::clear() {
-  while (!is_empty()) {
-    get_first_instruction()->destroy();
+  while (!empty()) {
+    first_instruction()->destroy();
   }
 }
 
@@ -359,7 +359,7 @@ void Block::on_removed_branch_to(Block* to, bool destroy_empty_phis) const {
 }
 
 bool Block::is_terminated() const {
-  const auto last = get_last_instruction();
+  const auto last = last_instruction();
   return last && last->is_terminator();
 }
 
@@ -372,7 +372,7 @@ bool Block::is_dominated_by(const Block* other, const DominatorTree& dominator_t
 }
 
 bool Block::has_successor(const Block* successor) const {
-  const auto terminator = get_last_instruction();
+  const auto terminator = last_instruction();
   if (const auto branch = cast<Branch>(terminator)) {
     return branch->get_target() == successor;
   } else if (const auto cond_branch = cast<CondBranch>(terminator)) {
@@ -388,31 +388,31 @@ bool Block::has_predecessor(const Block* predecessor) const {
          predecessors_list_unique.end();
 }
 
-Block* Block::get_single_successor() {
+Block* Block::single_successor() {
   return get_single_successor_generic<Block>(this);
 }
 
-const Block* Block::get_single_successor() const {
+const Block* Block::single_successor() const {
   return get_single_successor_generic<const Block>(this);
 }
 
-Block* Block::get_single_predecessor() {
+Block* Block::single_predecessor() {
   return predecessors_list_unique.size() == 1 ? predecessors_list_unique[0] : nullptr;
 }
 
-const Block* Block::get_single_predecessor() const {
+const Block* Block::single_predecessor() const {
   return predecessors_list_unique.size() == 1 ? predecessors_list_unique[0] : nullptr;
 }
 
 BlockTargets<Block> Block::successors() {
-  if (const auto terminator = get_last_instruction()) {
+  if (const auto terminator = last_instruction()) {
     return terminator->targets();
   }
   return {};
 }
 
 BlockTargets<const Block> Block::successors() const {
-  if (const auto terminator = get_last_instruction()) {
+  if (const auto terminator = last_instruction()) {
     return terminator->targets();
   }
   return {};
@@ -449,22 +449,22 @@ std::unordered_set<const Block*> Block::predecessors_set() const {
   return set;
 }
 
-std::vector<Block*> Block::get_reachable_blocks(TraversalType traversal) {
+std::vector<Block*> Block::reachable_blocks(TraversalType traversal) {
   return traverse_generic<Block, true>(this, traversal);
 }
 
-std::vector<const Block*> Block::get_reachable_blocks(TraversalType traversal) const {
+std::vector<const Block*> Block::reachable_blocks(TraversalType traversal) const {
   return traverse_generic<const Block, true>(this, traversal);
 }
 
-std::unordered_set<Block*> Block::get_reachable_blocks_set(IncludeStart include_start) {
+std::unordered_set<Block*> Block::reachable_blocks_set(IncludeStart include_start) {
   // Prefer DFS as it's faster.
   return traverse_generic<Block, false>(this, include_start == IncludeStart::Yes
                                                 ? TraversalType::DFS_WithStart
                                                 : TraversalType::DFS_WithoutStart);
 }
 
-std::unordered_set<const Block*> Block::get_reachable_blocks_set(IncludeStart include_start) const {
+std::unordered_set<const Block*> Block::reachable_blocks_set(IncludeStart include_start) const {
   // Prefer DFS as it's faster.
   return traverse_generic<const Block, false>(this, include_start == IncludeStart::Yes
                                                       ? TraversalType::DFS_WithStart
