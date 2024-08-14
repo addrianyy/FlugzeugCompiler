@@ -15,7 +15,7 @@ using analysis::detail::PointerOriginMap;
 template <typename T>
 struct ValuePairHash {
   size_t operator()(const std::pair<const Value*, const Value*>& p) const {
-    return hash_combine(p.first, p.second);
+    return combine_hash(p.first, p.second);
   }
 };
 

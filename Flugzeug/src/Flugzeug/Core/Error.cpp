@@ -1,24 +1,27 @@
 #include "Error.hpp"
 #include "ConsoleColors.hpp"
 #include "Log.hpp"
-#include "Platform.hpp"
 
+#include <atomic>
 #include <cstdlib>
+#include <thread>
+
+static std::atomic_bool g_is_panicking = false;
 
 #undef fatal_error
 #undef verify
 #undef unreachable
 
-#ifdef PLATFORM_WINDOWS
-
-#include <Windows.h>
-
-#endif
-
 [[noreturn]] void flugzeug::detail::error::fatal_error(const char* file,
                                                        int line,
                                                        const std::string& message) {
-  console_colors::ensure_initialized();
+  if (g_is_panicking.exchange(true)) {
+    while (true) {
+      std::this_thread::sleep_for(std::chrono::seconds(10));
+    }
+  }
+
+  ConsoleColors::ensure_initialized();
 
   log_error("{}:{} => {}", file, line, message);
 
@@ -27,14 +30,6 @@
     int _unused = 0;
     (void)_unused;
   }
-
-#ifdef PLATFORM_WINDOWS
-  if (message.size() < 128) {
-    MessageBoxA(nullptr, message.c_str(), "Error", MB_ICONERROR);
-  } else {
-    MessageBoxA(nullptr, "Encountered fatal error.", "Error", MB_ICONERROR);
-  }
-#endif
 
   std::exit(1);
 }

@@ -9,7 +9,6 @@
 #define ENUM_CASE(enum_case) \
   case ThisEnum::enum_case:  \
     return #enum_case;
-
 #define END_ENUM_STRINGIFY() \
   default:                   \
     unreachable();           \

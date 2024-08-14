@@ -4,7 +4,7 @@
 #include <fstream>
 #include <string>
 
-std::string flugzeug::read_file_to_string(const std::string& path) {
+std::string flugzeug::File::read_to_string(const std::string& path) {
   std::string source;
   {
     std::ifstream file(path);

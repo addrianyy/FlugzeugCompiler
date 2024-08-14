@@ -8,13 +8,13 @@ using namespace flugzeug;
 
 void ConsolePrinter::reset() {
   if (variant == Variant::Colorful) {
-    console_colors::reset_color(output_stream);
+    ConsoleColors::reset_color(output_stream);
   }
 }
 
 void ConsolePrinter::set_color(int color) {
   if (variant == Variant::Colorful) {
-    console_colors::set_color(output_stream, color);
+    ConsoleColors::set_color(output_stream, color);
   }
 }
 
@@ -41,10 +41,10 @@ ConsolePrinter::ConsolePrinter(ConsolePrinter::Variant variant)
 
 ConsolePrinter::ConsolePrinter(ConsolePrinter::Variant variant, std::ostream& output_stream)
     : variant(variant), output_stream(output_stream) {
-  console_colors::ensure_initialized();
+  ConsoleColors::ensure_initialized();
 
   if (variant == Variant::ColorfulIfSupported) {
-    if (console_colors::are_allowed()) {
+    if (ConsoleColors::supported()) {
       this->variant = Variant::Colorful;
     } else {
       this->variant = Variant::Simple;

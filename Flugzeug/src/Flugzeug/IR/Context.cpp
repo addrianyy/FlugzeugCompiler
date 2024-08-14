@@ -7,11 +7,11 @@
 using namespace flugzeug;
 
 size_t Context::ConstantKeyHash::operator()(const Context::ConstantKey& p) const {
-  return hash_combine(p.constant, p.type);
+  return combine_hash(p.constant, p.type);
 }
 
 size_t Context::PointerKeyHash::operator()(const Context::PointerKey& p) const {
-  return hash_combine(p.indirection, p.base);
+  return combine_hash(p.indirection, p.base);
 }
 
 void Context::increase_refcount() {
@@ -155,5 +155,5 @@ Module* Context::create_module_from_source(std::string source) {
 }
 
 Module* Context::create_module_from_file(const std::string& path) {
-  return create_module_from_source(read_file_to_string(path));
+  return create_module_from_source(File::read_to_string(path));
 }

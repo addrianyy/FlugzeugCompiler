@@ -9,7 +9,7 @@ namespace flugzeug {
 
 template <typename T, size_t N>
 class StaticVector {
-  static_assert(N > 0, "Empty StaticVector is not supported");
+  static_assert(N > 0, "empty StaticVector is not supported");
 
   using StorageT = std::aligned_storage_t<sizeof(T), alignof(T)>;
 
@@ -37,14 +37,32 @@ class StaticVector {
   }
 
  public:
+  using value_type = T;
+
   StaticVector() = default;
+
+  template <size_t InitN>
+  StaticVector(const T (&array)[InitN]) {
+    static_assert(InitN <= N);
+
+    for (auto v : array) {
+      push_back(std::move(v));
+    }
+  }
+
+  StaticVector(std::initializer_list<T> input) {
+    for (auto v : input) {
+      push_back(std::move(v));
+    }
+  }
+
   ~StaticVector() { clear(); }
 
   StaticVector(StaticVector&& other) noexcept { move_from(std::move(other)); }
   StaticVector(const StaticVector& other) { copy_from(other); }
 
   StaticVector& operator=(StaticVector&& other) noexcept {
-    if (other != this) {
+    if (&other != this) {
       clear();
       move_from(std::move(other));
     }
@@ -52,7 +70,7 @@ class StaticVector {
   }
 
   StaticVector& operator=(const StaticVector& other) {
-    if (other != this) {
+    if (&other != this) {
       clear();
       copy_from(other);
     }
@@ -62,6 +80,29 @@ class StaticVector {
   void clear() {
     while (size_ > 0) {
       (*this)[--size_].~T();
+    }
+  }
+
+  void resize(size_t new_size) {
+    if (size() != new_size) {
+      resize(new_size, T{});
+    }
+  }
+
+  void resize(size_t new_size, const T& default_value) {
+    while (size() > new_size) {
+      pop_back();
+    }
+
+    if (new_size > size_) {
+      verify(new_size <= N, "out of bounds resize");
+
+      const auto to_add = new_size - size_;
+      const auto old_size = size_;
+      for (size_t i = 0; i < to_add; ++i) {
+        new (data() + old_size + i) T(default_value);
+      }
+      size_ = new_size;
     }
   }
 
@@ -107,7 +148,7 @@ class StaticVector {
 
   void pop_back() {
     size_--;
-    end().~T();
+    end()->~T();
   }
 
   template <size_t OtherN>

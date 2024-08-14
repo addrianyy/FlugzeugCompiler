@@ -226,7 +226,7 @@ Token Lexer::lex_identifier(std::string_view& source) {
 }
 
 Lexer Lexer::from_file(const std::string& path) {
-  return Lexer(flugzeug::read_file_to_string(path));
+  return Lexer(flugzeug::File::read_to_string(path));
 }
 
 void Lexer::lex() {

@@ -6,10 +6,10 @@
 
 namespace flugzeug {
 
-inline void hash_combine(std::size_t& seed) {}
+inline void combine_hash_to(std::size_t& seed) {}
 
 template <typename T, typename... Rest>
-inline void hash_combine(std::size_t& seed, const T& v, Rest... rest) {
+inline void combine_hash_to(std::size_t& seed, const T& v, Rest... rest) {
   std::hash<T> hasher;
   if constexpr (sizeof(void*) == 8) {
     seed ^= hasher(v) + 0x9e3779b97f4a7c17 + (seed << 6) + (seed >> 2);
@@ -17,13 +17,13 @@ inline void hash_combine(std::size_t& seed, const T& v, Rest... rest) {
     seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
   }
 
-  hash_combine(seed, rest...);
+  combine_hash_to(seed, rest...);
 }
 
 template <typename... Args>
-inline std::size_t hash_combine(Args... args) {
+inline std::size_t combine_hash(Args... args) {
   std::size_t seed = 0;
-  hash_combine(seed, args...);
+  combine_hash_to(seed, args...);
 
   return seed;
 }

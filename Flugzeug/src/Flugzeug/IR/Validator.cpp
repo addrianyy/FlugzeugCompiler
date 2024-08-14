@@ -391,18 +391,18 @@ class Validator : public ConstInstructionVisitor {
 };
 
 static bool use_colors(std::ostream& stream) {
-  return &stream == &std::cout && console_colors::are_allowed();
+  return &stream == &std::cout && ConsoleColors::supported();
 }
 
 static void reset_console_color(std::ostream& stream) {
   if (use_colors(stream)) {
-    console_colors::reset_color(stream);
+    ConsoleColors::reset_color(stream);
   }
 }
 
 static void set_console_color(std::ostream& stream, int color) {
   if (use_colors(stream)) {
-    console_colors::set_color(stream, color);
+    ConsoleColors::set_color(stream, color);
   }
 }
 
@@ -446,7 +446,7 @@ static void print_error(const Function* function,
 namespace flugzeug {
 
 ValidationResults validate_function(const Function* function, ValidationBehaviour behaviour) {
-  console_colors::ensure_initialized();
+  ConsoleColors::ensure_initialized();
 
   Validator validator(function);
   auto results = validator.validate();

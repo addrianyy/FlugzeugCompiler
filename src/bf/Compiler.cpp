@@ -7,7 +7,7 @@
 using namespace flugzeug;
 
 Module* bf::Compiler::compile_from_file(Context* context, const std::string& source_path) {
-  const std::string source = read_file_to_string(source_path);
+  const std::string source = File::read_to_string(source_path);
 
   const auto void_ty = context->get_void_ty();
   const auto i8 = context->get_i8_ty();

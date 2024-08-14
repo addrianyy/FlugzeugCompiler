@@ -22,7 +22,7 @@ struct InstructionUniqueIdentifierHash {
     size_t hash = 0;
 
     for (const auto element : identifier) {
-      hash_combine(hash, element);
+      combine_hash(hash, element);
     }
 
     return hash;

@@ -5,7 +5,6 @@
 #include <type_traits>
 
 #include "Error.hpp"
-#include "Log.hpp"
 
 namespace flugzeug {
 
@@ -20,7 +19,7 @@ class SmallVectorImpl {
 
   SmallVectorImpl(StorageT* data, size_t capacity) : data_(data), capacity_(capacity) {}
 
-  StorageT* get_inline_storage() {
+  StorageT* inline_storage() {
     const auto end = uintptr_t(this) + sizeof(SmallVectorImpl<T>);
     const auto align = alignof(T);
     const auto unalignment = end & (align - 1);
@@ -29,7 +28,7 @@ class SmallVectorImpl {
     return reinterpret_cast<StorageT*>(storage);
   }
 
-  bool is_using_inline_storage() { return data_ == get_inline_storage(); }
+  bool is_using_inline_storage() { return data_ == inline_storage(); }
 
   void ensure_capacity(size_t required_capacity) {
     if (capacity_ < required_capacity) {
@@ -80,7 +79,11 @@ class SmallVectorImpl {
 
   void reserve(size_t capacity) { ensure_capacity(capacity); }
 
-  void resize(size_t new_size) { resize(new_size, T{}); }
+  void resize(size_t new_size) {
+    if (size() != new_size) {
+      resize(new_size, T{});
+    }
+  }
 
   void resize(size_t new_size, const T& default_value) {
     while (size() > new_size) {
@@ -194,8 +197,10 @@ class SmallVector : public SmallVectorImpl<T> {
   }
 
  public:
+  using value_type = T;
+
   SmallVector() : SmallVectorImpl<T>(inline_storage, N) {
-    verify(this->is_using_inline_storage(), "Offset calculation is incorrect");
+    verify(this->is_using_inline_storage(), "offset calculation is incorrect");
   }
 
   SmallVector(const SmallVectorImpl<T>& other) : SmallVector() { this->copy_from(other); }

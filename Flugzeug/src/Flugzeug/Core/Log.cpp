@@ -1,33 +1,42 @@
 #include "Log.hpp"
 #include "ConsoleColors.hpp"
 
-#include <iostream>
+#include <string_view>
+
+#define TERMINAL_RESET_SEQUENCE "\x1b[0m"
+
+#define TERMINAL_COLOR_RED(x) "\x1b[31;1m" x TERMINAL_RESET_SEQUENCE
+#define TERMINAL_COLOR_YELLOW(x) "\x1b[33;1m" x TERMINAL_RESET_SEQUENCE
+#define TERMINAL_COLOR_BLUE(x) "\x1b[34;1m" x TERMINAL_RESET_SEQUENCE
+#define TERMINAL_COLOR_MAGENTA(x) "\x1b[35;1m" x TERMINAL_RESET_SEQUENCE
 
 void flugzeug::detail::log::log(const char* file,
                                 int line,
                                 LogLevel level,
                                 const std::string& message) {
-  console_colors::ensure_initialized();
+  (void)file;
+  (void)line;
 
-  std::ostream& stream = level >= LogLevel::Warn ? std::cerr : std::cout;
-  const char* header = nullptr;
+  ConsoleColors::ensure_initialized();
+
+  std::string_view header;
 
   switch (level) {
     case LogLevel::Debug:
-      header = "\x1b[32;1m[debug] ";
+      header = TERMINAL_COLOR_BLUE("[debug] ");
       break;
     case LogLevel::Info:
-      header = "\x1b[36;1m[info ] ";
+      header = TERMINAL_COLOR_MAGENTA("[info ] ");
       break;
     case LogLevel::Warn:
-      header = "\x1b[33;1m[warn ] ";
+      header = TERMINAL_COLOR_YELLOW("[warn ] ");
       break;
     case LogLevel::Error:
-      header = "\x1b[31;1m[error] ";
+      header = TERMINAL_COLOR_RED("[warn ] ");
       break;
     default:
       header = "??? ";
   }
 
-  stream << header << message << "\x1b[0m" << std::endl;
+  fmt::println("{}" TERMINAL_RESET_SEQUENCE "{}", header, message);
 }

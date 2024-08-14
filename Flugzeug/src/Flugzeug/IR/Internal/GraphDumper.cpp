@@ -199,8 +199,8 @@ void Function::generate_graph(const std::string& graph_path, IRPrintingMethod me
 void Function::debug_graph() const {
   const auto graph_path =
     std::filesystem::temp_directory_path() /
-    fmt::format("{}_{}_{}_{}.svg", get_name(), environment::get_current_process_id(),
-                environment::get_current_thread_id(), environment::get_tick_count(), (void*)this);
+    fmt::format("{}_{}_{}_{}.svg", get_name(), Environment::current_process_id(),
+                Environment::current_thread_id(), Environment::monotonic_timestamp(), (void*)this);
   const auto graph_path_string = graph_path.string();
 
   generate_graph(graph_path_string);

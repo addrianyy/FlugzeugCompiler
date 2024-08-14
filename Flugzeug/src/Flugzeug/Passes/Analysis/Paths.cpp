@@ -170,7 +170,7 @@ std::unordered_set<Block*> analysis::get_blocks_from_dominator_to_target(
 }
 
 size_t PathValidator::CacheKeyHash::operator()(const PathValidator::CacheKey& p) const {
-  return hash_combine(p.start, p.end, p.memory_kill_target);
+  return combine_hash(p.start, p.end, p.memory_kill_target);
 }
 
 bool PathValidator::get_blocks_to_check(const std::unordered_set<Block*>*& blocks_to_check,

@@ -2,6 +2,8 @@
 #include <fmt/core.h>
 #include <string>
 
+namespace flugzeug {
+
 enum class LogLevel {
   Debug,
   Info,
@@ -9,7 +11,7 @@ enum class LogLevel {
   Error,
 };
 
-namespace flugzeug::detail::log {
+namespace detail::log {
 
 void log(const char* file, int line, LogLevel level, const std::string& message);
 
@@ -22,12 +24,14 @@ inline void log_fmt(const char* file,
   log(file, line, level, fmt::format(fmt, std::forward<Args>(args)...));
 }
 
-}  // namespace flugzeug::detail::log
+}  // namespace detail::log
+
+}  // namespace flugzeug
 
 #define log_message(level, format, ...) \
   ::flugzeug::detail::log::log_fmt(__FILE__, __LINE__, (level), (format), ##__VA_ARGS__)
 
-#define log_debug(format, ...) log_message(LogLevel::Debug, (format), ##__VA_ARGS__)
-#define log_info(format, ...) log_message(LogLevel::Info, (format), ##__VA_ARGS__)
-#define log_warn(format, ...) log_message(LogLevel::Warn, (format), ##__VA_ARGS__)
-#define log_error(format, ...) log_message(LogLevel::Error, (format), ##__VA_ARGS__)
+#define log_debug(format, ...) log_message(::flugzeug::LogLevel::Debug, (format), ##__VA_ARGS__)
+#define log_info(format, ...) log_message(::flugzeug::LogLevel::Info, (format), ##__VA_ARGS__)
+#define log_warn(format, ...) log_message(::flugzeug::LogLevel::Warn, (format), ##__VA_ARGS__)
+#define log_error(format, ...) log_message(::flugzeug::LogLevel::Error, (format), ##__VA_ARGS__)

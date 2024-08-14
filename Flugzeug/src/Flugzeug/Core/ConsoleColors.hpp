@@ -1,12 +1,15 @@
 #pragma once
 #include <ostream>
 
-namespace flugzeug::console_colors {
+namespace flugzeug {
 
-void ensure_initialized();
-bool are_allowed();
+class ConsoleColors {
+ public:
+  static void ensure_initialized();
+  static bool supported();
 
-void reset_color(std::ostream& stream);
-void set_color(std::ostream& stream, int color);
+  static void reset_color(std::ostream& stream);
+  static void set_color(std::ostream& stream, int color);
+};
 
-}  // namespace flugzeug::console_colors
+}  // namespace flugzeug
