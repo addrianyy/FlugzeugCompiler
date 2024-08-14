@@ -41,6 +41,7 @@ uint64_t get_tick_count() {
 
 #elif defined(PLATFORM_MAC)
 
+#include <pthread.h>
 #include <unistd.h>
 
 namespace flugzeug::environment {

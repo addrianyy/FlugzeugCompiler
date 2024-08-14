@@ -26,12 +26,12 @@ class Format {
 template <typename T>
 struct fmt::formatter<Format<T>> {
   template <typename ParseContext>
-  constexpr auto parse(ParseContext& ctx) {
+  constexpr auto parse(ParseContext& ctx) const {
     return ctx.begin();
   }
 
   template <typename FormatContext>
-  auto format(const Format<T>& value, FormatContext& ctx) {
+  auto format(const Format<T>& value, FormatContext& ctx) const {
     return fmt::format_to(ctx.out(), "{}", value.get()->format());
   }
 };

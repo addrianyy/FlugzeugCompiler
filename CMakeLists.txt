@@ -1,12 +1,11 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.15)
 project(Compiler)
 
-set(CMAKE_CXX_STANDARD 20)
+add_subdirectory(Flugzeug)
 
 add_executable(Compiler "")
 add_subdirectory(src)
 
-add_subdirectory(Flugzeug)
-target_link_libraries(Compiler Flugzeug)
-
+target_link_libraries(Compiler PUBLIC Flugzeug)
+target_compile_features(Compiler PUBLIC cxx_std_20)
 target_include_directories(Compiler PRIVATE src)
