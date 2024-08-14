@@ -11,11 +11,11 @@ using namespace flugzeug;
 
 class InlinedFunction {
   std::unordered_map<Value*, Value*> mapping;
-  std::vector<Block*> blocks;
+  std::vector<Block*> blocks_;
 
  public:
-  void add_block(Block* block) { blocks.push_back(block); }
-  const std::vector<Block*>& get_blocks() { return blocks; }
+  void add_block(Block* block) { blocks_.push_back(block); }
+  const std::vector<Block*>& blocks() { return blocks_; }
 
   void add_mapping(Value* from, Value* to) { mapping.insert({from, to}); }
 
@@ -110,7 +110,7 @@ void flugzeug::utils::inline_call(Call* call) {
   }
 
   // Fixup operands.
-  for (Block* block : inlined_function.get_blocks()) {
+  for (Block* block : inlined_function.blocks()) {
     for (Instruction& instruction : advance_early(*block)) {
       // Replace returns with branches to `return_block`.
       if (const auto ret = cast<Ret>(instruction)) {
@@ -130,7 +130,7 @@ void flugzeug::utils::inline_call(Call* call) {
 
   // Add branch to callee entry just before `call` instruction which will be removed soon.
   {
-    const auto entry = inlined_function.get_blocks().front();
+    const auto entry = inlined_function.blocks().front();
     const auto branch_to_entry = new Branch(context, entry);
 
     branch_to_entry->insert_before(call);

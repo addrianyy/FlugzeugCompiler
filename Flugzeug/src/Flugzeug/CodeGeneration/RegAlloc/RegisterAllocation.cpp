@@ -3,7 +3,7 @@
 
 #include <Flugzeug/Core/Log.hpp>
 
-#include <Flugzeug/IR/ConsolePrinter.hpp>
+#include <Flugzeug/IR/ConsoleIRPrinter.hpp>
 #include <Flugzeug/IR/DominatorTree.hpp>
 #include <Flugzeug/IR/Function.hpp>
 #include <Flugzeug/IR/Instructions.hpp>

@@ -1,10 +1,10 @@
 #include <Flugzeug/Core/Iterator.hpp>
 #include <Flugzeug/Core/Log.hpp>
 
-#include <Flugzeug/IR/ConsolePrinter.hpp>
+#include <Flugzeug/IR/ConsoleIRPrinter.hpp>
 #include <Flugzeug/IR/Context.hpp>
 #include <Flugzeug/IR/DominatorTree.hpp>
-#include <Flugzeug/IR/FilePrinter.hpp>
+#include <Flugzeug/IR/FileIRPrinter.hpp>
 #include <Flugzeug/IR/Function.hpp>
 #include <Flugzeug/IR/Module.hpp>
 
@@ -137,8 +137,8 @@ int main() {
   module->print(printing_method);
 
   if (false) {
-    FilePrinter file_printer("TestResults/result.flug");
-    ConsolePrinter console_printer(ConsolePrinter::Variant::ColorfulIfSupported);
+    FileIRPrinter file_printer("TestResults/result.flug");
+    ConsoleIRPrinter console_printer(ConsoleIRPrinter::Variant::ColorfulIfSupported);
 
     module->print(console_printer, printing_method);
   }

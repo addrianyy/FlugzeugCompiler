@@ -3,7 +3,7 @@
 
 namespace flugzeug {
 
-class ConsolePrinter : public IRPrinter {
+class ConsoleIRPrinter : public IRPrinter {
  public:
   enum class Variant {
     Simple,
@@ -33,9 +33,9 @@ class ConsolePrinter : public IRPrinter {
   void write_string(std::string_view string) override;
 
  public:
-  explicit ConsolePrinter(Variant variant);
-  ConsolePrinter(Variant variant, std::ostream& output_stream);
-  ~ConsolePrinter() override;
+  explicit ConsoleIRPrinter(Variant variant);
+  ConsoleIRPrinter(Variant variant, std::ostream& output_stream);
+  ~ConsoleIRPrinter() override;
 };
 
 }  // namespace flugzeug

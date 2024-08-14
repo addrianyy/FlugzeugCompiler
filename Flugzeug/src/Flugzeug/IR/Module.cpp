@@ -1,5 +1,5 @@
 #include "Module.hpp"
-#include "ConsolePrinter.hpp"
+#include "ConsoleIRPrinter.hpp"
 
 using namespace flugzeug;
 
@@ -34,7 +34,7 @@ void Module::print(IRPrinter& printer, IRPrintingMethod method) const {
 }
 
 void Module::print(IRPrintingMethod method) const {
-  ConsolePrinter printer(ConsolePrinter::Variant::ColorfulIfSupported);
+  ConsoleIRPrinter printer(ConsoleIRPrinter::Variant::ColorfulIfSupported);
   print(printer, method);
 }
 

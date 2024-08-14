@@ -2,7 +2,7 @@
 
 #include <Flugzeug/Core/Log.hpp>
 
-#include <Flugzeug/IR/ConsolePrinter.hpp>
+#include <Flugzeug/IR/ConsoleIRPrinter.hpp>
 #include <Flugzeug/IR/DominatorTree.hpp>
 #include <Flugzeug/IR/Function.hpp>
 #include <Flugzeug/IR/Instructions.hpp>
@@ -87,8 +87,7 @@ bool OrderedInstruction::join_to(OrderedInstruction* other) {
     return false;
   }
 
-  other_i->live_interval_ =
-    LiveInterval::merge(this_i->live_interval(), other_i->live_interval());
+  other_i->live_interval_ = LiveInterval::merge(this_i->live_interval(), other_i->live_interval());
   this_i->live_interval_.clear();
   representative_ = other_i;
 
@@ -129,7 +128,7 @@ OrderedInstruction* OrderedInstructions::get(Instruction* instruction) {
 void OrderedInstructions::debug_print() {
   Block* current_block = nullptr;
 
-  ConsolePrinter printer(ConsolePrinter::Variant::ColorfulIfSupported);
+  ConsoleIRPrinter printer(ConsoleIRPrinter::Variant::ColorfulIfSupported);
 
   for (const auto& instruction : instructions()) {
     const auto block = instruction.get()->block();
@@ -185,8 +184,7 @@ void OrderedInstructions::debug_print_interference() {
         continue;
       }
 
-      const auto overlap =
-        LiveInterval::are_overlapping(a.live_interval(), b.live_interval());
+      const auto overlap = LiveInterval::are_overlapping(a.live_interval(), b.live_interval());
 
       verify(LiveInterval::are_overlapping(b.live_interval(), a.live_interval()) == overlap,
              "Non symmetric result of `are_overlapping`");

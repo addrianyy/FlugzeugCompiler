@@ -17,7 +17,7 @@ class OrderedInstructions;
 class OrderedInstruction;
 
 class DebugRepresentation {
-  std::unordered_map<class OrderedInstruction*, std::vector<OrderedInstruction*>> represents;
+  std::unordered_map<OrderedInstruction*, std::vector<OrderedInstruction*>> represents;
 
  public:
   explicit DebugRepresentation(OrderedInstructions& ordered_instructions);
@@ -29,7 +29,7 @@ struct BlockInstructionsRange {
   size_t first;
   size_t last;
 
-  BlockInstructionsRange(class OrderedInstructions& ordered_instructions, Block* block);
+  BlockInstructionsRange(OrderedInstructions& ordered_instructions, Block* block);
 };
 
 class OrderedInstruction {

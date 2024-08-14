@@ -4,14 +4,13 @@
 
 namespace flugzeug {
 
-class FilePrinter : public IRPrinter {
- private:
+class FileIRPrinter : public IRPrinter {
   std::ofstream file_stream;
 
   void write_string(std::string_view string) override;
 
  public:
-  explicit FilePrinter(const std::string& path);
+  explicit FileIRPrinter(const std::string& path);
 };
 
 }  // namespace flugzeug

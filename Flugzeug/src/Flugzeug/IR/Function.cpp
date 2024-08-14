@@ -1,6 +1,6 @@
 #include "Function.hpp"
-#include "ConsolePrinter.hpp"
-#include "Internal/DebugPrinter.hpp"
+#include "ConsoleIRPrinter.hpp"
+#include "Internal/DebugIRPrinter.hpp"
 #include "Module.hpp"
 
 using namespace flugzeug;
@@ -125,12 +125,12 @@ void Function::print(IRPrinter& printer, IRPrintingMethod method) const {
 }
 
 void Function::print(IRPrintingMethod method) const {
-  ConsolePrinter printer(ConsolePrinter::Variant::ColorfulIfSupported);
+  ConsoleIRPrinter printer(ConsoleIRPrinter::Variant::ColorfulIfSupported);
   print(printer, method);
 }
 
 void Function::debug_print() const {
-  DebugPrinter printer;
+  DebugIRPrinter printer;
   print(printer);
 }
 

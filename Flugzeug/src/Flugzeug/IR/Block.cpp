@@ -1,9 +1,9 @@
 #include "Block.hpp"
-#include "ConsolePrinter.hpp"
+#include "ConsoleIRPrinter.hpp"
 #include "DominatorTree.hpp"
 #include "Function.hpp"
 #include "Instructions.hpp"
-#include "Internal/DebugPrinter.hpp"
+#include "Internal/DebugIRPrinter.hpp"
 
 #include <deque>
 
@@ -293,12 +293,12 @@ void Block::print(IRPrinter& printer, IRPrintingMethod method) const {
 }
 
 void Block::print(IRPrintingMethod method) const {
-  ConsolePrinter printer(ConsolePrinter::Variant::ColorfulIfSupported);
+  ConsoleIRPrinter printer(ConsoleIRPrinter::Variant::ColorfulIfSupported);
   print(printer, method);
 }
 
 void Block::debug_print() const {
-  DebugPrinter printer;
+  DebugIRPrinter printer;
   print(printer);
 }
 

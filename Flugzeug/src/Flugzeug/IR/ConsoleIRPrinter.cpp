@@ -1,4 +1,4 @@
-#include "ConsolePrinter.hpp"
+#include "ConsoleIRPrinter.hpp"
 
 #include <Flugzeug/Core/ConsoleColors.hpp>
 
@@ -6,40 +6,40 @@
 
 using namespace flugzeug;
 
-void ConsolePrinter::reset() {
+void ConsoleIRPrinter::reset() {
   if (variant == Variant::Colorful) {
     ConsoleColors::reset_color(output_stream);
   }
 }
 
-void ConsolePrinter::set_color(int color) {
+void ConsoleIRPrinter::set_color(int color) {
   if (variant == Variant::Colorful) {
     ConsoleColors::set_color(output_stream, color);
   }
 }
 
-void ConsolePrinter::begin_keyword() {
+void ConsoleIRPrinter::begin_keyword() {
   set_color(32);
 }
-void ConsolePrinter::begin_value() {
+void ConsoleIRPrinter::begin_value() {
   set_color(33);
 }
-void ConsolePrinter::begin_constant() {}
-void ConsolePrinter::begin_type() {
+void ConsoleIRPrinter::begin_constant() {}
+void ConsoleIRPrinter::begin_type() {
   set_color(34);
 }
-void ConsolePrinter::begin_block() {
+void ConsoleIRPrinter::begin_block() {
   set_color(37);
 }
 
-void ConsolePrinter::write_string(std::string_view string) {
+void ConsoleIRPrinter::write_string(std::string_view string) {
   output_stream << string;
 }
 
-ConsolePrinter::ConsolePrinter(ConsolePrinter::Variant variant)
-    : ConsolePrinter(variant, std::cout) {}
+ConsoleIRPrinter::ConsoleIRPrinter(ConsoleIRPrinter::Variant variant)
+    : ConsoleIRPrinter(variant, std::cout) {}
 
-ConsolePrinter::ConsolePrinter(ConsolePrinter::Variant variant, std::ostream& output_stream)
+ConsoleIRPrinter::ConsoleIRPrinter(ConsoleIRPrinter::Variant variant, std::ostream& output_stream)
     : variant(variant), output_stream(output_stream) {
   ConsoleColors::ensure_initialized();
 
@@ -54,6 +54,6 @@ ConsolePrinter::ConsolePrinter(ConsolePrinter::Variant variant, std::ostream& ou
   reset();
 }
 
-ConsolePrinter::~ConsolePrinter() {
+ConsoleIRPrinter::~ConsoleIRPrinter() {
   output_stream.flush();
 }

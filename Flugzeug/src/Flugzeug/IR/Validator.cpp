@@ -1,5 +1,5 @@
 #include "Validator.hpp"
-#include "ConsolePrinter.hpp"
+#include "ConsoleIRPrinter.hpp"
 #include "DominatorTree.hpp"
 #include "Function.hpp"
 #include "InstructionVisitor.hpp"
@@ -409,7 +409,7 @@ static void set_console_color(std::ostream& stream, int color) {
 
 static void print_error(const Function* function,
                         std::ostream& stream,
-                        ConsolePrinter& printer,
+                        ConsoleIRPrinter& printer,
                         const ValidationResults::Error& error) {
   // Red
   const int key_color = 31;
@@ -454,7 +454,7 @@ ValidationResults validate_function(const Function* function, ValidationBehaviou
 
   if (behaviour != ValidationBehaviour::Silent) {
     std::ostream& stream = std::cout;
-    ConsolePrinter printer(ConsolePrinter::Variant::ColorfulIfSupported, stream);
+    ConsoleIRPrinter printer(ConsoleIRPrinter::Variant::ColorfulIfSupported, stream);
 
     for (const auto& error : results) {
       print_error(function, stream, printer, error);
