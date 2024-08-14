@@ -38,7 +38,7 @@ bool opt::memory::eliminate_dead_stores_local(Function* function,
 
       // Make sure that nothing inbetween can load the pointer.
       const auto loaded_inbetween = alias_analysis.is_pointer_accessed_inbetween(
-        store.get_ptr(), previous_store->get_next(), &store,
+        store.get_ptr(), previous_store->next(), &store,
         analysis::PointerAliasing::AccessType::Load);
 
       // Destroy previous store as it's dead.
@@ -89,7 +89,7 @@ static bool is_store_dead(const Store* store, const analysis::PointerAliasing& a
 
   {
     // Make sure that nothing in the remaining part of the store block can observe the pointer.
-    const auto result = check_instruction_range(store->get_next(), nullptr);
+    const auto result = check_instruction_range(store->next(), nullptr);
     if (result == CheckResult::Ok) {
       return true;
     }

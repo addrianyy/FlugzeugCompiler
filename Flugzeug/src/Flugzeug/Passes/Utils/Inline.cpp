@@ -40,11 +40,11 @@ static Block* split_block(Instruction* instruction) {
   const auto new_block = old_block->get_function()->create_block();
 
   // Move all instructions after `instruction` to the new block.
-  Instruction* current = instruction->get_next();
+  Instruction* current = instruction->next();
   verify(current, "Cannot split at the last instruction of the block");
 
   while (current) {
-    const auto next = current->get_next();
+    const auto next = current->next();
     current->move_to_back(new_block);
     current = next;
   }

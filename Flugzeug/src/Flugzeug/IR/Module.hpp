@@ -6,11 +6,11 @@ namespace flugzeug {
 class Context;
 
 class Module {
-  friend class IntrusiveLinkedList<Function, Module>;
-  friend class IntrusiveNode<Function, Module>;
+  friend class ll::IntrusiveLinkedList<Function, Module>;
+  friend class ll::IntrusiveNode<Function, Module>;
   friend class Context;
 
-  using FunctionList = IntrusiveLinkedList<Function, Module>;
+  using FunctionList = ll::IntrusiveLinkedList<Function, Module>;
 
   template <typename TIterator, bool Extern>
   class FunctionFilteringIterator {
@@ -61,7 +61,7 @@ class Module {
 
   std::unordered_map<std::string_view, Function*> function_map;
 
-  FunctionList& get_list() { return function_list; }
+  FunctionList& intrusive_list() { return function_list; }
 
   void on_added_node(Function* function);
   void on_removed_node(Function* function);
@@ -78,8 +78,8 @@ class Module {
 
   void destroy();
 
-  size_t get_function_count() const { return function_list.get_size(); }
-  bool is_empty() const { return function_list.is_empty(); }
+  size_t get_function_count() const { return function_list.size(); }
+  bool is_empty() const { return function_list.empty(); }
 
   std::unordered_map<const Function*, ValidationResults> validate(
     ValidationBehaviour behaviour) const;

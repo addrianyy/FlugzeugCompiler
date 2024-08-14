@@ -260,7 +260,7 @@ std::unordered_set<const Value*> Block::get_inlinable_values() const {
 }
 
 Block::~Block() {
-  verify(instruction_list.is_empty(), "Cannot remove non-empty block.");
+  verify(instruction_list.empty(), "Cannot remove non-empty block.");
   verify(!get_function(), "Cannot remove block that is attached to the function.");
 
   verify(predecessors_list.empty(), "Predecessors list is not empty.");

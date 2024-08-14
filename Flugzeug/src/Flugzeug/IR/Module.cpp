@@ -19,7 +19,7 @@ Module::Module(Context* context) : context(context), function_list(this) {
 }
 
 Module::~Module() {
-  verify(function_list.is_empty(), "Cannot remove non-empty module.");
+  verify(function_list.empty(), "Cannot remove non-empty module.");
   context->decrease_refcount();
 }
 
@@ -27,7 +27,7 @@ void Module::print(IRPrinter& printer, IRPrintingMethod method) const {
   for (const Function& function : *this) {
     function.print(printer, method);
 
-    if (function.get_next()) {
+    if (function.next()) {
       printer.newline();
     }
   }

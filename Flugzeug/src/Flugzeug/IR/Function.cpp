@@ -14,7 +14,7 @@ void Function::on_added_node(Block* block) {
 
   if (block->is_entry) {
     // We cannot check if size() == 0 because it's already updated before calling `on_added_node`.
-    verify(!get_list().get_first(), "Entry block must be first one in the list.");
+    verify(!intrusive_list().first(), "Entry block must be first one in the list.");
   }
 
   for (Instruction& instruction : *block) {
@@ -26,7 +26,7 @@ void Function::on_added_node(Block* block) {
 
 void Function::on_removed_node(Block* block) {
   if (block->is_entry) {
-    verify(get_list().is_empty(), "Entry block must be removed last");
+    verify(intrusive_list().empty(), "Entry block must be removed last");
     block->is_entry = false;
   }
 }
@@ -52,7 +52,7 @@ void Function::print_prototype(IRPrinter& printer, bool end_line) const {
 }
 
 void Function::insert_block(Block* block) {
-  if (blocks.is_empty()) {
+  if (blocks.empty()) {
     block->is_entry = true;
   }
 
@@ -82,7 +82,7 @@ Function::Function(Context* context,
 }
 
 Function::~Function() {
-  verify(blocks.is_empty(), "Block list must be empty before removing function.");
+  verify(blocks.empty(), "Block list must be empty before removing function.");
 }
 
 ValidationResults Function::validate(ValidationBehaviour behaviour) const {

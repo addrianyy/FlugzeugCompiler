@@ -240,7 +240,7 @@ std::optional<size_t> PathValidator::validate_path(const DominatorTree& dominato
     }
 
     // Verify all instructions between `start` and `end`.
-    for (Instruction& instruction : instruction_range(start->get_next(), end)) {
+    for (Instruction& instruction : instruction_range(start->next(), end)) {
       if (!verifier(&instruction)) {
         return std::nullopt;
       }
@@ -280,7 +280,7 @@ std::optional<size_t> PathValidator::validate_path(const DominatorTree& dominato
   // Check start block partially if we haven't checked it previously.
   if (!included_start) {
     // Make sure there is no invalid instruction in the remaining part of start block.
-    for (Instruction& instruction : instruction_range(start->get_next(), nullptr)) {
+    for (Instruction& instruction : instruction_range(start->next(), nullptr)) {
       if (!verifier(&instruction)) {
         return std::nullopt;
       }
@@ -319,7 +319,7 @@ std::optional<size_t> PathValidator::validate_path_count(const DominatorTree& do
     }
 
     // Verify all instructions between `start` and `end`.
-    for (Instruction& instruction : instruction_range(start->get_next(), end)) {
+    for (Instruction& instruction : instruction_range(start->next(), end)) {
       instruction_count++;
     }
 
@@ -337,7 +337,7 @@ std::optional<size_t> PathValidator::validate_path_count(const DominatorTree& do
     instruction_count += block->get_instruction_count();
   }
 
-  for (Instruction& instruction : instruction_range(start->get_next(), nullptr)) {
+  for (Instruction& instruction : instruction_range(start->next(), nullptr)) {
     instruction_count++;
   }
 

@@ -4,7 +4,7 @@
 
 #include <memory>
 
-namespace flugzeug {
+namespace flugzeug::ll {
 
 template <typename T, typename Owner>
 class IntrusiveNode;
@@ -15,13 +15,13 @@ template <typename T, typename Owner>
 class IntrusiveNode {
   friend class IntrusiveLinkedList<T, Owner>;
 
-  Owner* owner = nullptr;
-  IntrusiveNode* next = nullptr;
-  IntrusiveNode* previous = nullptr;
+  Owner* owner_ = nullptr;
+  IntrusiveNode* next_ = nullptr;
+  IntrusiveNode* previous_ = nullptr;
 
-  IntrusiveLinkedList<T, Owner>& get_list() {
-    verify(owner, "Cannot get containing list for unlinked node.");
-    return owner->get_list();
+  IntrusiveLinkedList<T, Owner>& owning_list() {
+    verify(owner_, "Cannot get containing list for unlinked node.");
+    return owner_->intrusive_list();
   }
 
   T* to_underlying() { return static_cast<T*>(this); }
@@ -31,22 +31,22 @@ class IntrusiveNode {
 
   IntrusiveNode() = default;
 
-  virtual ~IntrusiveNode() { verify(!owner, "Tried to destroy linked node."); }
+  virtual ~IntrusiveNode() { verify(!owner_, "Tried to destroy linked node."); }
 
-  Owner* get_owner() { return owner; }
-  T* get_previous() { return static_cast<T*>(previous); }
-  T* get_next() { return static_cast<T*>(next); }
+  Owner* owner() { return owner_; }
+  T* previous() { return static_cast<T*>(previous_); }
+  T* next() { return static_cast<T*>(next_); }
 
-  const Owner* get_owner() const { return owner; }
-  const T* get_previous() const { return static_cast<const T*>(previous); }
-  const T* get_next() const { return static_cast<const T*>(next); }
+  const Owner* owner() const { return owner_; }
+  const T* previous() const { return static_cast<const T*>(previous_); }
+  const T* next() const { return static_cast<const T*>(next_); }
 
  protected:
-  void insert_before(T* before) { before->get_list().insert_before(to_underlying(), before); }
-  void insert_after(T* after) { after->get_list().insert_after(to_underlying(), after); }
+  void insert_before(T* before) { before->owning_list().insert_before(to_underlying(), before); }
+  void insert_after(T* after) { after->owning_list().insert_after(to_underlying(), after); }
 
-  void push_front(Owner* new_owner) { new_owner->get_list().push_front(to_underlying()); }
-  void push_back(Owner* new_owner) { new_owner->get_list().push_back(to_underlying()); }
+  void push_front(Owner* new_owner) { new_owner->intrusive_list().push_front(to_underlying()); }
+  void push_back(Owner* new_owner) { new_owner->intrusive_list().push_back(to_underlying()); }
 
   void move_before(T* before) {
     unlink();
@@ -68,10 +68,10 @@ class IntrusiveNode {
     push_back(new_owner);
   }
 
-  void unlink() { get_list().unlink(to_underlying()); }
+  void unlink() { owning_list().unlink(to_underlying()); }
 
   void destroy() {
-    if (owner) {
+    if (owner_) {
       unlink();
     }
 
@@ -97,7 +97,7 @@ class IntrusiveLinkedList {
     explicit IteratorInternal(TNode* node) : node(node) {}
 
     IteratorInternal& operator++() {
-      node = Reversed ? node->get_previous() : node->get_next();
+      node = Reversed ? node->previous() : node->next();
       return *this;
     }
 
@@ -108,7 +108,7 @@ class IntrusiveLinkedList {
     }
 
     IteratorInternal& operator--() {
-      node = Reversed ? node->get_next() : node->get_previous();
+      node = Reversed ? node->next() : node->previous();
       return *this;
     }
 
@@ -127,51 +127,51 @@ class IntrusiveLinkedList {
 
   using Node = IntrusiveNode<T, Owner>;
 
-  Owner* owner = nullptr;
-  Node* first = nullptr;
-  Node* last = nullptr;
+  Owner* owner_ = nullptr;
+  Node* first_ = nullptr;
+  Node* last_ = nullptr;
 
-  size_t size = 0;
+  size_t size_ = 0;
 
   Node* to_node(T* node) { return static_cast<Node*>(node); }
 
   void own_node(Node* node) {
-    verify(node, "Cannot own null node.");
-    verify(!node->owner, "Node is already owned.");
+    verify(node, "cannot own null node");
+    verify(!node->owner_, "node is already owned");
 
-    node->owner = owner;
+    node->owner_ = owner_;
 
-    size++;
+    size_++;
 
-    owner->on_added_node(static_cast<T*>(node));
+    owner_->on_added_node(static_cast<T*>(node));
   }
 
  public:
   CLASS_NON_MOVABLE_NON_COPYABLE(IntrusiveLinkedList);
 
-  explicit IntrusiveLinkedList(Owner* owner) : owner(owner) {}
+  explicit IntrusiveLinkedList(Owner* owner) : owner_(owner) {}
 
   ~IntrusiveLinkedList() {
-    auto to_delete = first;
+    auto to_delete = first_;
 
     while (to_delete) {
       const auto node = to_delete;
 
-      to_delete = node->next;
+      to_delete = node->next_;
 
       // Make sure user can add his own logic to destroy function.
       static_cast<T*>(node)->destroy();
     }
   }
 
-  T* get_first() { return static_cast<T*>(first); }
-  T* get_last() { return static_cast<T*>(last); }
+  T* first() { return static_cast<T*>(first_); }
+  T* last() { return static_cast<T*>(last_); }
 
-  const T* get_first() const { return static_cast<const T*>(first); }
-  const T* get_last() const { return static_cast<const T*>(last); }
+  const T* first() const { return static_cast<const T*>(first_); }
+  const T* last() const { return static_cast<const T*>(last_); }
 
-  size_t get_size() const { return size; }
-  bool is_empty() const { return size == 0; }
+  size_t size() const { return size_; }
+  bool empty() const { return size_ == 0; }
 
   void insert_before(T* node, T* before) {
     const auto list_node = to_node(node);
@@ -180,37 +180,37 @@ class IntrusiveLinkedList {
     own_node(list_node);
 
     if (before == nullptr) {
-      const auto previous_first = first;
+      const auto previous_first = first_;
 
-      first = list_node;
+      first_ = list_node;
 
-      list_node->previous = nullptr;
-      list_node->next = previous_first;
+      list_node->previous_ = nullptr;
+      list_node->next_ = previous_first;
 
       if (previous_first) {
-        verify(!previous_first->previous, "Invalid previous link.");
+        verify(!previous_first->previous_, "Invalid previous link.");
 
-        previous_first->previous = list_node;
+        previous_first->previous_ = list_node;
       } else {
-        verify(!last, "Invalid last node.");
+        verify(!last_, "Invalid last node.");
 
-        last = list_node;
+        last_ = list_node;
       }
     } else {
-      verify(before_node->owner == owner, "Before node is not owned by this list.");
+      verify(before_node->owner_ == owner_, "Before node is not owned by this list.");
 
-      list_node->next = before_node;
-      list_node->previous = before_node->previous;
+      list_node->next_ = before_node;
+      list_node->previous_ = before_node->previous_;
 
-      if (before_node->previous) {
-        before_node->previous->next = list_node;
+      if (before_node->previous_) {
+        before_node->previous_->next_ = list_node;
       } else {
-        verify(before_node == first, "List corruption.");
+        verify(before_node == first_, "List corruption.");
 
-        first = list_node;
+        first_ = list_node;
       }
 
-      before_node->previous = list_node;
+      before_node->previous_ = list_node;
     }
   }
 
@@ -221,67 +221,67 @@ class IntrusiveLinkedList {
     own_node(list_node);
 
     if (after == nullptr) {
-      const auto previous_last = last;
+      const auto previous_last = last_;
 
-      last = list_node;
+      last_ = list_node;
 
-      list_node->previous = previous_last;
-      list_node->next = nullptr;
+      list_node->previous_ = previous_last;
+      list_node->next_ = nullptr;
 
       if (previous_last) {
-        verify(!previous_last->next, "Invalid next link.");
-        previous_last->next = list_node;
+        verify(!previous_last->next_, "Invalid next link.");
+        previous_last->next_ = list_node;
       } else {
-        verify(!first, "Invalid first node.");
+        verify(!first_, "Invalid first node.");
 
-        first = list_node;
+        first_ = list_node;
       }
     } else {
-      verify(after_node->owner == owner, "After node is not owned by this list.");
+      verify(after_node->owner_ == owner_, "After node is not owned by this list.");
 
-      list_node->next = after_node->next;
-      list_node->previous = after_node;
+      list_node->next_ = after_node->next_;
+      list_node->previous_ = after_node;
 
-      if (after_node->next) {
-        after_node->next->previous = list_node;
+      if (after_node->next_) {
+        after_node->next_->previous_ = list_node;
       } else {
-        verify(after_node == last, "List corruption.");
+        verify(after_node == last_, "List corruption.");
 
-        last = list_node;
+        last_ = list_node;
       }
 
-      after_node->next = list_node;
+      after_node->next_ = list_node;
     }
   }
 
   void unlink(T* node) {
     const auto unlink_node = to_node(node);
 
-    verify(unlink_node->owner == owner, "Cannot unlink this node, it's not owned by us.");
+    verify(unlink_node->owner_ == owner_, "Cannot unlink this node, it's not owned by us.");
 
-    if (unlink_node->previous) {
-      unlink_node->previous->next = unlink_node->next;
+    if (unlink_node->previous_) {
+      unlink_node->previous_->next_ = unlink_node->next_;
     } else {
-      verify(unlink_node == first, "List corruption.");
+      verify(unlink_node == first_, "List corruption.");
 
-      first = unlink_node->next;
+      first_ = unlink_node->next_;
     }
 
-    if (unlink_node->next) {
-      unlink_node->next->previous = unlink_node->previous;
+    if (unlink_node->next_) {
+      unlink_node->next_->previous_ = unlink_node->previous_;
     } else {
-      verify(unlink_node == last, "List corruption.");
+      verify(unlink_node == last_, "List corruption.");
 
-      last = unlink_node->previous;
+      last_ = unlink_node->previous_;
     }
 
-    unlink_node->next = nullptr;
-    unlink_node->previous = nullptr;
-    unlink_node->owner = nullptr;
+    unlink_node->next_ = nullptr;
+    unlink_node->previous_ = nullptr;
+    unlink_node->owner_ = nullptr;
 
-    size--;
+    size_--;
 
-    owner->on_removed_node(node);
+    owner_->on_removed_node(node);
   }
 
   void push_front(T* insert_node) { insert_before(insert_node, nullptr); }
@@ -293,17 +293,17 @@ class IntrusiveLinkedList {
   using reverse_iterator = IteratorInternal<T, Node, true>;
   using const_reverse_iterator = IteratorInternal<const T, const Node, true>;
 
-  iterator begin() { return iterator(first); }
+  iterator begin() { return iterator(first_); }
   iterator end() { return iterator(nullptr); }
 
-  const_iterator begin() const { return const_iterator(first); }
+  const_iterator begin() const { return const_iterator(first_); }
   const_iterator end() const { return const_iterator(nullptr); }
 
-  reverse_iterator rbegin() { return reverse_iterator(last); }
+  reverse_iterator rbegin() { return reverse_iterator(last_); }
   reverse_iterator rend() { return reverse_iterator(nullptr); }
 
-  const_reverse_iterator rbegin() const { return const_reverse_iterator(last); }
+  const_reverse_iterator rbegin() const { return const_reverse_iterator(last_); }
   const_reverse_iterator rend() const { return const_reverse_iterator(nullptr); }
 };
 
-}  // namespace flugzeug
+}  // namespace flugzeug::ll

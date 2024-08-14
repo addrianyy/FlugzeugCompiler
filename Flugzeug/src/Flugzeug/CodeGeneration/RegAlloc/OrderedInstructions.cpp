@@ -41,7 +41,7 @@ BlockInstructionsRange::BlockInstructionsRange(OrderedInstructions& ordered_inst
   // Skip Phi instructions.
   Instruction* first_instruction = block->get_first_instruction();
   while (cast<Phi>(first_instruction)) {
-    first_instruction = first_instruction->get_next();
+    first_instruction = first_instruction->next();
   }
 
   first = ordered_instructions.get(first_instruction)->get_index();

@@ -47,7 +47,7 @@ static bool order_phis(Function* function) {
     Phi* last_phi = nullptr;
 
     for (Phi& phi : advance_early(block.instructions<Phi>())) {
-      Instruction* previous = phi.get_previous();
+      Instruction* previous = phi.previous();
 
       if (previous && !cast<Phi>(previous)) {
         if (!last_phi) {

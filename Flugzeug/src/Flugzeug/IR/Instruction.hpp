@@ -17,7 +17,7 @@ class DominatorTree;
 template <typename TBlock>
 using BlockTargets = StaticVector<TBlock*, 2>;
 
-class Instruction : public User, public IntrusiveNode<Instruction, Block> {
+class Instruction : public User, public ll::IntrusiveNode<Instruction, Block> {
   DEFINE_INSTANCEOF_RANGE(Value, Value::Kind::InstructionBegin, Value::Kind::InstructionEnd)
 
   friend class Block;
@@ -60,8 +60,8 @@ class Instruction : public User, public IntrusiveNode<Instruction, Block> {
   void print() const;
   void debug_print() const;
 
-  Block* get_block() { return get_owner(); }
-  const Block* get_block() const { return get_owner(); }
+  Block* get_block() { return owner(); }
+  const Block* get_block() const { return owner(); }
 
   Function* get_function();
   const Function* get_function() const;

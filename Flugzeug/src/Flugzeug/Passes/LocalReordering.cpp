@@ -25,7 +25,7 @@ class Reorderer : InstructionVisitor {
 
   Instruction* visit_binary_instr(Argument<BinaryInstr> binary) {
     const auto corresponding_op = corresponding_divmod(binary->get_op());
-    const auto previous = binary->get_previous();
+    const auto previous = binary->previous();
     if (!corresponding_op || !previous) {
       return nullptr;
     }
@@ -74,7 +74,7 @@ class Reorderer : InstructionVisitor {
 static bool can_move_earlier_down(Instruction* earlier_instruction,
                                   Instruction* later_instruction) {
   for (Instruction& instruction :
-       instruction_range(earlier_instruction->get_next(), later_instruction)) {
+       instruction_range(earlier_instruction->next(), later_instruction)) {
     if (instruction.uses_value(earlier_instruction)) {
       return false;
     }
@@ -103,7 +103,7 @@ bool opt::LocalReordering::run(Function* function) {
 
     // Check if other instruction is actually just above us. In this case
     // we have nothing to do.
-    if (earlier_instruction->get_next() == later_instruction) {
+    if (earlier_instruction->next() == later_instruction) {
       continue;
     }
 
