@@ -47,7 +47,7 @@ static Value* get_value_for_first_use(Block* block,
   if (block->is_entry_block()) {
     return type->undef();
   } else {
-    auto phi = new Phi(block->get_context(), type);
+    auto phi = new Phi(block->context(), type);
 
     block->push_instruction_front(phi);
     inserted_phis.push_back(phi);

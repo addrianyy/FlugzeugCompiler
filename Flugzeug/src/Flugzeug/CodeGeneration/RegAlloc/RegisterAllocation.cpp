@@ -95,7 +95,7 @@ static bool split_critical_edges(Function* function) {
       // Edge between `predecessor` and `block` is a critical edge. Split it.
 
       const auto mid_block = function->create_block();
-      mid_block->push_instruction_front(new Branch(function->get_context(), &block));
+      mid_block->push_instruction_front(new Branch(function->context(), &block));
 
       predecessor->get_last_instruction()->replace_operands(&block, mid_block);
       block.replace_incoming_blocks_in_phis(predecessor, mid_block);
@@ -113,8 +113,8 @@ static bool generate_phi_moves(Function* function) {
   for (Block& block : *function) {
     for (Phi& phi : advance_early(block.instructions<Phi>())) {
       for (const auto incoming : phi) {
-        const auto move = new BinaryInstr(function->get_context(), incoming.value, BinaryOp::Add,
-                                          incoming.value->get_type()->zero());
+        const auto move = new BinaryInstr(function->context(), incoming.value, BinaryOp::Add,
+                                          incoming.value->type()->zero());
         move->insert_before(incoming.block->get_last_instruction());
 
         phi.replace_incoming_for_block(incoming.block, move);

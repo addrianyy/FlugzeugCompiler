@@ -17,7 +17,7 @@ void Value::add_use(detail::Use* use) {
   uses.add_use(use);
 
   if (use->user() != this) {
-    user_count_excluding_self++;
+    user_count_excluding_self_++;
   }
 
   if (const auto block = cast<Block>(this)) {
@@ -29,7 +29,7 @@ void Value::remove_use(detail::Use* use) {
   uses.remove_use(use);
 
   if (use->user() != this) {
-    user_count_excluding_self--;
+    user_count_excluding_self_--;
   }
 
   if (const auto block = cast<Block>(this)) {
@@ -69,46 +69,46 @@ void Value::deduplicate_phi_incoming_blocks(Block* block, User* user) {
   }
 }
 
-Value::Value(Context* context, Value::Kind kind, Type* type)
-    : context(context), kind(kind), type(type), uses(this) {
+Value::Value(Context* context, Kind kind, Type* type)
+    : context_(context), kind_(kind), type_(type), uses(this) {
   verify(type->context() == context, "Context mismatch");
   context->increase_refcount();
 }
 
 Value::~Value() {
   verify(uses.size() == 0, "Cannot destroy value that has active users.");
-  context->decrease_refcount();
+  context_->decrease_refcount();
 }
 
 void Value::set_display_index(size_t index) {
-  verify(!type->is_void() && !type->is_function(),
+  verify(!type_->is_void() && !type_->is_function(),
          "Void or function values cannot have user index.");
-  display_index = index;
+  display_index_ = index;
 }
 
 bool Value::is_zero() const {
   const auto c = cast<Constant>(this);
-  return c && c->get_constant_u() == 0;
+  return c && c->get_u() == 0;
 }
 
 bool Value::is_one() const {
   const auto c = cast<Constant>(this);
-  return c && c->get_constant_u() == 1;
+  return c && c->get_u() == 1;
 }
 
 bool Value::is_all_ones() const {
   const auto c = cast<Constant>(this);
-  return c && c->get_constant_i() == -1;
+  return c && c->get_i() == -1;
 }
 
-std::optional<uint64_t> Value::get_constant_u_opt() const {
+std::optional<uint64_t> Value::constant_u_opt() const {
   const auto c = cast<Constant>(this);
-  return c ? std::optional(c->get_constant_u()) : std::nullopt;
+  return c ? std::optional(c->get_u()) : std::nullopt;
 }
 
-std::optional<int64_t> Value::get_constant_i_opt() const {
+std::optional<int64_t> Value::constant_i_opt() const {
   const auto c = cast<Constant>(this);
-  return c ? std::optional(c->get_constant_i()) : std::nullopt;
+  return c ? std::optional(c->get_i()) : std::nullopt;
 }
 
 bool Value::is_same_type_as(const Value* other) const {
@@ -116,7 +116,7 @@ bool Value::is_same_type_as(const Value* other) const {
     return true;
   }
 
-  if (get_type() != other->get_type()) {
+  if (type() != other->type()) {
     return false;
   }
 
@@ -132,8 +132,8 @@ bool Value::is_same_type_as(const Value* other) const {
     }
 
     for (size_t i = 0; i < function->get_parameter_count(); ++i) {
-      const auto t1 = function->get_parameter(i)->get_type();
-      const auto t2 = other_function->get_parameter(i)->get_type();
+      const auto t1 = function->get_parameter(i)->type();
+      const auto t2 = other_function->get_parameter(i)->type();
       if (t1 != t2) {
         return false;
       }
@@ -165,11 +165,11 @@ void Value::replace_uses_with(Value* new_value) {
 }
 
 void Value::replace_uses_with_constant(uint64_t constant) {
-  replace_uses_with(get_type()->constant(constant));
+  replace_uses_with(type()->constant(constant));
 }
 
 void Value::replace_uses_with_undef() {
-  replace_uses_with(get_type()->undef());
+  replace_uses_with(type()->undef());
 }
 
 void Constant::constrain_constant(Type* type, uint64_t c, uint64_t* u, int64_t* i) {
@@ -222,13 +222,13 @@ bool Value::is_used_only_by(const User* checked_user) const {
 }
 
 std::string Value::format() const {
-  return "v" + std::to_string(display_index);
+  return "v" + std::to_string(display_index_);
 }
 
 std::string Constant::format() const {
-  if (get_type()->is_i1()) {
+  if (type()->is_i1()) {
     return constant_u == 0 ? "false" : "true";
-  } else if (get_type()->is_pointer()) {
+  } else if (type()->is_pointer()) {
     return constant_u == 0 ? "null" : fmt::format("0x{:x}", constant_u);
   } else {
     return std::to_string(constant_i);

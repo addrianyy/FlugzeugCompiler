@@ -24,7 +24,7 @@ static bool process_pointer(Instruction* pointer,
         return false;
       }
 
-      worklist.emplace_back(offset, offset_from_stackalloc + constant_index->get_constant_i());
+      worklist.emplace_back(offset, offset_from_stackalloc + constant_index->get_i());
       continue;
     }
 
@@ -79,11 +79,11 @@ static bool split_stackalloc(StackAlloc* stackalloc) {
   }
 
   for (const auto& [offset, pointers] : offset_to_pointers) {
-    const auto partial_stackalloc = new StackAlloc(stackalloc->get_context(), type);
+    const auto partial_stackalloc = new StackAlloc(stackalloc->context(), type);
     partial_stackalloc->insert_after(stackalloc);
 
     const auto zero_initializer =
-      new Store(stackalloc->get_context(), partial_stackalloc, type->zero());
+      new Store(stackalloc->context(), partial_stackalloc, type->zero());
     zero_initializer->insert_after(partial_stackalloc);
 
     for (const auto& pointer : pointers) {

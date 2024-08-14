@@ -41,7 +41,7 @@ void Function::print_prototype(IRPrinter& printer, bool end_line) const {
   p.print(return_type, IRPrinter::NonKeywordWord{name}, IRPrinter::Item::ParenOpen);
 
   for (auto param : parameters) {
-    p.print(param->get_type(), param, IRPrinter::Item::Comma);
+    p.print(param->type(), param, IRPrinter::Item::Comma);
   }
 
   p.print(IRPrinter::Item::ParenClose);
@@ -154,7 +154,7 @@ void Function::reassign_display_indices() {
 }
 
 Block* Function::create_block() {
-  const auto block = new Block(get_context());
+  const auto block = new Block(context());
   insert_block(block);
   return block;
 }

@@ -34,7 +34,7 @@ void InstructionInserter::set_insertion_block(Block* block, InsertDestination de
   follow_instruction = false;
   insertion_instruction = nullptr;
   insertion_block = block;
-  context = block ? block->get_context() : nullptr;
+  context = block ? block->context() : nullptr;
 }
 
 void InstructionInserter::set_insertion_instruction(Instruction* instruction,
@@ -45,7 +45,7 @@ void InstructionInserter::set_insertion_instruction(Instruction* instruction,
   follow_instruction = follow_instruction_;
   insertion_instruction = instruction;
   insertion_block = nullptr;
-  context = instruction ? instruction->get_context() : nullptr;
+  context = instruction ? instruction->context() : nullptr;
 }
 
 Block* InstructionInserter::get_insertion_block() {

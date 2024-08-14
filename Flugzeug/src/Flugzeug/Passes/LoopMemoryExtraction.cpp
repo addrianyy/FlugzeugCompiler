@@ -72,9 +72,9 @@ static void rewrite_pointer(Value* pointer,
                             const std::vector<Call*>& calls,
                             const std::unordered_set<Instruction*>& loads_stores,
                             const analysis::PointerAliasing& alias_analysis) {
-  const auto context = pointer->get_context();
+  const auto context = pointer->context();
 
-  const auto value_type = cast<PointerType>(pointer->get_type())->pointee();
+  const auto value_type = cast<PointerType>(pointer->type())->pointee();
   const auto stackalloc = new StackAlloc(context, value_type);
   preheader->push_instruction_front(stackalloc);
 

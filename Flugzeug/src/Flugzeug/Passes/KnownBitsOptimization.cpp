@@ -27,12 +27,12 @@ class KnownBitsDatabase {
 
  public:
   KnownBits get(Value* value) {
-    const auto type_bitmask = value->get_type()->bit_mask();
+    const auto type_bitmask = value->type()->bit_mask();
 
     if (const auto constant = cast<Constant>(value)) {
       return KnownBits{
         .mask = type_bitmask,
-        .value = constant->get_constant_u(),
+        .value = constant->get_u(),
       };
     }
 
@@ -52,7 +52,7 @@ class KnownBitsDatabase {
   }
 
   void set(Value* value, const KnownBits& bits) {
-    const auto type_bitmask = value->get_type()->bit_mask();
+    const auto type_bitmask = value->type()->bit_mask();
 
     verify((~bits.mask & bits.value) == 0 && (bits.mask & ~type_bitmask) == 0 &&
              (bits.value & ~type_bitmask) == 0,
@@ -199,7 +199,7 @@ class BitOptimizer : InstructionVisitor {
       }
 
       case UnaryOp::Neg: {
-        computed = bitops::neg(bits_database.get(unary->get_val()), unary->get_type());
+        computed = bitops::neg(bits_database.get(unary->get_val()), unary->type());
         break;
       }
     }
@@ -210,7 +210,7 @@ class BitOptimizer : InstructionVisitor {
   }
 
   BitOptimizationResult visit_binary_instr(Argument<BinaryInstr> binary) {
-    const auto type = binary->get_type();
+    const auto type = binary->type();
     const auto op = binary->get_op();
 
     auto a = bits_database.get(binary->get_lhs());
@@ -329,7 +329,7 @@ class BitOptimizer : InstructionVisitor {
       case BinaryOp::Sar: {
         const auto shift_amount_constant = cast<Constant>(binary->get_rhs());
         if (shift_amount_constant) {
-          const auto shift_amount = shift_amount_constant->get_constant_u();
+          const auto shift_amount = shift_amount_constant->get_u();
 
           auto mask = a.mask;
           auto value = a.value;
@@ -453,7 +453,7 @@ class BitOptimizer : InstructionVisitor {
   }
 
   BitOptimizationResult visit_int_compare(Argument<IntCompare> int_compare) {
-    const auto type = int_compare->get_lhs()->get_type();
+    const auto type = int_compare->get_lhs()->type();
     const auto pred = int_compare->get_pred();
 
     auto a = bits_database.get(int_compare->get_lhs());
@@ -536,10 +536,10 @@ class BitOptimizer : InstructionVisitor {
   }
 
   BitOptimizationResult visit_cast(Argument<Cast> cast_instr) {
-    const auto input_type = cast_instr->get_val()->get_type();
+    const auto input_type = cast_instr->get_val()->type();
     const auto input_bitmask = input_type->bit_mask();
 
-    const auto output_type = cast_instr->get_type();
+    const auto output_type = cast_instr->type();
     const auto output_bitmask = output_type->bit_mask();
 
     const auto input = bits_database.get(cast_instr->get_val());
@@ -631,7 +631,7 @@ bool opt::KnownBitsOptimization::run(Function* function) {
         case BitOptimizationResult::ModifiedInstruction: {
           const auto bits = bits_database.get(&instruction);
 
-          if (bits.mask == instruction.get_type()->bit_mask()) {
+          if (bits.mask == instruction.type()->bit_mask()) {
             instruction.replace_uses_with_constant_and_destroy(bits.value);
             did_something = true;
           }

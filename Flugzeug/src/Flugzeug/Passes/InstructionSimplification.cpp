@@ -35,7 +35,7 @@ static uint64_t bin_log2(uint64_t x) {
 static OptimizationResult make_undef_if_uses_undef(Instruction* instruction) {
   for (const auto& operand : instruction->operands()) {
     if (operand.is_undef()) {
-      return instruction->get_type()->undef();
+      return instruction->type()->undef();
     }
   }
 
@@ -58,7 +58,7 @@ static OptimizationResult chain_commutative_expressions(BinaryInstr* binary) {
     return OptimizationResult::unchanged();
   }
 
-  const auto evaluated = utils::evaluate_binary_instr_to_value(binary->get_type(), c1, op, c2);
+  const auto evaluated = utils::evaluate_binary_instr_to_value(binary->type(), c1, op, c2);
 
   binary->set_new_operands(operand, op, evaluated);
   parent_binary->destroy_if_unused();
@@ -72,7 +72,7 @@ static OptimizationResult simplify_arithmetic(BinaryInstr* binary) {
 
     // a + (-a) => 0
     if (match_pattern(binary, pat::add(pat::neg(pat::value(a)), pat::exact_ref(a)))) {
-      return binary->get_type()->zero();
+      return binary->type()->zero();
     }
   }
 
@@ -116,7 +116,7 @@ static OptimizationResult simplify_bit_operations(BinaryInstr* binary) {
 
     // x & ~x => 0
     if (match_pattern(binary, pat::and_(pat::value(x), pat::not_(pat::exact_ref(x))))) {
-      return binary->get_type()->zero();
+      return binary->type()->zero();
     }
   }
 
@@ -142,7 +142,7 @@ static bool is_value_compared_to(Value* value, Value*& cmp_value, int64_t& cmp_c
 
   int64_t add_constant = 0;
   if (match_pattern(value, pat::add(pat::exact(cmp_value), pat::constant_i(add_constant)))) {
-    cmp_constant = Constant::constrain_i(cmp_value->get_type(), cmp_constant + add_constant);
+    cmp_constant = Constant::constrain_i(cmp_value->type(), cmp_constant + add_constant);
     cmp_value = value;
     return true;
   }
@@ -244,7 +244,7 @@ static OptimizationResult simplify_selected_arithmetic_2(Value* cmp_value,
   if (!on_constant_instruction) {
     return OptimizationResult::unchanged();
   }
-  const auto on_constant = on_constant_instruction->get_constant_i();
+  const auto on_constant = on_constant_instruction->get_i();
 
   if (!is_value_compared_to(on_non_constant->get_lhs(), cmp_value, cmp_constant) &&
       !is_value_compared_to(on_non_constant->get_rhs(), cmp_value, cmp_constant)) {
@@ -365,7 +365,7 @@ static OptimizationResult simplify_cmp_select_cmp_sequence(IntCompare* cmp) {
     return OptimizationResult::changed();
   } else if (const auto parent_cmp = cast<IntCompare>(select_cond)) {
     const auto new_cmp =
-      new IntCompare(cmp->get_context(), parent_cmp->get_lhs(),
+      new IntCompare(cmp->context(), parent_cmp->get_lhs(),
                      IntCompare::inverted_predicate(parent_cmp->get_pred()), parent_cmp->get_rhs());
     cmp->replace_with_instruction_and_destroy(new_cmp);
 
@@ -387,8 +387,8 @@ static OptimizationResult bitcasts_to_offset(Cast* cast_instr) {
   //  =>
   // v0 offset by v1
 
-  const auto context = cast_instr->get_context();
-  const auto pointer_type = cast<PointerType>(cast_instr->get_type());
+  const auto context = cast_instr->context();
+  const auto pointer_type = cast<PointerType>(cast_instr->type());
   if (!pointer_type) {
     return OptimizationResult::unchanged();
   }
@@ -418,7 +418,7 @@ static OptimizationResult bitcasts_to_offset(Cast* cast_instr) {
   Value* offset_by = nullptr;
   if (const auto added_constant = cast<Constant>(added_amount)) {
     // (ptr + X) offsets ptr by (X / pointee_size) if X is divisible by it
-    const auto v = added_constant->get_constant_u();
+    const auto v = added_constant->get_u();
     if ((v % pointee_size) == 0) {
       offset_by = i64->constant(v / pointee_size);
     }
@@ -458,7 +458,7 @@ class Simplifier : public InstructionVisitor {
   Context* context;
 
  public:
-  explicit Simplifier(Instruction* instruction) : context(instruction->get_context()) {}
+  explicit Simplifier(Instruction* instruction) : context(instruction->context()) {}
 
   OptimizationResult visit_unary_instr(Argument<UnaryInstr> unary) {
     PROPAGATE_RESULT(make_undef_if_uses_undef(unary));
@@ -484,7 +484,7 @@ class Simplifier : public InstructionVisitor {
     PROPAGATE_RESULT(simplify_bit_operations(binary));
     PROPAGATE_RESULT(simplify_arithmetic(binary));
 
-    const auto type = binary->get_type();
+    const auto type = binary->type();
     const auto lhs = binary->get_lhs();
     const auto rhs = binary->get_rhs();
 
@@ -530,7 +530,7 @@ class Simplifier : public InstructionVisitor {
 
           // We do these casts to avoid compiler warning.
           const auto negated_constant =
-            type->constant(uint64_t(-int64_t(constant->get_constant_u())));
+            type->constant(uint64_t(-int64_t(constant->get_u())));
           return new BinaryInstr(context, lhs, BinaryOp::Add, negated_constant);
         }
 
@@ -611,7 +611,7 @@ class Simplifier : public InstructionVisitor {
         }
 
         if (const auto multiplier_v = cast<Constant>(rhs)) {
-          const auto multiplier = multiplier_v->get_constant_u();
+          const auto multiplier = multiplier_v->get_u();
           if (is_pow2(multiplier)) {
             // X * Y (if Y is power of 2) == X << log2(Y)
             const auto shift_amount = type->constant(bin_log2(multiplier));
@@ -688,7 +688,7 @@ class Simplifier : public InstructionVisitor {
     // If both operands to int compare instruction are the same we can
     // calculate the result at compile time.
     if (lhs == rhs) {
-      const auto result = utils::evaluate_int_compare(lhs->get_type(), 1, pred, 1);
+      const auto result = utils::evaluate_int_compare(lhs->type(), 1, pred, 1);
 
       return context->i1_ty()->constant(result);
     }
@@ -720,14 +720,14 @@ class Simplifier : public InstructionVisitor {
         case IntPredicate::GtU:
           // unsigned > 0 == unsigned != 0
           return new IntCompare(context, lhs, IntPredicate::NotEqual,
-                                lhs->get_type()->constant(0));
+                                lhs->type()->constant(0));
 
         default:
           break;
       }
     } else if (rhs->is_one() && pred == IntPredicate::LtU) {
       // unsigned < 1 == unsigned == 0
-      return new IntCompare(context, lhs, IntPredicate::Equal, lhs->get_type()->constant(0));
+      return new IntCompare(context, lhs, IntPredicate::Equal, lhs->type()->constant(0));
     }
 
     // cmp (x + C1), C2  =>  cmp x, C2 - C1
@@ -740,8 +740,8 @@ class Simplifier : public InstructionVisitor {
       const auto added = pat::add(add, pat::constant(add_const), pat::value(add_unknown));
 
       if (match_pattern(int_compare, pat::compare_eq_or_ne(added, pat::constant(compared_to)))) {
-        const auto new_constant = compared_to->get_type()->constant(
-          compared_to->get_constant_u() - add_const->get_constant_u());
+        const auto new_constant = compared_to->type()->constant(
+          compared_to->get_u() - add_const->get_u());
 
         int_compare->replace_operands(add, add_unknown);
         int_compare->replace_operands(compared_to, new_constant);
@@ -770,7 +770,7 @@ class Simplifier : public InstructionVisitor {
       if (kind == parent_kind ||
           (kind == CastKind::SignExtend && parent_kind == CastKind::ZeroExtend)) {
         const auto new_cast =
-          new Cast(context, parent_kind, parent_cast->get_val(), cast_instr->get_type());
+          new Cast(context, parent_kind, parent_cast->get_val(), cast_instr->type());
 
         cast_instr->replace_with_instruction_and_destroy(new_cast);
         parent_cast->destroy_if_unused();
@@ -786,8 +786,8 @@ class Simplifier : public InstructionVisitor {
           (parent_kind == CastKind::ZeroExtend || parent_kind == CastKind::SignExtend)) {
         const auto original = parent_cast->get_val();
 
-        const auto from_size = original->get_type()->bit_size();
-        const auto to_size = cast_instr->get_type()->bit_size();
+        const auto from_size = original->type()->bit_size();
+        const auto to_size = cast_instr->type()->bit_size();
 
         CastKind new_kind = CastKind::Bitcast;
         if (from_size == to_size) {
@@ -798,7 +798,7 @@ class Simplifier : public InstructionVisitor {
           new_kind = parent_kind;
         }
 
-        const auto new_cast = new Cast(context, new_kind, original, cast_instr->get_type());
+        const auto new_cast = new Cast(context, new_kind, original, cast_instr->type());
 
         cast_instr->replace_with_instruction_and_destroy(new_cast);
         parent_cast->destroy_if_unused();

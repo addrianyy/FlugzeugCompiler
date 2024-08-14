@@ -48,7 +48,7 @@ static bool get_brainfuck_loop(Block* block, BrainfuckLoop& loop) {
     return false;
   }
 
-  const auto loop_type = loop.iteration_count->get_type();
+  const auto loop_type = loop.iteration_count->type();
 
   const auto is_foreign = [&](Value* value) {
     if (const auto instruction = cast<Instruction>(value)) {
@@ -104,11 +104,11 @@ static bool optimize_loop(const analysis::Loop* loop) {
   }
 
   bf_loop.branch->replace_with_instruction_and_destroy(
-    new Branch(block->get_context(), bf_loop.exit_block));
+    new Branch(block->context(), bf_loop.exit_block));
   bf_loop.compare->destroy_if_unused();
 
   for (const auto& add : bf_loop.adds) {
-    const auto added_value = new BinaryInstr(block->get_context(), add.foreign_operand,
+    const auto added_value = new BinaryInstr(block->context(), add.foreign_operand,
                                              BinaryOp::Mul, bf_loop.iteration_count);
     added_value->insert_before(add.instruction);
     add.instruction->set_new_operands(add.normal_operand, BinaryOp::Add, added_value);

@@ -223,7 +223,7 @@ static std::optional<size_t> get_unroll_count(const std::vector<Instruction*>& i
   const auto get_constant_from_map = [&](const std::unordered_map<Value*, uint64_t>& value_map,
                                          Value* value, uint64_t& constant) -> bool {
     if (const auto constant_value = cast<Constant>(value)) {
-      constant = constant_value->get_constant_u();
+      constant = constant_value->get_u();
       return true;
     }
 
@@ -265,7 +265,7 @@ static std::optional<size_t> get_unroll_count(const std::vector<Instruction*>& i
         if (!get_constant(unary_instr->get_val(), constant)) {
           return std::nullopt;
         }
-        set_constant(instruction, utils::evaluate_unary_instr(unary_instr->get_type(),
+        set_constant(instruction, utils::evaluate_unary_instr(unary_instr->type(),
                                                               unary_instr->get_op(), constant));
       } else if (auto binary_instr = cast<BinaryInstr>(instruction)) {
         uint64_t lhs, rhs;
@@ -273,7 +273,7 @@ static std::optional<size_t> get_unroll_count(const std::vector<Instruction*>& i
             !get_constant(binary_instr->get_rhs(), rhs)) {
           return std::nullopt;
         }
-        set_constant(instruction, utils::evaluate_binary_instr(binary_instr->get_type(), lhs,
+        set_constant(instruction, utils::evaluate_binary_instr(binary_instr->type(), lhs,
                                                                binary_instr->get_op(), rhs));
       } else if (auto cast_instr = cast<Cast>(instruction)) {
         uint64_t constant;
@@ -281,8 +281,8 @@ static std::optional<size_t> get_unroll_count(const std::vector<Instruction*>& i
           return std::nullopt;
         }
         set_constant(instruction,
-                     utils::evaluate_cast(constant, cast_instr->get_val()->get_type(),
-                                          cast_instr->get_type(), cast_instr->get_cast_kind()));
+                     utils::evaluate_cast(constant, cast_instr->get_val()->type(),
+                                          cast_instr->type(), cast_instr->get_cast_kind()));
       } else if (auto phi = cast<Phi>(instruction)) {
         const auto& loop_phi = loop_phis.find(phi)->second;
 
@@ -302,7 +302,7 @@ static std::optional<size_t> get_unroll_count(const std::vector<Instruction*>& i
         }
 
         const auto result =
-          utils::evaluate_int_compare(cmp->get_lhs()->get_type(), lhs, cmp->get_pred(), rhs);
+          utils::evaluate_int_compare(cmp->get_lhs()->type(), lhs, cmp->get_pred(), rhs);
 
         // Check if we hit the exit condition.
         if (result != condition_to_continue) {
@@ -356,7 +356,7 @@ static void perform_unrolling(Function* function,
 
   verify(unroll_count > 0, "Cannot unroll loop zero times");
 
-  const auto context = function->get_context();
+  const auto context = function->context();
 
   // (Step 1) Create a new exit block for the loop and make it branch to the `exit_to`.
   const auto new_loop_exit = function->create_block();
@@ -386,7 +386,7 @@ static void perform_unrolling(Function* function,
         // Before unrolling all instructions outside the loop used the last iteration value.
         // Now we will have several exiting blocks so this won't work. We need to create Phi
         // in the newly created exit block for these values.
-        const auto phi = new Phi(context, instruction.get_type());
+        const auto phi = new Phi(context, instruction.type());
         new_loop_exit->push_instruction_front(phi);
 
         // We already have one exiting block, so we add it to the Phi incoming list.

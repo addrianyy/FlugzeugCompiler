@@ -223,7 +223,7 @@ std::unordered_set<const Value*> Block::get_inlinable_values() const {
       continue;
     }
 
-    if (instruction.get_user_count() == 0 || instruction.get_user_count() > 3) {
+    if (instruction.user_count() == 0 || instruction.user_count() > 3) {
       continue;
     }
 
@@ -303,7 +303,7 @@ void Block::debug_print() const {
 }
 
 std::string Block::format() const {
-  return is_entry ? "entry" : ("block_" + std::to_string(get_display_index()));
+  return is_entry ? "entry" : ("block_" + std::to_string(display_index()));
 }
 
 void Block::clear() {

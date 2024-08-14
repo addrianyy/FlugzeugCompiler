@@ -58,7 +58,7 @@ static Block* split_block(Instruction* instruction) {
 }
 
 void flugzeug::utils::inline_call(Call* call) {
-  const auto context = call->get_context();
+  const auto context = call->context();
   const auto caller = call->get_function();
   const auto callee = call->get_callee();
 

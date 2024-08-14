@@ -189,7 +189,7 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
     // Merge values from header and jump-back blocks.
     // TODO: Check if we actually need it.
     const auto merging_phi =
-      new Phi(function->get_context(),
+      new Phi(function->context(),
               {{header, header_instruction}, {jump_back_block, jump_back_instruction}});
     actual_body->push_instruction_front(merging_phi);
 
@@ -236,7 +236,7 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
 
     // Merge values from header and jump-back blocks.
     const auto merging_phi =
-      new Phi(function->get_context(), {{header, header_value}, {jump_back_block, loop_value}});
+      new Phi(function->context(), {{header, header_value}, {jump_back_block, loop_value}});
     exit_target->push_instruction_front(merging_phi);
 
     // All users outside of the loop use value from header. Replace them with merging Phi.

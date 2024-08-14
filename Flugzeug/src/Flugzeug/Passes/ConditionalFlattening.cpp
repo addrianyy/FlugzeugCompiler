@@ -99,14 +99,14 @@ static bool flatten(const std::array<Block*, N>& speculated_blocks,
     const auto false_value = phi.remove_incoming(false_block);
 
     const auto select =
-      new Select(block->get_context(), cond_branch->get_cond(), true_value, false_value);
+      new Select(block->context(), cond_branch->get_cond(), true_value, false_value);
     select->insert_before(cond_branch);
 
     phi.add_incoming(block, select);
   }
 
   // Make `block` branch directly to `exit`.
-  cond_branch->replace_with_instruction_and_destroy(new Branch(block->get_context(), exit));
+  cond_branch->replace_with_instruction_and_destroy(new Branch(block->context(), exit));
 
   // Destroy speculated blocks.
   for (const auto speculated : speculated_blocks) {

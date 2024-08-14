@@ -14,7 +14,7 @@ class Propagator : public InstructionVisitor {
   static bool get_constant(const Value* value, uint64_t& result) {
     const auto c = cast<Constant>(value);
     if (c) {
-      result = c->get_constant_u();
+      result = c->get_u();
     }
     return c;
   }
@@ -46,7 +46,7 @@ class Propagator : public InstructionVisitor {
       return OptimizationResult::unchanged();
     }
 
-    return utils::evaluate_int_compare_to_value(int_compare->get_lhs()->get_type(), lhs,
+    return utils::evaluate_int_compare_to_value(int_compare->get_lhs()->type(), lhs,
                                                 int_compare->get_pred(), rhs);
   }
 
@@ -56,7 +56,7 @@ class Propagator : public InstructionVisitor {
       return OptimizationResult::unchanged();
     }
 
-    return utils::evaluate_cast_to_value(val, cast->get_val()->get_type(), type,
+    return utils::evaluate_cast_to_value(val, cast->get_val()->type(), type,
                                          cast->get_cast_kind());
   }
 
@@ -70,7 +70,7 @@ class Propagator : public InstructionVisitor {
     const auto removed_target = cond_branch->get_target(!cond);
 
     const auto block = cond_branch->get_block();
-    const auto branch = new Branch(cond_branch->get_context(), actual_target);
+    const auto branch = new Branch(cond_branch->context(), actual_target);
 
     cond_branch->replace_with_instruction_and_destroy(branch);
 
@@ -96,7 +96,7 @@ class Propagator : public InstructionVisitor {
       return OptimizationResult::unchanged();
     }
 
-    const auto pointer = base + uint64_t(index_constant->get_constant_i());
+    const auto pointer = base + uint64_t(index_constant->get_i());
 
     return type->constant(pointer);
   }
@@ -118,7 +118,7 @@ bool opt::ConstPropagation::run(Function* function) {
   bool did_something = false;
 
   for (Instruction& instruction : advance_early(function->instructions())) {
-    Propagator propagator(instruction.get_type());
+    Propagator propagator(instruction.type());
 
     if (const auto result = visitor::visit_instruction(&instruction, propagator)) {
       if (const auto replacement = result.get_replacement()) {

@@ -52,15 +52,15 @@ class Value {
  private:
   friend class User;
 
-  const Kind kind;
+  const Kind kind_;
 
-  Type* const type;
-  Context* const context;
+  Type* const type_;
+  Context* const context_;
 
   detail::ValueUses uses;
-  size_t user_count_excluding_self = 0;
+  size_t user_count_excluding_self_ = 0;
 
-  size_t display_index = 0;
+  size_t display_index_ = 0;
 
   static Block* cast_to_block(Value* value);
   static void set_user_operand(User* user, size_t operand_index, Value* value);
@@ -79,19 +79,19 @@ class Value {
 
   virtual ~Value();
 
-  Kind get_kind() const { return kind; }
+  Kind get_kind() const { return kind_; }
 
-  Context* get_context() { return context; }
-  const Context* get_context() const { return context; }
+  Context* context() { return context_; }
+  const Context* context() const { return context_; }
 
-  Type* get_type() const { return type; }
+  Type* type() const { return type_; }
 
-  size_t get_display_index() const { return display_index; }
+  size_t display_index() const { return display_index_; }
   void set_display_index(size_t index);
 
-  bool is_void() const { return get_type()->is_void(); }
+  bool is_void() const { return type()->is_void(); }
   bool is_global() const {
-    return kind == Kind::Undef || kind == Kind::Function || kind == Kind::Constant;
+    return kind_ == Kind::Undef || kind_ == Kind::Function || kind_ == Kind::Constant;
   }
 
   bool is_same_type_as(const Value* other) const;
@@ -131,15 +131,15 @@ class Value {
   bool is_zero() const;
   bool is_one() const;
   bool is_all_ones() const;
-  bool is_undef() const { return kind == Kind::Undef; }
+  bool is_undef() const { return kind_ == Kind::Undef; }
 
-  std::optional<uint64_t> get_constant_u_opt() const;
-  std::optional<int64_t> get_constant_i_opt() const;
+  std::optional<uint64_t> constant_u_opt() const;
+  std::optional<int64_t> constant_i_opt() const;
 
-  size_t get_user_count() const { return uses.size(); }
-  size_t get_user_count_excluding_self() const { return user_count_excluding_self; }
+  size_t user_count() const { return uses.size(); }
+  size_t user_count_excluding_self() const { return user_count_excluding_self_; }
 
-  bool is_used() const { return get_user_count_excluding_self() > 0; }
+  bool is_used() const { return user_count_excluding_self() > 0; }
   bool is_used_only_by(const User* user) const;
 
   virtual std::string format() const;
@@ -182,8 +182,8 @@ class Constant final : public Value {
   static uint64_t constrain_u(Type* type, uint64_t value);
   static int64_t constrain_i(Type* type, int64_t value);
 
-  uint64_t get_constant_u() const { return constant_u; }
-  int64_t get_constant_i() const { return constant_i; }
+  uint64_t get_u() const { return constant_u; }
+  int64_t get_i() const { return constant_i; }
 
   std::string format() const override;
 };

@@ -46,9 +46,9 @@ class ConstantBindingPattern {
     }
 
     if constexpr (Unsigned) {
-      bind_constant = constant->get_constant_u();
+      bind_constant = constant->get_u();
     } else {
-      bind_constant = constant->get_constant_i();
+      bind_constant = constant->get_i();
     }
 
     return true;
@@ -110,9 +110,9 @@ class ExactConstantPattern {
     }
 
     if constexpr (Unsigned) {
-      return constant->get_constant_u() == exact_constant;
+      return constant->get_u() == exact_constant;
     } else {
-      return constant->get_constant_i() == exact_constant;
+      return constant->get_i() == exact_constant;
     }
   }
 };
@@ -128,7 +128,7 @@ class TypeCheckingPattern {
 
   template <typename T>
   bool match(T* m_value) {
-    if (m_value->get_type() == type) {
+    if (m_value->type() == type) {
       return sub_pattern.match(m_value);
     }
 

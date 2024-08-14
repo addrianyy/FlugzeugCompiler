@@ -164,34 +164,34 @@ static std::string_view to_symbol(IntPredicate predicate) {
 }
 
 void UnaryInstr::print_instruction_internal(IRPrinter::LinePrinter& p) const {
-  p.print(to_string(get_op()), get_type(), get_val());
+  p.print(to_string(get_op()), type(), get_val());
 }
 
 void BinaryInstr::print_instruction_internal(IRPrinter::LinePrinter& p) const {
-  p.print(to_string(get_op()), get_type(), get_lhs(), SpecialItem::Comma, get_rhs());
+  p.print(to_string(get_op()), type(), get_lhs(), SpecialItem::Comma, get_rhs());
 }
 
 void IntCompare::print_instruction_internal(IRPrinter::LinePrinter& p) const {
-  p.print("cmp", to_string(get_pred()), get_lhs()->get_type(), get_lhs(), SpecialItem::Comma,
+  p.print("cmp", to_string(get_pred()), get_lhs()->type(), get_lhs(), SpecialItem::Comma,
           get_rhs());
 }
 
 void Load::print_instruction_internal(IRPrinter::LinePrinter& p) const {
-  p.print("load", get_type(), SpecialItem::Comma, get_ptr()->get_type(), get_ptr());
+  p.print("load", type(), SpecialItem::Comma, get_ptr()->type(), get_ptr());
 }
 
 void Store::print_instruction_internal(IRPrinter::LinePrinter& p) const {
-  p.print("store", get_ptr()->get_type(), get_ptr(), SpecialItem::Comma, get_val()->get_type(),
+  p.print("store", get_ptr()->type(), get_ptr(), SpecialItem::Comma, get_val()->type(),
           get_val());
 }
 
 void Call::print_instruction_internal(IRPrinter::LinePrinter& p) const {
-  p.print("call", get_type(), IRPrinter::NonKeywordWord{get_callee()->get_name()},
+  p.print("call", type(), IRPrinter::NonKeywordWord{get_callee()->get_name()},
           SpecialItem::ParenOpen);
 
   for (size_t i = 0; i < get_arg_count(); ++i) {
     const auto arg = get_arg(i);
-    p.print(arg->get_type(), arg, SpecialItem::Comma);
+    p.print(arg->type(), arg, SpecialItem::Comma);
   }
 
   p.print(SpecialItem::ParenClose);
@@ -202,7 +202,7 @@ void Branch::print_instruction_internal(IRPrinter::LinePrinter& p) const {
 }
 
 void CondBranch::print_instruction_internal(IRPrinter::LinePrinter& p) const {
-  p.print("bcond", get_cond()->get_type(), get_cond(), SpecialItem::Comma, get_true_target(),
+  p.print("bcond", get_cond()->type(), get_cond(), SpecialItem::Comma, get_true_target(),
           SpecialItem::Comma, get_false_target());
 }
 
@@ -218,28 +218,28 @@ void Ret::print_instruction_internal(IRPrinter::LinePrinter& p) const {
   p.print("ret");
 
   if (is_ret_void()) {
-    p.print(get_context()->void_ty());
+    p.print(context()->void_ty());
   } else {
-    p.print(get_val()->get_type(), get_val());
+    p.print(get_val()->type(), get_val());
   }
 }
 
 void Offset::print_instruction_internal(IRPrinter::LinePrinter& p) const {
-  p.print("offset", get_base()->get_type(), get_base(), SpecialItem::Comma, get_index()->get_type(),
+  p.print("offset", get_base()->type(), get_base(), SpecialItem::Comma, get_index()->type(),
           get_index());
 }
 
 void Cast::print_instruction_internal(IRPrinter::LinePrinter& p) const {
-  p.print(to_string(get_cast_kind()), get_val()->get_type(), get_val(), "to", get_type());
+  p.print(to_string(get_cast_kind()), get_val()->type(), get_val(), "to", type());
 }
 
 void Select::print_instruction_internal(IRPrinter::LinePrinter& p) const {
-  p.print("select", get_cond()->get_type(), get_cond(), SpecialItem::Comma,
-          get_true_val()->get_type(), get_true_val(), SpecialItem::Comma, get_false_val());
+  p.print("select", get_cond()->type(), get_cond(), SpecialItem::Comma,
+          get_true_val()->type(), get_true_val(), SpecialItem::Comma, get_false_val());
 }
 
 void Phi::print_instruction_internal(IRPrinter::LinePrinter& p) const {
-  p.print("phi", get_type(), SpecialItem::BracketOpen);
+  p.print("phi", type(), SpecialItem::BracketOpen);
 
   for (size_t i = 0; i < get_incoming_count(); ++i) {
     const auto incoming = get_incoming(i);
@@ -281,23 +281,23 @@ void IntCompare::print_instruction_compact_internal(
 void Load::print_instruction_compact_internal(
   IRPrinter::LinePrinter& p,
   const std::unordered_set<const Value*>& inlined_values) const {
-  p.print("load", get_type(), IRPrinter::Item::Comma, get_ptr()->get_type());
+  p.print("load", type(), IRPrinter::Item::Comma, get_ptr()->type());
   print_value_compact(get_ptr(), p, inlined_values);
 }
 
 void Store::print_instruction_compact_internal(
   IRPrinter::LinePrinter& p,
   const std::unordered_set<const Value*>& inlined_values) const {
-  p.print("store", get_ptr()->get_type());
+  p.print("store", get_ptr()->type());
   print_value_compact(get_ptr(), p, inlined_values);
-  p.print(IRPrinter::Item::Comma, get_val()->get_type());
+  p.print(IRPrinter::Item::Comma, get_val()->type());
   print_value_compact(get_val(), p, inlined_values);
 }
 
 void Call::print_instruction_compact_internal(
   IRPrinter::LinePrinter& p,
   const std::unordered_set<const Value*>& inlined_values) const {
-  p.print("call", get_type(), IRPrinter::NonKeywordWord{get_callee()->get_name()},
+  p.print("call", type(), IRPrinter::NonKeywordWord{get_callee()->get_name()},
           SpecialItem::ParenOpen);
 
   for (size_t i = 0; i < get_arg_count(); ++i) {
@@ -338,9 +338,9 @@ void Ret::print_instruction_compact_internal(
   p.print("ret");
 
   if (is_ret_void()) {
-    p.print(get_context()->void_ty());
+    p.print(context()->void_ty());
   } else {
-    p.print(get_val()->get_type());
+    p.print(get_val()->type());
     print_value_compact(get_val(), p, inlined_values, false);
   }
 }
@@ -356,7 +356,7 @@ void Offset::print_instruction_compact_internal(
 void Cast::print_instruction_compact_internal(
   IRPrinter::LinePrinter& p,
   const std::unordered_set<const Value*>& inlined_values) const {
-  p.print(to_string(get_cast_kind()), get_type());
+  p.print(to_string(get_cast_kind()), type());
   print_value_compact(get_val(), p, inlined_values);
 }
 
@@ -373,7 +373,7 @@ void Select::print_instruction_compact_internal(
 void Phi::print_instruction_compact_internal(
   IRPrinter::LinePrinter& p,
   const std::unordered_set<const Value*>& inlined_values) const {
-  p.print("phi", get_type(), SpecialItem::BracketOpen);
+  p.print("phi", type(), SpecialItem::BracketOpen);
 
   for (auto incoming : *this) {
     p.print(incoming.block, SpecialItem::Colon);

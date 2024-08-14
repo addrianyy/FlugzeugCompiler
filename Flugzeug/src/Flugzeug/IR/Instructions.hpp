@@ -56,7 +56,7 @@ class UnaryInstr final : public Instruction {
 
  public:
   UnaryInstr(Context* context, UnaryOp op, Value* val)
-      : Instruction(context, Value::Kind::UnaryInstr, val->get_type()), op(op) {
+      : Instruction(context, Value::Kind::UnaryInstr, val->type()), op(op) {
     set_operand_count(1);
     set_val(val);
   }
@@ -75,7 +75,7 @@ class UnaryInstr final : public Instruction {
     set_val(val);
   }
 
-  Instruction* clone() override { return new UnaryInstr(get_context(), get_op(), get_val()); }
+  Instruction* clone() override { return new UnaryInstr(context(), get_op(), get_val()); }
 
  protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
@@ -91,7 +91,7 @@ class BinaryInstr final : public Instruction {
 
  public:
   BinaryInstr(Context* context, Value* lhs, BinaryOp op, Value* rhs)
-      : Instruction(context, Value::Kind::BinaryInstr, lhs->get_type()), op(op) {
+      : Instruction(context, Value::Kind::BinaryInstr, lhs->type()), op(op) {
     set_operand_count(2);
     set_lhs(lhs);
     set_rhs(rhs);
@@ -117,7 +117,7 @@ class BinaryInstr final : public Instruction {
   }
 
   Instruction* clone() override {
-    return new BinaryInstr(get_context(), get_lhs(), get_op(), get_rhs());
+    return new BinaryInstr(context(), get_lhs(), get_op(), get_rhs());
   }
 
   static bool is_binary_op_commutative(BinaryOp op);
@@ -162,7 +162,7 @@ class IntCompare final : public Instruction {
   }
 
   Instruction* clone() override {
-    return new IntCompare(get_context(), get_lhs(), get_pred(), get_rhs());
+    return new IntCompare(context(), get_lhs(), get_pred(), get_rhs());
   }
 
   static IntPredicate inverted_predicate(IntPredicate pred);
@@ -180,7 +180,7 @@ class Load final : public Instruction {
 
  public:
   explicit Load(Context* context, Value* ptr)
-      : Instruction(context, Value::Kind::Load, cast<PointerType>(ptr->get_type())->deref()) {
+      : Instruction(context, Value::Kind::Load, cast<PointerType>(ptr->type())->deref()) {
     set_operand_count(1);
     set_ptr(ptr);
   }
@@ -192,7 +192,7 @@ class Load final : public Instruction {
 
   void set_new_operands(Value* ptr) { set_ptr(ptr); }
 
-  Instruction* clone() override { return new Load(get_context(), get_ptr()); }
+  Instruction* clone() override { return new Load(context(), get_ptr()); }
 
  protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
@@ -226,7 +226,7 @@ class Store final : public Instruction {
     set_val(val);
   }
 
-  Instruction* clone() override { return new Store(get_context(), get_ptr(), get_val()); }
+  Instruction* clone() override { return new Store(context(), get_ptr(), get_val()); }
 
  protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
@@ -255,7 +255,7 @@ class Call final : public Instruction {
     for (size_t i = 0; i < get_arg_count(); ++i) {
       arguments.push_back(get_arg(i));
     }
-    return new Call(get_context(), get_callee(), arguments);
+    return new Call(context(), get_callee(), arguments);
   }
 
  protected:
@@ -282,7 +282,7 @@ class Branch final : public Instruction {
 
   void set_new_operands(Block* target) { set_target(target); }
 
-  Instruction* clone() override { return new Branch(get_context(), get_target()); }
+  Instruction* clone() override { return new Branch(context(), get_target()); }
 
  protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
@@ -326,7 +326,7 @@ class CondBranch final : public Instruction {
   }
 
   Instruction* clone() override {
-    return new CondBranch(get_context(), get_cond(), get_true_target(), get_false_target());
+    return new CondBranch(context(), get_cond(), get_true_target(), get_false_target());
   }
 
  protected:
@@ -346,10 +346,10 @@ class StackAlloc final : public Instruction {
       : Instruction(context, Value::Kind::StackAlloc, type->ref()), size(size) {}
 
   size_t get_size() const { return size; }
-  Type* get_allocated_type() const { return cast<PointerType>(get_type())->deref(); }
+  Type* get_allocated_type() const { return cast<PointerType>(type())->deref(); }
 
   Instruction* clone() override {
-    return new StackAlloc(get_context(), get_allocated_type(), get_size());
+    return new StackAlloc(context(), get_allocated_type(), get_size());
   }
 
  protected:
@@ -383,7 +383,7 @@ class Ret final : public Instruction {
 
   void set_new_operands(Value* val) { set_val(val); }
 
-  Instruction* clone() override { return new Ret(get_context(), get_val()); }
+  Instruction* clone() override { return new Ret(context(), get_val()); }
 
  protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
@@ -397,7 +397,7 @@ class Offset final : public Instruction {
 
  public:
   Offset(Context* context, Value* base, Value* index)
-      : Instruction(context, Value::Kind::Offset, base->get_type()) {
+      : Instruction(context, Value::Kind::Offset, base->type()) {
     set_operand_count(2);
     set_base(base);
     set_index(index);
@@ -417,7 +417,7 @@ class Offset final : public Instruction {
     set_index(index);
   }
 
-  Instruction* clone() override { return new Offset(get_context(), get_base(), get_index()); }
+  Instruction* clone() override { return new Offset(context(), get_base(), get_index()); }
 
  protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
@@ -448,7 +448,7 @@ class Cast final : public Instruction {
   void set_cast_kind(CastKind new_cast_kind) { cast_kind = new_cast_kind; }
 
   Instruction* clone() override {
-    return new Cast(get_context(), get_cast_kind(), get_val(), get_type());
+    return new Cast(context(), get_cast_kind(), get_val(), type());
   }
 
  protected:
@@ -463,7 +463,7 @@ class Select final : public Instruction {
 
  public:
   Select(Context* context, Value* cond, Value* true_val, Value* false_val)
-      : Instruction(context, Value::Kind::Select, true_val->get_type()) {
+      : Instruction(context, Value::Kind::Select, true_val->type()) {
     set_operand_count(3);
     set_cond(cond);
     set_true_val(true_val);
@@ -493,7 +493,7 @@ class Select final : public Instruction {
   }
 
   Instruction* clone() override {
-    return new Select(get_context(), get_cond(), get_true_val(), get_false_val());
+    return new Select(context(), get_cond(), get_true_val(), get_false_val());
   }
 
  protected:
@@ -586,7 +586,7 @@ class Phi final : public Instruction {
  public:
   explicit Phi(Context* context, Type* type) : Instruction(context, Instruction::Kind::Phi, type) {}
   explicit Phi(Context* context, const std::vector<Incoming>& incoming)
-      : Phi(context, incoming[0].value->get_type()) {
+      : Phi(context, incoming[0].value->type()) {
     reserve_operands(incoming.size() * 2);
 
     for (const auto& i : incoming) {
@@ -627,7 +627,7 @@ class Phi final : public Instruction {
     for (size_t i = 0; i < get_incoming_count(); ++i) {
       incoming.push_back(get_incoming(i));
     }
-    return new Phi(get_context(), incoming);
+    return new Phi(context(), incoming);
   }
 
  protected:

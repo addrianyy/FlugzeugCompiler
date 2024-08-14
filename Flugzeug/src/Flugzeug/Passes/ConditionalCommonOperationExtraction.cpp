@@ -71,11 +71,11 @@ class CommonOperation {
   Instruction* create_instruction(Value* argument) {
     switch (kind) {
       case Kind::Unary: {
-        return new UnaryInstr(argument->get_context(), unary_op, argument);
+        return new UnaryInstr(argument->context(), unary_op, argument);
       }
 
       case Kind::Binary: {
-        return new BinaryInstr(argument->get_context(), argument, binary_op, binary_rhs);
+        return new BinaryInstr(argument->context(), argument, binary_op, binary_rhs);
       }
 
       default:

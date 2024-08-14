@@ -13,9 +13,9 @@ static void convert_phi_to_memory(Phi* phi) {
     return;
   }
 
-  Context* context = phi->get_context();
+  Context* context = phi->context();
   Block* entry_block = phi->get_function()->get_entry_block();
-  Type* type = phi->get_type();
+  Type* type = phi->type();
 
   const auto stackalloc = new StackAlloc(context, type);
   const auto load = new Load(context, stackalloc);

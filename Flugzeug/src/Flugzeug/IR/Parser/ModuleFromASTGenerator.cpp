@@ -88,9 +88,9 @@ Value* ModuleFromASTGenerator::operand_to_value(const PRInstructionOperand& oper
 
   verify(result, "Failed to get value from instruction operand");
 
-  if (operand.kind == PRInstructionOperand::Kind::Value && result->get_type() != type) {
+  if (operand.kind == PRInstructionOperand::Kind::Value && result->type() != type) {
     fatal_error("{}: Type mismatch for `{}`. Expected `{}`, found `{}`.", fn_ctx.pr_function->name,
-                operand.name, type->format(), result->get_type()->format());
+                operand.name, type->format(), result->type()->format());
   }
 
   return result;
@@ -124,9 +124,9 @@ Instruction* ModuleFromASTGenerator::generate_instruction(const PRInstruction* i
     case Token::Keyword::Load: {
       const auto load = new Load(context, operand_to_value(instruction, 0));
       const auto expected_type = convert_type(instruction->specific_type);
-      if (load->get_type() != expected_type) {
+      if (load->type() != expected_type) {
         fatal_error("{}: Type mismatch for load result. Expected `{}`, found `{}`.",
-                    fn_ctx.pr_function->name, expected_type->format(), load->get_type()->format());
+                    fn_ctx.pr_function->name, expected_type->format(), load->type()->format());
       }
       return load;
     }

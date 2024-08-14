@@ -13,7 +13,7 @@ static Block* add_intermediate_block_between_edges(const std::unordered_set<Bloc
 
   // Create an intermediate block and make it branch to the `to` block.
   const auto intermediate_block = function->create_block();
-  intermediate_block->push_instruction_back(new Branch(function->get_context(), to));
+  intermediate_block->push_instruction_back(new Branch(function->context(), to));
 
   // Make every `from` block branch to the `intermediate_block` instead of `to`.
   for (const auto from_block : from) {
@@ -26,7 +26,7 @@ static Block* add_intermediate_block_between_edges(const std::unordered_set<Bloc
   //      edges to the newly created Phi.
   //   2. Add created Phi as incoming value to the Phi in the destination block.
   for (Phi& phi : to->instructions<Phi>()) {
-    const auto corresponding_phi = new Phi(function->get_context(), phi.get_type());
+    const auto corresponding_phi = new Phi(function->context(), phi.type());
     intermediate_block->push_instruction_front(corresponding_phi);
 
     for (const auto from_block : from) {

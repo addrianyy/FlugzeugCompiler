@@ -24,7 +24,7 @@ static bool handle_out_of_bounds_stackalloc_load(Load* load,
   const auto size = int64_t(const_offset->first->get_size());
   const auto offset = const_offset->second;
   if (offset < 0 || offset >= size) {
-    load->replace_uses_with_and_destroy(load->get_type()->undef());
+    load->replace_uses_with_and_destroy(load->type()->undef());
     return true;
   }
 

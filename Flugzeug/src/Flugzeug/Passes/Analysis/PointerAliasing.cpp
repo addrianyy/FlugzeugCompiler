@@ -159,12 +159,12 @@ static void process_offset_instruction(
   const auto index = offset->get_index();
 
   if (const auto c_index = cast<Constant>(index)) {
-    std::pair result = {base, c_index->get_constant_i()};
+    std::pair result = {base, c_index->get_i()};
 
     const auto it = constant_offset_db.find(base);
     if (it != constant_offset_db.end()) {
       const auto parent = it->second;
-      result = {parent.first, parent.second + c_index->get_constant_i()};
+      result = {parent.first, parent.second + c_index->get_i()};
     }
 
     constant_offset_db.insert({offset, result});
@@ -191,7 +191,7 @@ static void process_offset_instruction(
     if (it != constant_offset_db.end()) {
       const auto parent = it->second;
       result = {parent.first,
-                Constant::constrain_i(index_base->get_type(), parent.second + index_add)};
+                Constant::constrain_i(index_base->type(), parent.second + index_add)};
     }
 
     constant_offset_db.insert({offset, result});
@@ -226,7 +226,7 @@ PointerAliasing::PointerAliasing(const Function* function) {
     // use V are before P and were already processed (which is what we want).
     for (const Block* block : reversed(traversal)) {
       for (const Instruction& instruction : reversed(*block)) {
-        if (!instruction.get_type()->is_pointer()) {
+        if (!instruction.type()->is_pointer()) {
           continue;
         }
 
@@ -272,7 +272,7 @@ PointerAliasing::PointerAliasing(const Function* function) {
     // Save constant pointer offsets.
     for (const Block* block : traversal) {
       for (const Instruction& instruction : *block) {
-        if (!instruction.get_type()->is_pointer()) {
+        if (!instruction.type()->is_pointer()) {
           continue;
         }
 
@@ -298,7 +298,7 @@ PointerAliasing::PointerAliasing(const Function* function) {
 Aliasing PointerAliasing::can_alias(const Instruction* instruction,
                                     const Value* v1,
                                     const Value* v2) const {
-  verify(v1->get_type()->is_pointer() && v2->get_type()->is_pointer(),
+  verify(v1->type()->is_pointer() && v2->type()->is_pointer(),
          "Provided values aren't pointers");
 
   // More advanced alias analysis would make use of this instruction.
@@ -365,7 +365,7 @@ Aliasing PointerAliasing::can_alias(const Instruction* instruction,
 Aliasing PointerAliasing::can_instruction_access_pointer(const Instruction* instruction,
                                                          const Value* pointer,
                                                          AccessType access_type) const {
-  verify(pointer->get_type()->is_pointer(), "Provided value is not a pointer");
+  verify(pointer->type()->is_pointer(), "Provided value is not a pointer");
 
   if (access_type == AccessType::Store || access_type == AccessType::All) {
     if (const auto store = cast<Store>(instruction)) {
@@ -390,7 +390,7 @@ Aliasing PointerAliasing::can_instruction_access_pointer(const Instruction* inst
       bool has_simple_arguments = true;
       for (size_t i = 0; i < call->get_arg_count(); ++i) {
         const auto arg = call->get_arg(i);
-        if (!arg->get_type()->is_pointer()) {
+        if (!arg->type()->is_pointer()) {
           continue;
         }
 
@@ -418,7 +418,7 @@ Aliasing PointerAliasing::can_instruction_access_pointer(const Instruction* inst
       // this call cannot affect the pointer.
       for (size_t i = 0; i < call->get_arg_count(); ++i) {
         const auto arg = call->get_arg(i);
-        if (!arg->get_type()->is_pointer()) {
+        if (!arg->type()->is_pointer()) {
           continue;
         }
 
