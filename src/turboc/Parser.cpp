@@ -317,7 +317,7 @@ std::unique_ptr<BodyStmt> Parser::parse_body() {
   while (!lexer.current_token().is(Token::Kind::BraceClose)) {
     auto stmt = parse_statement();
 
-    const auto kind = stmt->get_kind();
+    const auto kind = stmt->kind();
     const auto no_semicolon =
       kind == Stmt::Kind::While || kind == Stmt::Kind::If || kind == Stmt::Kind::For;
 

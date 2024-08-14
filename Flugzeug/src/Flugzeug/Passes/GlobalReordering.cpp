@@ -13,7 +13,7 @@ static bool can_be_reordered(const Instruction* instruction) {
     return false;
   }
 
-  switch (instruction->get_kind()) {
+  switch (instruction->kind()) {
     case Value::Kind::Load:
     case Value::Kind::Phi:
       return false;

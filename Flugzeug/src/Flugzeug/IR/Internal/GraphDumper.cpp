@@ -169,10 +169,10 @@ void Function::generate_dot_graph_source(std::ostream& output,
     };
 
     if (const auto branch = cast<Branch>(last_instruction)) {
-      make_edge(&block, branch->get_target(), "blue");
+      make_edge(&block, branch->target(), "blue");
     } else if (const auto cond_branch = cast<CondBranch>(last_instruction)) {
-      make_edge(&block, cond_branch->get_true_target(), "green");
-      make_edge(&block, cond_branch->get_false_target(), "red");
+      make_edge(&block, cond_branch->true_target(), "green");
+      make_edge(&block, cond_branch->false_target(), "red");
     }
   }
 

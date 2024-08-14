@@ -23,14 +23,14 @@ bool opt::memory::eliminate_dead_stores_local(Function* function,
     for (Store& store : advance_early(block.instructions<Store>())) {
       Store* previous_store = nullptr;
       {
-        const auto it = stores.find(store.get_ptr());
+        const auto it = stores.find(store.address());
         if (it != stores.end()) {
           previous_store = it->second;
         }
       }
 
       // Update the latest store to this pointer.
-      stores[store.get_ptr()] = &store;
+      stores[store.address()] = &store;
 
       if (!previous_store) {
         continue;
@@ -38,7 +38,7 @@ bool opt::memory::eliminate_dead_stores_local(Function* function,
 
       // Make sure that nothing inbetween can load the pointer.
       const auto loaded_inbetween = alias_analysis.is_pointer_accessed_inbetween(
-        store.get_ptr(), previous_store->next(), &store,
+        store.address(), previous_store->next(), &store,
         analysis::PointerAliasing::AccessType::Load);
 
       // Destroy previous store as it's dead.
@@ -59,13 +59,13 @@ static bool is_store_dead(const Store* store, const analysis::PointerAliasing& a
     CheckSuccessors,
   };
 
-  const auto pointer = store->get_ptr();
+  const auto pointer = store->address();
 
   const auto check_instruction_range = [&](const Instruction* begin, const Instruction* end) {
     for (const Instruction& instruction : instruction_range(begin, end)) {
       // If there is another store to this pointer then no successors can observe the old value.
       if (const auto store = cast<Store>(instruction)) {
-        if (alias_analysis.can_alias(store, store->get_ptr(), pointer) ==
+        if (alias_analysis.can_alias(store, store->address(), pointer) ==
             analysis::Aliasing::Always) {
           return CheckResult::Ok;
         }

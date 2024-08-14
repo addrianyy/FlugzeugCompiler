@@ -36,7 +36,7 @@ class IntComparePattern {
       return false;
     }
 
-    const auto pred = cmp->get_pred();
+    const auto pred = cmp->predicate();
     if (MatchSpecificPred && pred != specific_pred) {
       return false;
     }
@@ -47,8 +47,8 @@ class IntComparePattern {
     }
 
     const bool matched =
-      (lhs_pattern.match(cmp->get_lhs()) && rhs_pattern.match(cmp->get_rhs())) ||
-      (is_eq_or_ne && lhs_pattern.match(cmp->get_rhs()) && rhs_pattern.match(cmp->get_lhs()));
+      (lhs_pattern.match(cmp->lhs()) && rhs_pattern.match(cmp->rhs())) ||
+      (is_eq_or_ne && lhs_pattern.match(cmp->rhs()) && rhs_pattern.match(cmp->lhs()));
     if (!matched) {
       return false;
     }

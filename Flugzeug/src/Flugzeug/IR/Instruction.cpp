@@ -11,8 +11,8 @@ template <typename TBlock, typename TInstruction>
 BlockTargets<TBlock> get_targets_generic(TInstruction* instruction) {
   BlockTargets<TBlock> result;
   if (const auto cond_branch = cast<CondBranch>(instruction)) {
-    const auto true_target = cond_branch->get_true_target();
-    const auto false_target = cond_branch->get_false_target();
+    const auto true_target = cond_branch->true_target();
+    const auto false_target = cond_branch->false_target();
 
     result.push_back(true_target);
 
@@ -20,7 +20,7 @@ BlockTargets<TBlock> get_targets_generic(TInstruction* instruction) {
       result.push_back(false_target);
     }
   } else if (const auto branch = cast<Branch>(instruction)) {
-    result.push_back(branch->get_target());
+    result.push_back(branch->target());
   }
 
   return result;
@@ -186,7 +186,7 @@ bool Instruction::is_dominated_by(const Instruction* other,
 }
 
 bool Instruction::is_volatile() const {
-  switch (get_kind()) {
+  switch (kind()) {
     case Kind::Ret:
     case Kind::Call:
     case Kind::Store:
@@ -200,9 +200,9 @@ bool Instruction::is_volatile() const {
 }
 
 bool Instruction::is_branching() const {
-  return get_kind() == Kind::Branch || get_kind() == Kind::CondBranch;
+  return kind() == Kind::Branch || kind() == Kind::CondBranch;
 }
 
 bool Instruction::is_terminator() const {
-  return is_branching() || get_kind() == Kind::Ret;
+  return is_branching() || kind() == Kind::Ret;
 }

@@ -28,13 +28,13 @@ struct BrainfuckLoop {
 
 static bool get_brainfuck_loop(Block* block, BrainfuckLoop& loop) {
   loop.branch = cast<CondBranch>(block->last_instruction());
-  if (!loop.branch || loop.branch->get_true_target() != block) {
+  if (!loop.branch || loop.branch->true_target() != block) {
     return false;
   }
 
-  loop.exit_block = loop.branch->get_false_target();
+  loop.exit_block = loop.branch->false_target();
 
-  if (!match_pattern(loop.branch->get_cond(),
+  if (!match_pattern(loop.branch->condition(),
                      pat::compare_ne(loop.compare, pat::value(loop.iteration_count), pat::one()))) {
     return false;
   }
@@ -43,7 +43,7 @@ static bool get_brainfuck_loop(Block* block, BrainfuckLoop& loop) {
     return false;
   }
 
-  const auto step = loop.iteration_count->get_incoming_by_block(block);
+  const auto step = loop.iteration_count->incoming_for_block(block);
   if (!match_pattern(step, pat::add(pat::exact(loop.iteration_count), pat::negative_one()))) {
     return false;
   }

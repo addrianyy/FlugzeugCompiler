@@ -83,7 +83,7 @@ bool opt::PhiMinimization::run(Function* function) {
   // Connect Phis which reference each other.
   for (Phi& phi : function->instructions<Phi>()) {
     std::vector<Value*> phi_operands;
-    phi_operands.reserve(phi.get_incoming_count());
+    phi_operands.reserve(phi.incoming_count());
 
     for (const auto incoming : phi) {
       phi_operands.push_back(incoming.value);

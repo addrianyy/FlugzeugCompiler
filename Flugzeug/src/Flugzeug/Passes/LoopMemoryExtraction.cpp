@@ -15,10 +15,10 @@ struct MemoryDfsContext {
 
 static Value* get_load_store_pointer(Instruction* instruction) {
   if (const auto load = cast<Load>(instruction)) {
-    return load->get_ptr();
+    return load->address();
   }
   if (const auto store = cast<Store>(instruction)) {
-    return store->get_ptr();
+    return store->address();
   }
 
   return nullptr;
@@ -97,11 +97,11 @@ static void rewrite_pointer(Value* pointer,
   // Rewrite all loads/stores to use stackalloc.
   for (Instruction* user : loads_stores) {
     if (const auto load = cast<Load>(user)) {
-      load->set_ptr(stackalloc);
+      load->set_address(stackalloc);
     }
 
     if (const auto store = cast<Store>(user)) {
-      store->set_ptr(stackalloc);
+      store->set_address(stackalloc);
       has_stores = true;
     }
   }
@@ -155,7 +155,7 @@ static bool optimize_loop(Function* function,
 
       {
         const auto stackalloc = cast<StackAlloc>(pointer);
-        if (stackalloc && stackalloc->get_size() == 1) {
+        if (stackalloc && stackalloc->size() == 1) {
           continue;
         }
       }

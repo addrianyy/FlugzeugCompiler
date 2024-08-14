@@ -15,17 +15,17 @@ static std::optional<std::pair<Value*, Value*>> get_edge_invariant(Block* from, 
     return std::nullopt;
   }
 
-  const auto on_true = cond_branch->get_true_target();
-  const auto on_false = cond_branch->get_false_target();
+  const auto on_true = cond_branch->true_target();
+  const auto on_false = cond_branch->false_target();
 
   // Get compare instruction that is used as `cond_branch` condition.
-  const auto cmp = cast<IntCompare>(cond_branch->get_cond());
+  const auto cmp = cast<IntCompare>(cond_branch->condition());
   if (!cmp) {
     return std::nullopt;
   }
 
-  const auto cmp_lhs = cmp->get_lhs();
-  const auto cmp_rhs = cmp->get_rhs();
+  const auto cmp_lhs = cmp->lhs();
+  const auto cmp_rhs = cmp->rhs();
 
   // We cannot get invariant if `on_true` == `on_false` or `cmp_lhs` == `cmp_rhs`
   // (it's an unconditional branch then).
@@ -35,8 +35,8 @@ static std::optional<std::pair<Value*, Value*>> get_edge_invariant(Block* from, 
 
   // if (a == b) { block1 } else { block2 } => we know that in `block1` a == b.
   // if (a != b) { block1 } else { block2 } => we know that in `block2` a == b.
-  if ((cmp->get_pred() == IntPredicate::Equal && on_true == to) ||
-      (cmp->get_pred() == IntPredicate::NotEqual && on_false == to)) {
+  if ((cmp->predicate() == IntPredicate::Equal && on_true == to) ||
+      (cmp->predicate() == IntPredicate::NotEqual && on_false == to)) {
     const auto is_lhs_const = cast<Constant>(cmp_lhs);
     const auto is_rhs_const = cast<Constant>(cmp_rhs);
 

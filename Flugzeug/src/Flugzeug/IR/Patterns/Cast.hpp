@@ -29,12 +29,12 @@ class CastPattern {
       return false;
     }
 
-    const auto kind = cast_instr->get_cast_kind();
+    const auto kind = cast_instr->cast_kind();
     if (MatchSpecificCast && kind != specific_kind) {
       return false;
     }
 
-    const bool matched = value.match(cast_instr->get_val());
+    const bool matched = value.match(cast_instr->casted_value());
     if (!matched) {
       return false;
     }

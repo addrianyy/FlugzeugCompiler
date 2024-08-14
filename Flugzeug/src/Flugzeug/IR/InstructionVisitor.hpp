@@ -46,7 +46,7 @@ inline auto visit_instruction(TInstruction* instruction, TVisitor& visitor) {
   static_assert(std::is_base_of_v<Instruction, std::remove_cvref_t<TInstruction>>,
                 "Cannot visit non-instruction argument");
 
-  switch (instruction->get_kind()) {
+  switch (instruction->kind()) {
     case Value::Kind::UnaryInstr:
       return visitor.visit_unary_instr(relaxed_cast<UnaryInstr>(instruction));
     case Value::Kind::BinaryInstr:

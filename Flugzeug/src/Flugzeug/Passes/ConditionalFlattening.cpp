@@ -99,7 +99,7 @@ static bool flatten(const std::array<Block*, N>& speculated_blocks,
     const auto false_value = phi.remove_incoming(false_block);
 
     const auto select =
-      new Select(block->context(), cond_branch->get_cond(), true_value, false_value);
+      new Select(block->context(), cond_branch->condition(), true_value, false_value);
     select->insert_before(cond_branch);
 
     phi.add_incoming(block, select);
@@ -122,8 +122,8 @@ static bool try_flatten_block(Block* block) {
     return false;
   }
 
-  const auto on_true = cond_branch->get_true_target();
-  const auto on_false = cond_branch->get_false_target();
+  const auto on_true = cond_branch->true_target();
+  const auto on_false = cond_branch->false_target();
 
   // Skip conditional branches with both labels equal and skip loops.
   if (on_true == on_false || on_true == block || on_false == block) {

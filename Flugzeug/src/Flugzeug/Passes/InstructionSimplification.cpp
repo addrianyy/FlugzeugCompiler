@@ -45,7 +45,7 @@ static OptimizationResult make_undef_if_uses_undef(Instruction* instruction) {
 static OptimizationResult chain_commutative_expressions(BinaryInstr* binary) {
   // Optimize chain of (C1 op (X op C2)) to (a op C).
 
-  const auto op = binary->get_op();
+  const auto op = binary->op();
 
   uint64_t c1, c2;
   Value* operand;
@@ -156,9 +156,9 @@ static OptimizationResult simplify_selected_arithmetic_1(Value* cmp_value,
                                                          BinaryInstr* on_non_constant) {
   // (b != 0) ? (a - b) : a   =>   a - b
 
-  const auto op = on_non_constant->get_op();
-  const auto lhs = on_non_constant->get_lhs();
-  const auto rhs = on_non_constant->get_rhs();
+  const auto op = on_non_constant->op();
+  const auto lhs = on_non_constant->lhs();
+  const auto rhs = on_non_constant->rhs();
 
   if (lhs != on_constant && rhs != on_constant) {
     return OptimizationResult::unchanged();
@@ -246,12 +246,12 @@ static OptimizationResult simplify_selected_arithmetic_2(Value* cmp_value,
   }
   const auto on_constant = on_constant_instruction->value_i();
 
-  if (!is_value_compared_to(on_non_constant->get_lhs(), cmp_value, cmp_constant) &&
-      !is_value_compared_to(on_non_constant->get_rhs(), cmp_value, cmp_constant)) {
+  if (!is_value_compared_to(on_non_constant->lhs(), cmp_value, cmp_constant) &&
+      !is_value_compared_to(on_non_constant->rhs(), cmp_value, cmp_constant)) {
     return OptimizationResult::unchanged();
   }
 
-  switch (on_non_constant->get_op()) {
+  switch (on_non_constant->op()) {
     case BinaryOp::Mul:
     case BinaryOp::And: {
       if (cmp_constant == 0 && on_constant == 0) {
@@ -281,16 +281,17 @@ static OptimizationResult simplify_selected_arithmetic(Select* select) {
   Value* cmp_value;
   int64_t cmp_constant;
   IntPredicate predicate;
-  if (!match_pattern(select->get_cond(), pat::compare_eq_or_ne(pat::constant_i(cmp_constant),
-                                                               predicate, pat::value(cmp_value)))) {
+  if (!match_pattern(
+        select->condition(),
+        pat::compare_eq_or_ne(pat::constant_i(cmp_constant), predicate, pat::value(cmp_value)))) {
     return OptimizationResult::unchanged();
   }
 
   const bool constant_equal = predicate == IntPredicate::Equal;
 
-  const auto on_constant = select->get_val(constant_equal);
+  const auto on_constant = select->select_value(constant_equal);
 
-  const auto on_non_constant = cast<BinaryInstr>(select->get_val(!constant_equal));
+  const auto on_non_constant = cast<BinaryInstr>(select->select_value(!constant_equal));
   if (!on_non_constant) {
     return OptimizationResult::unchanged();
   }
@@ -365,8 +366,8 @@ static OptimizationResult simplify_cmp_select_cmp_sequence(IntCompare* cmp) {
     return OptimizationResult::changed();
   } else if (const auto parent_cmp = cast<IntCompare>(select_cond)) {
     const auto new_cmp =
-      new IntCompare(cmp->context(), parent_cmp->get_lhs(),
-                     IntCompare::inverted_predicate(parent_cmp->get_pred()), parent_cmp->get_rhs());
+      new IntCompare(cmp->context(), parent_cmp->lhs(),
+                     IntCompare::inverted_predicate(parent_cmp->predicate()), parent_cmp->rhs());
     cmp->replace_with_instruction_and_destroy(new_cmp);
 
     select->destroy_if_unused();
@@ -466,9 +467,9 @@ class Simplifier : public InstructionVisitor {
     // 2 same unary operations cancel out.
     // --x == x
     // !!x == x
-    if (const auto other_unary = cast<UnaryInstr>(unary->get_val())) {
-      if (unary->get_op() == other_unary->get_op()) {
-        unary->replace_uses_with_and_destroy(other_unary->get_val());
+    if (const auto other_unary = cast<UnaryInstr>(unary->value())) {
+      if (unary->op() == other_unary->op()) {
+        unary->replace_uses_with_and_destroy(other_unary->value());
         other_unary->destroy_if_unused();
 
         return OptimizationResult::changed();
@@ -485,11 +486,11 @@ class Simplifier : public InstructionVisitor {
     PROPAGATE_RESULT(simplify_arithmetic(binary));
 
     const auto type = binary->type();
-    const auto lhs = binary->get_lhs();
-    const auto rhs = binary->get_rhs();
+    const auto lhs = binary->lhs();
+    const auto rhs = binary->rhs();
 
     // Canonicalize `op const, non-const` to `op non-const, const` if `op` is commutative.
-    if (BinaryInstr::is_binary_op_commutative(binary->get_op())) {
+    if (BinaryInstr::is_binary_op_commutative(binary->op())) {
       if (cast<Constant>(lhs) && !cast<Constant>(rhs)) {
         binary->set_lhs(rhs);
         binary->set_rhs(lhs);
@@ -498,7 +499,7 @@ class Simplifier : public InstructionVisitor {
       }
     }
 
-    switch (binary->get_op()) {
+    switch (binary->op()) {
       case BinaryOp::Add: {
         if (rhs->is_zero()) {
           // x + 0 == x
@@ -529,8 +530,7 @@ class Simplifier : public InstructionVisitor {
           // x - c == x + (-c)
 
           // We do these casts to avoid compiler warning.
-          const auto negated_constant =
-            type->constant(uint64_t(-int64_t(constant->value_u())));
+          const auto negated_constant = type->constant(uint64_t(-int64_t(constant->value_u())));
           return new BinaryInstr(context, lhs, BinaryOp::Add, negated_constant);
         }
 
@@ -681,9 +681,9 @@ class Simplifier : public InstructionVisitor {
     PROPAGATE_RESULT(make_undef_if_uses_undef(int_compare));
     PROPAGATE_RESULT(simplify_cmp_select_cmp_sequence(int_compare));
 
-    const auto lhs = int_compare->get_lhs();
-    const auto rhs = int_compare->get_rhs();
-    const auto pred = int_compare->get_pred();
+    const auto lhs = int_compare->lhs();
+    const auto rhs = int_compare->rhs();
+    const auto pred = int_compare->predicate();
 
     // If both operands to int compare instruction are the same we can
     // calculate the result at compile time.
@@ -719,8 +719,7 @@ class Simplifier : public InstructionVisitor {
 
         case IntPredicate::GtU:
           // unsigned > 0 == unsigned != 0
-          return new IntCompare(context, lhs, IntPredicate::NotEqual,
-                                lhs->type()->constant(0));
+          return new IntCompare(context, lhs, IntPredicate::NotEqual, lhs->type()->constant(0));
 
         default:
           break;
@@ -740,8 +739,8 @@ class Simplifier : public InstructionVisitor {
       const auto added = pat::add(add, pat::constant(add_const), pat::value(add_unknown));
 
       if (match_pattern(int_compare, pat::compare_eq_or_ne(added, pat::constant(compared_to)))) {
-        const auto new_constant = compared_to->type()->constant(
-          compared_to->value_u() - add_const->value_u());
+        const auto new_constant =
+          compared_to->type()->constant(compared_to->value_u() - add_const->value_u());
 
         int_compare->replace_operands(add, add_unknown);
         int_compare->replace_operands(compared_to, new_constant);
@@ -759,10 +758,10 @@ class Simplifier : public InstructionVisitor {
     PROPAGATE_RESULT(make_undef_if_uses_undef(cast_instr));
     PROPAGATE_RESULT(bitcasts_to_offset(cast_instr));
 
-    const auto kind = cast_instr->get_cast_kind();
+    const auto kind = cast_instr->cast_kind();
 
-    if (const auto parent_cast = cast<Cast>(cast_instr->get_val())) {
-      const auto parent_kind = parent_cast->get_cast_kind();
+    if (const auto parent_cast = cast<Cast>(cast_instr->casted_value())) {
+      const auto parent_kind = parent_cast->cast_kind();
 
       // Two casts of the same type can be optimized out to only one.
       // For example `zext` from i16 to i32 and `zext` from i32 to i64
@@ -770,7 +769,7 @@ class Simplifier : public InstructionVisitor {
       if (kind == parent_kind ||
           (kind == CastKind::SignExtend && parent_kind == CastKind::ZeroExtend)) {
         const auto new_cast =
-          new Cast(context, parent_kind, parent_cast->get_val(), cast_instr->type());
+          new Cast(context, parent_kind, parent_cast->casted_value(), cast_instr->type());
 
         cast_instr->replace_with_instruction_and_destroy(new_cast);
         parent_cast->destroy_if_unused();
@@ -784,7 +783,7 @@ class Simplifier : public InstructionVisitor {
       // v1 = zext i16 v0 to i32
       if (kind == CastKind::Truncate &&
           (parent_kind == CastKind::ZeroExtend || parent_kind == CastKind::SignExtend)) {
-        const auto original = parent_cast->get_val();
+        const auto original = parent_cast->casted_value();
 
         const auto from_size = original->type()->bit_size();
         const auto to_size = cast_instr->type()->bit_size();
@@ -811,13 +810,13 @@ class Simplifier : public InstructionVisitor {
   }
 
   OptimizationResult visit_cond_branch(Argument<CondBranch> cond_branch) {
-    const auto true_target = cond_branch->get_true_target();
-    const auto false_target = cond_branch->get_false_target();
+    const auto true_target = cond_branch->true_target();
+    const auto false_target = cond_branch->false_target();
 
     // Branch to whatever target we want when condition is undefined.
-    if (cond_branch->get_cond()->is_undef()) {
+    if (cond_branch->condition()->is_undef()) {
       const auto block = cond_branch->block();
-      const auto other = cond_branch->get_true_target();
+      const auto other = cond_branch->true_target();
 
       cond_branch->replace_with_instruction_and_destroy(new Branch(context, false_target));
 
@@ -837,11 +836,11 @@ class Simplifier : public InstructionVisitor {
   OptimizationResult visit_select(Argument<Select> select) {
     PROPAGATE_RESULT(simplify_selected_arithmetic(select));
 
-    const auto true_val = select->get_true_val();
-    const auto false_val = select->get_false_val();
+    const auto true_val = select->true_value();
+    const auto false_val = select->false_value();
 
     // Return whichever value we want when condition is undefined.
-    if (select->get_cond()->is_undef()) {
+    if (select->condition()->is_undef()) {
       return false_val;
     }
 
@@ -862,10 +861,10 @@ class Simplifier : public InstructionVisitor {
     // v3 = cmp eq i32 v0, v2
     // v4 = select i1 v3, i32 v2, v0
     //   => v0
-    if (const auto cmp = cast<IntCompare>(select->get_cond())) {
-      const auto lhs = cmp->get_lhs();
-      const auto rhs = cmp->get_rhs();
-      const auto pred = cmp->get_pred();
+    if (const auto cmp = cast<IntCompare>(select->condition())) {
+      const auto lhs = cmp->lhs();
+      const auto rhs = cmp->rhs();
+      const auto pred = cmp->predicate();
 
       if (pred == IntPredicate::Equal || pred == IntPredicate::NotEqual) {
         const bool equal = pred == IntPredicate::Equal;
@@ -899,11 +898,11 @@ class Simplifier : public InstructionVisitor {
             pat::select(
               pat::value(), pat::binary(on_true, pat::value(common), pat::value(on_true_value)),
               pat::binary(on_false, pat::exact_ref(common), pat::value(on_false_value))))) {
-        if (on_true->get_op() == on_false->get_op()) {
-          select->set_true_val(on_true_value);
-          select->set_false_val(on_false_value);
+        if (on_true->op() == on_false->op()) {
+          select->set_true_value(on_true_value);
+          select->set_false_value(on_false_value);
 
-          const auto new_binary = new BinaryInstr(context, common, on_true->get_op(), select);
+          const auto new_binary = new BinaryInstr(context, common, on_true->op(), select);
           new_binary->insert_after(select);
           select->replace_uses_with_predicated(new_binary,
                                                [&](User* user) { return user != new_binary; });
@@ -934,7 +933,7 @@ class Simplifier : public InstructionVisitor {
   }
 
   OptimizationResult visit_store(Argument<Store> store) {
-    if (store->get_ptr()->is_undef() || store->get_val()->is_undef()) {
+    if (store->address()->is_undef() || store->value()->is_undef()) {
       store->destroy();
 
       return OptimizationResult::changed();
@@ -947,15 +946,15 @@ class Simplifier : public InstructionVisitor {
     PROPAGATE_RESULT(make_undef_if_uses_undef(offset));
 
     // Offset with 0 index always returns base value.
-    if (offset->get_index()->is_zero()) {
-      return offset->get_base();
+    if (offset->index()->is_zero()) {
+      return offset->base();
     }
 
     // GEP sign extends index internally so source the index
     // from non-sign-extended value.
-    if (const auto cast_instr = cast<Cast>(offset->get_index())) {
+    if (const auto cast_instr = cast<Cast>(offset->index())) {
       if (cast_instr->is(CastKind::SignExtend)) {
-        offset->set_index(cast_instr->get_val());
+        offset->set_index(cast_instr->casted_value());
         cast_instr->destroy_if_unused();
 
         return OptimizationResult::changed();

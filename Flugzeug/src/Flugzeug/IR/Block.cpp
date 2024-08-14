@@ -12,10 +12,10 @@ using namespace flugzeug;
 template <typename TBlock>
 TBlock* get_single_successor_generic(TBlock* block) {
   if (const auto branch = cast<Branch>(block->last_instruction())) {
-    return branch->get_target();
+    return branch->target();
   } else if (const auto cond_branch = cast<CondBranch>(block->last_instruction())) {
-    const auto on_true = cond_branch->get_true_target();
-    const auto on_false = cond_branch->get_false_target();
+    const auto on_true = cond_branch->true_target();
+    const auto on_false = cond_branch->false_target();
 
     if (on_true == on_false) {
       return on_true;
@@ -345,7 +345,7 @@ void Block::remove_incoming_block_from_phis(const Block* incoming, bool destroy_
   }
 
   for (Phi& phi : advance_early(instructions<Phi>())) {
-    if (phi.remove_incoming_opt(incoming) && destroy_empty_phis && phi.is_empty()) {
+    if (phi.remove_incoming_opt(incoming) && destroy_empty_phis && phi.empty()) {
       phi.destroy();
     }
   }
@@ -374,10 +374,9 @@ bool Block::is_dominated_by(const Block* other, const DominatorTree& dominator_t
 bool Block::has_successor(const Block* successor) const {
   const auto terminator = last_instruction();
   if (const auto branch = cast<Branch>(terminator)) {
-    return branch->get_target() == successor;
+    return branch->target() == successor;
   } else if (const auto cond_branch = cast<CondBranch>(terminator)) {
-    return cond_branch->get_true_target() == successor ||
-           cond_branch->get_false_target() == successor;
+    return cond_branch->true_target() == successor || cond_branch->false_target() == successor;
   }
 
   return false;

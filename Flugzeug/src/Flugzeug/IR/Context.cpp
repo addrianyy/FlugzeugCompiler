@@ -104,7 +104,7 @@ PointerType* Context::make_pointer_type_internal(Type* base, uint32_t indirectio
 
   verify(indirection > 0, "Cannot create pointer with no indirection");
 
-  switch (base->get_kind()) {
+  switch (base->kind()) {
     case Type::Kind::Void:
     case Type::Kind::Block:
     case Type::Kind::Function:

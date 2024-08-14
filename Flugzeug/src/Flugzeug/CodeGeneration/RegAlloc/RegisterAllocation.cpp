@@ -208,7 +208,7 @@ static void build_live_intervals(OrderedInstructions& ordered_instructions,
   const auto process_successors_phis = [&](Block* block, Block* successor,
                                            std::unordered_set<OrderedInstruction*>& live) {
     for (Phi& phi : successor->instructions<Phi>()) {
-      const auto incoming = cast<Instruction>(phi.get_incoming_by_block(block));
+      const auto incoming = cast<Instruction>(phi.incoming_for_block(block));
       verify(incoming, "Incoming value should be an instruction");
 
       // Make sure that successor's Phi isn't in the live set.

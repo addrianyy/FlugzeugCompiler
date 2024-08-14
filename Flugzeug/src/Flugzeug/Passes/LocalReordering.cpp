@@ -24,7 +24,7 @@ class Reorderer : InstructionVisitor {
   bool did_something = false;
 
   Instruction* visit_binary_instr(Argument<BinaryInstr> binary) {
-    const auto corresponding_op = corresponding_divmod(binary->get_op());
+    const auto corresponding_op = corresponding_divmod(binary->op());
     const auto previous = binary->previous();
     if (!corresponding_op || !previous) {
       return nullptr;
@@ -33,8 +33,8 @@ class Reorderer : InstructionVisitor {
     for (Instruction& instruction :
          instruction_range(binary->block()->first_instruction(), previous)) {
       if (match_pattern(&instruction,
-                        pat::binary_specific(pat::exact(binary->get_lhs()), *corresponding_op,
-                                             pat::exact(binary->get_rhs())))) {
+                        pat::binary_specific(pat::exact(binary->lhs()), *corresponding_op,
+                                             pat::exact(binary->rhs())))) {
         // Move this instruction just after corresponding `div`/`mod`.
         binary->move_after(&instruction);
 
@@ -50,14 +50,14 @@ class Reorderer : InstructionVisitor {
   Instruction* visit_load_store(Value* ptr) { return cast<Offset>(ptr); }
   Instruction* visit_select_cond_branch(Value* cond) { return cast<IntCompare>(cond); }
 
-  Instruction* visit_load(Argument<Load> load) { return visit_load_store(load->get_ptr()); }
-  Instruction* visit_store(Argument<Store> store) { return visit_load_store(store->get_ptr()); }
+  Instruction* visit_load(Argument<Load> load) { return visit_load_store(load->address()); }
+  Instruction* visit_store(Argument<Store> store) { return visit_load_store(store->address()); }
 
   Instruction* visit_cond_branch(Argument<CondBranch> cond_branch) {
-    return visit_select_cond_branch(cond_branch->get_cond());
+    return visit_select_cond_branch(cond_branch->condition());
   }
   Instruction* visit_select(Argument<Select> select) {
-    return visit_select_cond_branch(select->get_cond());
+    return visit_select_cond_branch(select->condition());
   }
 
   Instruction* visit_branch(Argument<Branch> branch) { return nullptr; }

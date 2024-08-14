@@ -71,10 +71,10 @@ class PointerOriginCalculator : public ConstInstructionVisitor {
   // We are actually at the primary origin.
   const Value* visit_stackalloc(Argument<StackAlloc> stackalloc) { return stackalloc; }
 
-  const Value* visit_offset(Argument<Offset> offset) { return origin_map.get(offset->get_base()); }
+  const Value* visit_offset(Argument<Offset> offset) { return origin_map.get(offset->base()); }
   const Value* visit_select(Argument<Select> select) {
-    const auto true_origin = origin_map.get(select->get_true_val());
-    const auto false_origin = origin_map.get(select->get_false_val());
+    const auto true_origin = origin_map.get(select->true_value());
+    const auto false_origin = origin_map.get(select->false_value());
 
     if (true_origin == false_origin) {
       return true_origin;
@@ -123,7 +123,7 @@ class PointerSafetyCalculator : public ConstInstructionVisitor {
 
   bool visit_store(Argument<Store> store) {
     // Make sure that we are actually storing TO the pointer, not storing the pointer.
-    return store->get_ptr() == pointer && store->get_val() != pointer;
+    return store->address() == pointer && store->value() != pointer;
   }
 
   bool visit_load(Argument<Load> load) { return true; }
@@ -133,7 +133,7 @@ class PointerSafetyCalculator : public ConstInstructionVisitor {
   bool visit_offset(Argument<Offset> offset) {
     // Offset returns memory which belongs to the source pointer. Make sure that offset return value
     // is safely used.
-    return offset->get_base() == pointer && safe_pointers.contains(offset);
+    return offset->base() == pointer && safe_pointers.contains(offset);
   }
 
   bool visit_phi(Argument<Phi> phi) {
@@ -155,8 +155,8 @@ static void process_offset_instruction(
   const Offset* offset,
   std::unordered_map<const Value*, std::pair<const Value*, int64_t>>& constant_offset_db,
   BaseIndexToOffset& base_index_to_offset) {
-  const auto base = offset->get_base();
-  const auto index = offset->get_index();
+  const auto base = offset->base();
+  const auto index = offset->index();
 
   if (const auto c_index = cast<Constant>(index)) {
     std::pair result = {base, c_index->value_i()};
@@ -366,27 +366,27 @@ Aliasing PointerAliasing::can_instruction_access_pointer(const Instruction* inst
 
   if (access_type == AccessType::Store || access_type == AccessType::All) {
     if (const auto store = cast<Store>(instruction)) {
-      return can_alias(store, store->get_ptr(), pointer);
+      return can_alias(store, store->address(), pointer);
     }
   }
 
   if (access_type == AccessType::Load || access_type == AccessType::All) {
     if (const auto load = cast<Load>(instruction)) {
-      return can_alias(load, load->get_ptr(), pointer);
+      return can_alias(load, load->address(), pointer);
     }
   }
 
   if (const auto call = cast<Call>(instruction)) {
     // No pointer can be accessed if this function doesn't take any parameters.
-    if (call->get_arg_count() == 0) {
+    if (call->argument_count() == 0) {
       return Aliasing::Never;
     }
 
     // If function takes only constant and undef values then it won't access the pointer.
     {
       bool has_simple_arguments = true;
-      for (size_t i = 0; i < call->get_arg_count(); ++i) {
-        const auto arg = call->get_arg(i);
+      for (size_t i = 0; i < call->argument_count(); ++i) {
+        const auto arg = call->argument(i);
         if (!arg->type()->is_pointer()) {
           continue;
         }
@@ -413,8 +413,8 @@ Aliasing PointerAliasing::can_instruction_access_pointer(const Instruction* inst
     } else {
       // Pointer is a safely used stackalloc. If no argument originates from the same stackalloc,
       // this call cannot affect the pointer.
-      for (size_t i = 0; i < call->get_arg_count(); ++i) {
-        const auto arg = call->get_arg(i);
+      for (size_t i = 0; i < call->argument_count(); ++i) {
+        const auto arg = call->argument(i);
         if (!arg->type()->is_pointer()) {
           continue;
         }

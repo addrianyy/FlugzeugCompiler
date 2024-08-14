@@ -94,7 +94,7 @@ static bool get_loop_count_related_instructions(Instruction* instruction,
     //   2. first iteration value (there can be multiple incoming entries for it, but they
     //      all must have the same value)
 
-    const auto previous_iteration_value = phi->get_incoming_by_block(back_edge_from);
+    const auto previous_iteration_value = phi->incoming_for_block(back_edge_from);
 
     Value* first_iteration_value = nullptr;
 
@@ -262,27 +262,26 @@ static std::optional<size_t> get_unroll_count(const std::vector<Instruction*>& i
     for (Instruction* instruction : instructions) {
       if (auto unary_instr = cast<UnaryInstr>(instruction)) {
         uint64_t constant;
-        if (!get_constant(unary_instr->get_val(), constant)) {
-          return std::nullopt;
-        }
-        set_constant(instruction, utils::evaluate_unary_instr(unary_instr->type(),
-                                                              unary_instr->get_op(), constant));
-      } else if (auto binary_instr = cast<BinaryInstr>(instruction)) {
-        uint64_t lhs, rhs;
-        if (!get_constant(binary_instr->get_lhs(), lhs) ||
-            !get_constant(binary_instr->get_rhs(), rhs)) {
-          return std::nullopt;
-        }
-        set_constant(instruction, utils::evaluate_binary_instr(binary_instr->type(), lhs,
-                                                               binary_instr->get_op(), rhs));
-      } else if (auto cast_instr = cast<Cast>(instruction)) {
-        uint64_t constant;
-        if (!get_constant(cast_instr->get_val(), constant)) {
+        if (!get_constant(unary_instr->value(), constant)) {
           return std::nullopt;
         }
         set_constant(instruction,
-                     utils::evaluate_cast(constant, cast_instr->get_val()->type(),
-                                          cast_instr->type(), cast_instr->get_cast_kind()));
+                     utils::evaluate_unary_instr(unary_instr->type(), unary_instr->op(), constant));
+      } else if (auto binary_instr = cast<BinaryInstr>(instruction)) {
+        uint64_t lhs, rhs;
+        if (!get_constant(binary_instr->lhs(), lhs) || !get_constant(binary_instr->rhs(), rhs)) {
+          return std::nullopt;
+        }
+        set_constant(instruction, utils::evaluate_binary_instr(binary_instr->type(), lhs,
+                                                               binary_instr->op(), rhs));
+      } else if (auto cast_instr = cast<Cast>(instruction)) {
+        uint64_t constant;
+        if (!get_constant(cast_instr->casted_value(), constant)) {
+          return std::nullopt;
+        }
+        set_constant(instruction,
+                     utils::evaluate_cast(constant, cast_instr->casted_value()->type(),
+                                          cast_instr->type(), cast_instr->cast_kind()));
       } else if (auto phi = cast<Phi>(instruction)) {
         const auto& loop_phi = loop_phis.find(phi)->second;
 
@@ -297,12 +296,12 @@ static std::optional<size_t> get_unroll_count(const std::vector<Instruction*>& i
         set_constant(instruction, constant);
       } else if (auto cmp = cast<IntCompare>(instruction)) {
         uint64_t lhs, rhs;
-        if (!get_constant(cmp->get_lhs(), lhs) || !get_constant(cmp->get_rhs(), rhs)) {
+        if (!get_constant(cmp->lhs(), lhs) || !get_constant(cmp->rhs(), rhs)) {
           return std::nullopt;
         }
 
         const auto result =
-          utils::evaluate_int_compare(cmp->get_lhs()->type(), lhs, cmp->get_pred(), rhs);
+          utils::evaluate_int_compare(cmp->lhs()->type(), lhs, cmp->predicate(), rhs);
 
         // Check if we hit the exit condition.
         if (result != condition_to_continue) {
@@ -461,7 +460,7 @@ static void perform_unrolling(Function* function,
         }
 
         if (const auto phi = cast<Phi>(instruction)) {
-          const auto back_edge_value = phi->get_incoming_by_block(back_edge_from);
+          const auto back_edge_value = phi->incoming_for_block(back_edge_from);
 
           // Check if this is a Phi that gets previous iteration value.
           if (back_edge_value) {
@@ -505,8 +504,7 @@ static void perform_unrolling(Function* function,
   if (unroll_count > 2) {
     for (size_t unroll = 0; unroll < unroll_count - 2; ++unroll) {
       // Get back edge instruction for this unroll instance.
-      const auto back_edge_instruction =
-        unrolls[unroll].map(back_edge_from->last_instruction());
+      const auto back_edge_instruction = unrolls[unroll].map(back_edge_from->last_instruction());
 
       // Change edge from (this instance exiting block -> this instance header) to
       // (this instance exiting block -> next instance header).
@@ -534,10 +532,10 @@ static void perform_unrolling(Function* function,
     // is reachable.
     Block* new_target = nullptr;
     if (const auto cond_branch = cast<CondBranch>(back_edge_instruction)) {
-      if (cond_branch->get_true_target() != loop_header) {
-        new_target = cond_branch->get_true_target();
-      } else if (cond_branch->get_false_target() != loop_header) {
-        new_target = cond_branch->get_false_target();
+      if (cond_branch->true_target() != loop_header) {
+        new_target = cond_branch->true_target();
+      } else if (cond_branch->false_target() != loop_header) {
+        new_target = cond_branch->false_target();
       }
     }
 
@@ -548,9 +546,8 @@ static void perform_unrolling(Function* function,
       new_instruction = new Branch(context, new_target);
     } else {
       // Containing block is dead and we will replace instruction with a return.
-      new_instruction = new Ret(context, function->return_type()->is_void()
-                                           ? nullptr
-                                           : function->return_type()->undef());
+      new_instruction = new Ret(
+        context, function->return_type()->is_void() ? nullptr : function->return_type()->undef());
     }
 
     back_edge_instruction->replace_with_instruction_and_destroy(new_instruction);
@@ -592,18 +589,18 @@ static bool unroll_loop(Function* function,
   if (!exit_instruction) {
     return false;
   }
-  const auto exit_condition = cast<IntCompare>(exit_instruction->get_cond());
+  const auto exit_condition = cast<IntCompare>(exit_instruction->condition());
   if (!exit_condition || !loop->contains_block_skipping_sub_loops(exit_condition->block())) {
     return false;
   }
 
   // Calculate comparison instruction result that is required to continue the loop.
   bool condition_to_continue = false;
-  if (exit_instruction->get_true_target() == exit_to &&
-      loop->contains_block_skipping_sub_loops(exit_instruction->get_false_target())) {
+  if (exit_instruction->true_target() == exit_to &&
+      loop->contains_block_skipping_sub_loops(exit_instruction->false_target())) {
     condition_to_continue = false;
-  } else if (exit_instruction->get_false_target() == exit_to &&
-             loop->contains_block_skipping_sub_loops(exit_instruction->get_true_target())) {
+  } else if (exit_instruction->false_target() == exit_to &&
+             loop->contains_block_skipping_sub_loops(exit_instruction->true_target())) {
     condition_to_continue = true;
   } else {
     return false;

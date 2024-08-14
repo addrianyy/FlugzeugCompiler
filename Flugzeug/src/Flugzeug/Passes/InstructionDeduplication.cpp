@@ -37,13 +37,13 @@ class UniqueIdentifierVisitor : public ConstInstructionVisitor {
       : identifier(identifier) {}
 
   void visit_unary_instr(Argument<UnaryInstr> unary) {
-    identifier.push_back(uintptr_t(unary->get_op()));
+    identifier.push_back(uintptr_t(unary->op()));
   }
   void visit_binary_instr(Argument<BinaryInstr> binary) {
-    identifier.push_back(uintptr_t(binary->get_op()));
+    identifier.push_back(uintptr_t(binary->op()));
   }
   void visit_int_compare(Argument<IntCompare> int_compare) {
-    identifier.push_back(uintptr_t(int_compare->get_pred()));
+    identifier.push_back(uintptr_t(int_compare->predicate()));
   }
   void visit_load(Argument<Load> load) {}
   void visit_store(Argument<Store> store) {}
@@ -51,11 +51,11 @@ class UniqueIdentifierVisitor : public ConstInstructionVisitor {
   void visit_branch(Argument<Branch> branch) {}
   void visit_cond_branch(Argument<CondBranch> cond_branch) {}
   void visit_stackalloc(Argument<StackAlloc> stackalloc) {
-    identifier.push_back(uintptr_t(stackalloc->get_size()));
+    identifier.push_back(uintptr_t(stackalloc->size()));
   }
   void visit_ret(Argument<Ret> ret) {}
   void visit_offset(Argument<Offset> offset) {}
-  void visit_cast(Argument<Cast> cast) { identifier.push_back(uintptr_t(cast->get_cast_kind())); }
+  void visit_cast(Argument<Cast> cast) { identifier.push_back(uintptr_t(cast->cast_kind())); }
   void visit_select(Argument<Select> select) {}
   void visit_phi(Argument<Phi> phi) {}
 };
@@ -78,7 +78,7 @@ static bool can_be_deduplicated(Instruction* instruction) {
     return false;
   }
 
-  switch (instruction->get_kind()) {
+  switch (instruction->kind()) {
     case Value::Kind::StackAlloc:
     case Value::Kind::Phi:
       return false;
@@ -106,7 +106,7 @@ static bool deduplicate_block_local(Function* function) {
         continue;
       }
 
-      auto& map = deduplication_map[instruction.get_kind()];
+      auto& map = deduplication_map[instruction.kind()];
       auto identifier = calculate_unique_identifier(&instruction);
 
       if (const auto it = map.find(identifier); it == map.end()) {
@@ -118,7 +118,7 @@ static bool deduplicate_block_local(Function* function) {
           // Special care needs to be taken if we want to deduplicate load. Something inbetween two
           // instructions may have modified loaded ptr and output value will be different.
           const auto stored_to_inbetween = alias_analysis.is_pointer_accessed_inbetween(
-            load->get_ptr(), previous->next(), &instruction,
+            load->address(), previous->next(), &instruction,
             analysis::PointerAliasing::AccessType::Store);
 
           if (stored_to_inbetween) {
@@ -149,7 +149,7 @@ static bool deduplicate_global(Function* function) {
     }
 
     auto identifier = calculate_unique_identifier(&instruction);
-    deduplication_map[instruction.get_kind()][std::move(identifier)].push_back(&instruction);
+    deduplication_map[instruction.kind()][std::move(identifier)].push_back(&instruction);
   }
 
   for (auto& map : deduplication_map) {
@@ -194,7 +194,7 @@ static bool deduplicate_global(Function* function) {
           dominator_tree, other, &instruction, analysis::PathValidator::MemoryKillTarget::End,
           [&](const Instruction* instruction) {
             return alias_analysis.can_instruction_access_pointer(
-                     instruction, load->get_ptr(), analysis::PointerAliasing::AccessType::Store) ==
+                     instruction, load->address(), analysis::PointerAliasing::AccessType::Store) ==
                    analysis::Aliasing::Never;
           });
       } else {

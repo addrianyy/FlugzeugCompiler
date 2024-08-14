@@ -69,15 +69,15 @@ class Stmt {
   // clang-format on
 
  private:
-  const Kind kind;
+  const Kind kind_;
 
  protected:
-  explicit Stmt(Kind kind) : kind(kind) {}
+  explicit Stmt(Kind kind) : kind_(kind) {}
 
  public:
   virtual ~Stmt() = default;
 
-  Kind get_kind() const { return kind; }
+  Kind kind() const { return kind_; }
 
   virtual void print(ASTPrinter& printer) const = 0;
 };

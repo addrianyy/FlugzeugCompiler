@@ -29,12 +29,12 @@ class UnaryPattern {
       return false;
     }
 
-    const auto op = unary->get_op();
+    const auto op = unary->op();
     if (MatchSpecificOp && op != specific_op) {
       return false;
     }
 
-    const bool matched = value_pattern.match(unary->get_val());
+    const bool matched = value_pattern.match(unary->value());
     if (!matched) {
       return false;
     }

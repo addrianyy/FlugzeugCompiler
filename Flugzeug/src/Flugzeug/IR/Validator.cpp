@@ -70,7 +70,7 @@ class Validator : public ConstInstructionVisitor {
 
   void visit_unary_instr(Argument<UnaryInstr> unary) {
     const auto type = unary->type();
-    const auto val_type = unary->get_val()->type();
+    const auto val_type = unary->value()->type();
 
     validation_check(type == val_type,
                      "Unary instruction return type ({}) differs from operand type ({})",
@@ -80,8 +80,8 @@ class Validator : public ConstInstructionVisitor {
 
   void visit_binary_instr(Argument<BinaryInstr> binary) {
     const auto type = binary->type();
-    const auto lhs_type = binary->get_lhs()->type();
-    const auto rhs_type = binary->get_rhs()->type();
+    const auto lhs_type = binary->lhs()->type();
+    const auto rhs_type = binary->rhs()->type();
 
     validation_check(lhs_type == rhs_type,
                      "Binary instruction LHS type ({}) differs from RHS type ({})",
@@ -94,8 +94,8 @@ class Validator : public ConstInstructionVisitor {
 
   void visit_int_compare(Argument<IntCompare> int_compare) {
     const auto type = int_compare->type();
-    const auto lhs_type = int_compare->get_lhs()->type();
-    const auto rhs_type = int_compare->get_rhs()->type();
+    const auto lhs_type = int_compare->lhs()->type();
+    const auto rhs_type = int_compare->rhs()->type();
 
     validation_check(lhs_type == rhs_type,
                      "Compare instruction LHS type ({}) differs from RHS type ({})",
@@ -107,7 +107,7 @@ class Validator : public ConstInstructionVisitor {
 
   void visit_load(Argument<Load> load) {
     const auto type = load->type();
-    const auto ptr_type = load->get_ptr()->type();
+    const auto ptr_type = load->address()->type();
 
     validation_check(ptr_type->is_pointer(), "Load operand isn't a pointer ({})", Format(ptr_type));
     validation_check(type->ref() == ptr_type, "Load operand and return type mismatch");
@@ -117,8 +117,8 @@ class Validator : public ConstInstructionVisitor {
 
   void visit_store(Argument<Store> store) {
     const auto type = store->type();
-    const auto ptr_type = store->get_ptr()->type();
-    const auto val_type = store->get_val()->type();
+    const auto ptr_type = store->address()->type();
+    const auto val_type = store->value()->type();
 
     validation_check(val_type->ref() == ptr_type, "Store destination and value type mismatch");
     validation_check(val_type->is_arithmetic_or_pointer(),
@@ -134,7 +134,7 @@ class Validator : public ConstInstructionVisitor {
 
   void visit_cond_branch(Argument<CondBranch> cond_branch) {
     const auto type = cond_branch->type();
-    const auto cond_type = cond_branch->get_cond()->type();
+    const auto cond_type = cond_branch->condition()->type();
 
     validation_check(cond_type->is_i1(), "Cond branch condition isn't i1 ({})", Format(cond_type));
     validation_check(type->is_void(), "Cond branch doesn't return void ({})", Format(type));
@@ -142,19 +142,19 @@ class Validator : public ConstInstructionVisitor {
 
   void visit_call(Argument<Call> call) {
     const auto type = call->type();
-    const auto called_function = call->get_callee();
+    const auto called_function = call->callee();
 
     validation_check(called_function->module() == function->module(),
                      "Call instruction crosses module boundary.");
     validation_check(type == called_function->return_type(),
                      "Call return type ({}) differs from functon return type", Format(type),
                      Format(called_function->return_type()));
-    validation_check(called_function->parameter_count() == call->get_arg_count(),
+    validation_check(called_function->parameter_count() == call->argument_count(),
                      "Call parameter count mismatch");
 
     for (size_t i = 0; i < called_function->parameter_count(); ++i) {
       const auto func_type = called_function->parameter(i)->type();
-      const auto call_type = call->get_arg(i)->type();
+      const auto call_type = call->argument(i)->type();
 
       validation_check(call_type == func_type, "Call argument {}: expected {}, found {}", i,
                        Format(func_type), Format(call_type));
@@ -164,10 +164,10 @@ class Validator : public ConstInstructionVisitor {
   void visit_stackalloc(Argument<StackAlloc> stackalloc) {
     const auto type = stackalloc->type();
 
-    validation_check(stackalloc->get_size() > 0, "Stackalloc size is 0");
+    validation_check(stackalloc->size() > 0, "Stackalloc size is 0");
     if (validation_check(type->is_pointer(), "Stackalloc type isn't a pointer ({})",
                          Format(type))) {
-      const auto allocated_type = stackalloc->get_allocated_type();
+      const auto allocated_type = stackalloc->allocated_type();
       validation_check(allocated_type->is_arithmetic_or_pointer(),
                        "Stackalloced type isn't arithmetic or pointer ({})",
                        Format(allocated_type));
@@ -176,11 +176,11 @@ class Validator : public ConstInstructionVisitor {
 
   void visit_ret(Argument<Ret> ret) {
     const auto type = ret->type();
-    const auto val_type = ret->get_val() ? ret->get_val()->type() : nullptr;
+    const auto val_type = ret->return_value() ? ret->return_value()->type() : nullptr;
 
     const auto return_type = current_block->function()->return_type();
     if (return_type->is_void()) {
-      validation_check(!ret->get_val(), "Void functions return non-void value");
+      validation_check(!ret->return_value(), "Void functions return non-void value");
     } else {
       validation_check(val_type == return_type, "Function returns {} but Ret operand is of type {}",
                        Format(return_type), Format(val_type));
@@ -191,8 +191,8 @@ class Validator : public ConstInstructionVisitor {
 
   void visit_offset(Argument<Offset> offset) {
     const auto type = offset->type();
-    const auto base_type = offset->get_base()->type();
-    const auto index_type = offset->get_index()->type();
+    const auto base_type = offset->base()->type();
+    const auto index_type = offset->index()->type();
 
     validation_check(type == base_type, "Offset base type ({}) and return type ({}) are mismatched",
                      Format(base_type), Format(type));
@@ -203,8 +203,8 @@ class Validator : public ConstInstructionVisitor {
 
   void visit_cast(Argument<Cast> cast) {
     const auto type = cast->type();
-    const auto val_type = cast->get_val()->type();
-    const auto kind = cast->get_cast_kind();
+    const auto val_type = cast->casted_value()->type();
+    const auto kind = cast->cast_kind();
 
     validation_check(val_type->is_arithmetic_or_pointer(),
                      "Cast operand ({}) is not arithmetic or pointer", Format(val_type));
@@ -236,9 +236,9 @@ class Validator : public ConstInstructionVisitor {
 
   void visit_select(Argument<Select> select) {
     const auto type = select->type();
-    const auto cond_type = select->get_cond()->type();
-    const auto true_type = select->get_true_val()->type();
-    const auto false_type = select->get_false_val()->type();
+    const auto cond_type = select->condition()->type();
+    const auto true_type = select->true_value()->type();
+    const auto false_type = select->false_value()->type();
 
     validation_check(cond_type->is_i1(), "Select condition isn't i1 ({})", Format(cond_type));
     validation_check(true_type == false_type,
@@ -297,14 +297,14 @@ class Validator : public ConstInstructionVisitor {
         }
 
         if (const auto other_phi = cast<Phi>(other)) {
-          validation_check(!other_phi->is_empty(),
-                           "Instruction used empty Phi (`{}`) as an operand", Format(other));
+          validation_check(!other_phi->empty(), "Instruction used empty Phi (`{}`) as an operand",
+                           Format(other));
         }
       }
     }
 
     if (phi) {
-      const auto incoming_count = phi->get_incoming_count();
+      const auto incoming_count = phi->incoming_count();
       validation_check(incoming_count == current_block_predecessors.size(),
                        "Phi incoming blocks and block predecessors are mismatched");
 

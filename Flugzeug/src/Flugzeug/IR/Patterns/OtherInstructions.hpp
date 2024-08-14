@@ -23,7 +23,7 @@ class LoadPattern {
       return false;
     }
 
-    const bool matched = ptr.match(load->get_ptr());
+    const bool matched = ptr.match(load->address());
     if (!matched) {
       return false;
     }
@@ -53,7 +53,7 @@ class StorePattern {
       return false;
     }
 
-    const bool matched = ptr.match(store->get_ptr()) && value.match(store->get_val());
+    const bool matched = ptr.match(store->address()) && value.match(store->value());
     if (!matched) {
       return false;
     }
@@ -82,7 +82,7 @@ class CallPattern {
       return false;
     }
 
-    const bool matched = callee.match(call->get_callee());
+    const bool matched = callee.match(call->callee());
     if (!matched) {
       return false;
     }
@@ -111,7 +111,7 @@ class BranchPattern {
       return false;
     }
 
-    const bool matched = target.match(branch->get_target());
+    const bool matched = target.match(branch->target());
     if (!matched) {
       return false;
     }
@@ -147,12 +147,11 @@ class CondBranchOrSelectPattern {
 
     bool matched;
     if constexpr (std::is_same_v<TInstruction, CondBranch>) {
-      matched = cond.match(instruction->get_cond()) &&
-                on_true.match(instruction->get_true_target()) &&
-                on_false.match(instruction->get_false_target());
+      matched = cond.match(instruction->condition()) && on_true.match(instruction->true_target()) &&
+                on_false.match(instruction->false_target());
     } else {
-      matched = cond.match(instruction->get_cond()) && on_true.match(instruction->get_true_val()) &&
-                on_false.match(instruction->get_false_val());
+      matched = cond.match(instruction->condition()) && on_true.match(instruction->true_value()) &&
+                on_false.match(instruction->false_value());
     }
 
     if (!matched) {
@@ -177,7 +176,7 @@ class RetVoidPattern {
   template <typename T>
   bool match(T* m_value) {
     const auto ret = flugzeug::cast<Ret>(m_value);
-    if (!ret || ret->get_val()) {
+    if (!ret || ret->value()) {
       return false;
     }
 
@@ -201,11 +200,11 @@ class RetPattern {
   template <typename T>
   bool match(T* m_value) {
     const auto ret = flugzeug::cast<Ret>(m_value);
-    if (!ret || !ret->get_val()) {
+    if (!ret || !ret->value()) {
       return false;
     }
 
-    const bool matched = value.match(ret->get_val());
+    const bool matched = value.match(ret->value());
     if (!matched) {
       return false;
     }
@@ -235,7 +234,7 @@ class OffsetPattern {
       return false;
     }
 
-    const bool matched = base.match(offset->get_base()) && index.match(offset->get_index());
+    const bool matched = base.match(offset->base()) && index.match(offset->index());
     if (!matched) {
       return false;
     }

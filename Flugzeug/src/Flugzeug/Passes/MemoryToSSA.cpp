@@ -9,7 +9,7 @@ using namespace flugzeug;
 
 static bool is_stackalloc_optimizable(const StackAlloc* stackalloc) {
   // We cannot optimize out arrays.
-  if (stackalloc->get_size() != 1) {
+  if (stackalloc->size() != 1) {
     return false;
   }
 
@@ -18,7 +18,7 @@ static bool is_stackalloc_optimizable(const StackAlloc* stackalloc) {
     const auto store = cast<Store>(user);
     const auto load = cast<Load>(user);
 
-    const auto valid_use = load || (store && store->get_ptr() == stackalloc);
+    const auto valid_use = load || (store && store->address() == stackalloc);
     if (!valid_use) {
       return false;
     }
@@ -42,7 +42,7 @@ static std::vector<StackAlloc*> find_optimizable_stackallocs(Function* function)
 static Value* get_value_for_first_use(Block* block,
                                       StackAlloc* stackalloc,
                                       std::vector<Phi*>& inserted_phis) {
-  const auto type = stackalloc->get_allocated_type();
+  const auto type = stackalloc->allocated_type();
 
   if (block->is_entry_block()) {
     return type->undef();
@@ -67,7 +67,7 @@ static void optimize_stackalloc(StackAlloc* stackalloc) {
 
     for (Instruction& instruction : advance_early(*block)) {
       if (const auto load = cast<Load>(instruction)) {
-        if (load->get_ptr() == stackalloc) {
+        if (load->address() == stackalloc) {
           // Pointer wasn't written to in this block. We will need to take value from PHI
           // instruction (or make it undef for entry block).
           if (!current_value) {
@@ -78,9 +78,9 @@ static void optimize_stackalloc(StackAlloc* stackalloc) {
           load->replace_uses_with_and_destroy(current_value);
         }
       } else if (const auto store = cast<Store>(instruction)) {
-        if (store->get_ptr() == stackalloc) {
+        if (store->address() == stackalloc) {
           // Source next loads of pointer from stored value.
-          current_value = store->get_val();
+          current_value = store->value();
           store->destroy();
         }
       }
@@ -101,7 +101,7 @@ static void optimize_stackalloc(StackAlloc* stackalloc) {
     for (Block* pred : block->predecessors()) {
       const auto it = block_values.find(pred);
       const auto value =
-        it != block_values.end() ? it->second : stackalloc->get_allocated_type()->undef();
+        it != block_values.end() ? it->second : stackalloc->allocated_type()->undef();
 
       phi->add_incoming(pred, value);
     }

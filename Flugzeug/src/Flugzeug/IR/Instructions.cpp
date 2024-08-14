@@ -82,18 +82,18 @@ Call::Call(Context* context, Function* function, const std::vector<Value*>& argu
   }
 }
 
-Function* Call::get_callee() {
+Function* Call::callee() {
   return cast<Function>(operand(0));
 }
 
-const Function* Call::get_callee() const {
+const Function* Call::callee() const {
   return cast<Function>(operand(0));
 }
 
 bool Phi::index_for_block(const Block* block, size_t& index) const {
   index = 0;
 
-  for (size_t i = 0; i < get_incoming_count(); ++i) {
+  for (size_t i = 0; i < incoming_count(); ++i) {
     if (operand(get_block_index(i)) == block) {
       index = i;
       return true;
@@ -108,10 +108,10 @@ void Phi::remove_incoming_by_index(size_t index) {
   remove_phi_incoming_helper(index);
 }
 
-Value* Phi::get_single_incoming_value() {
+Value* Phi::single_incoming_value() {
   Value* single_incoming = nullptr;
 
-  for (size_t i = 0; i < get_incoming_count(); ++i) {
+  for (size_t i = 0; i < incoming_count(); ++i) {
     const auto value = get_incoming_value(i);
     if (value == this) {
       continue;
@@ -152,13 +152,13 @@ void Phi::add_incoming(Block* block, Value* value) {
     return;
   }
 
-  const auto index = get_incoming_count();
+  const auto index = incoming_count();
   grow_operand_count(2);
   set_operand(get_block_index(index), block);
   set_operand(get_value_index(index), value);
 }
 
-Value* Phi::get_incoming_by_block(const Block* block) {
+Value* Phi::incoming_for_block(const Block* block) {
   size_t index;
   if (!index_for_block(block, index)) {
     return nullptr;
@@ -166,7 +166,7 @@ Value* Phi::get_incoming_by_block(const Block* block) {
   return operand(get_value_index(index));
 }
 
-const Value* Phi::get_incoming_by_block(const Block* block) const {
+const Value* Phi::incoming_for_block(const Block* block) const {
   size_t index;
   if (!index_for_block(block, index)) {
     return nullptr;
@@ -192,9 +192,9 @@ bool Phi::replace_incoming_block_opt(const Block* old_incoming, Block* new_incom
 
   size_t new_incoming_index;
   if (index_for_block(new_incoming, new_incoming_index)) {
-    verify(operand(get_value_index(new_incoming_index)) ==
-             operand(get_value_index(old_incoming_index)),
-           "Cannot duplicate blocks in Phi.");
+    verify(
+      operand(get_value_index(new_incoming_index)) == operand(get_value_index(old_incoming_index)),
+      "Cannot duplicate blocks in Phi.");
     remove_incoming_by_index(old_incoming_index);
     return true;
   }

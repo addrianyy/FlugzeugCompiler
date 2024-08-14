@@ -1,10 +1,10 @@
 #pragma once
 #include <type_traits>
 
-#define DEFINE_INSTANCEOF(Base, kind)                \
+#define DEFINE_INSTANCEOF(Base, o_kind)              \
  public:                                             \
   static bool is_object_of_class(const Base* base) { \
-    return base->get_kind() == kind;                 \
+    return base->kind() == o_kind;                   \
   }                                                  \
                                                      \
  private:
@@ -12,8 +12,8 @@
 #define DEFINE_INSTANCEOF_RANGE(Base, start, end)    \
  public:                                             \
   static bool is_object_of_class(const Base* base) { \
-    const auto kind = base->get_kind();              \
-    return kind >= start && kind <= end;             \
+    const auto o_kind = base->kind();                \
+    return o_kind >= start && o_kind <= end;         \
   }                                                  \
                                                      \
  private:

@@ -36,7 +36,7 @@ class BinaryPattern {
       return false;
     }
 
-    const auto op = binary->get_op();
+    const auto op = binary->op();
     if (MatchSpecificOp && op != specific_op) {
       return false;
     }
@@ -47,9 +47,8 @@ class BinaryPattern {
     }
 
     const bool matched =
-      (lhs_pattern.match(binary->get_lhs()) && rhs_pattern.match(binary->get_rhs())) ||
-      (is_commutative && lhs_pattern.match(binary->get_rhs()) &&
-       rhs_pattern.match(binary->get_lhs()));
+      (lhs_pattern.match(binary->lhs()) && rhs_pattern.match(binary->rhs())) ||
+      (is_commutative && lhs_pattern.match(binary->rhs()) && rhs_pattern.match(binary->lhs()));
     if (!matched) {
       return false;
     }

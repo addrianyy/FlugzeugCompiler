@@ -60,7 +60,7 @@ static Block* split_block(Instruction* instruction) {
 void flugzeug::utils::inline_call(Call* call) {
   const auto context = call->context();
   const auto caller = call->function();
-  const auto callee = call->get_callee();
+  const auto callee = call->callee();
 
   verify(!callee->is_extern(), "Cannot inline external call");
 
@@ -86,7 +86,7 @@ void flugzeug::utils::inline_call(Call* call) {
   // Create mapping from function parameter to passed argument.
   for (size_t i = 0; i < callee->parameter_count(); ++i) {
     const auto callee_value = callee->parameter(i);
-    const auto caller_value = call->get_arg(i);
+    const auto caller_value = call->argument(i);
 
     inlined_function.add_mapping(callee_value, caller_value);
   }
@@ -116,7 +116,7 @@ void flugzeug::utils::inline_call(Call* call) {
       if (const auto ret = cast<Ret>(instruction)) {
         // Add return value for this return site to Phi incoming values.
         if (return_phi) {
-          return_phi->add_incoming(block, inlined_function.map(ret->get_val()));
+          return_phi->add_incoming(block, inlined_function.map(ret->return_value()));
         }
 
         ret->replace_with_instruction_and_destroy(new Branch(context, return_block));

@@ -17,7 +17,7 @@ static bool is_instruction_loop_invariant(Instruction* instruction,
     return false;
   }
 
-  switch (instruction->get_kind()) {
+  switch (instruction->kind()) {
     case Value::Kind::Load:
     case Value::Kind::Phi:
       return false;

@@ -10,7 +10,7 @@ static bool inline_everything(Function* function) {
   std::vector<Call*> inlinable_calls;
 
   for (Call& call : function->instructions<Call>()) {
-    Function* callee = call.get_callee();
+    Function* callee = call.callee();
     if (!callee->is_extern() && callee != function) {
       inlinable_calls.push_back(&call);
     }

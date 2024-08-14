@@ -17,8 +17,8 @@ static Block* get_actual_loop_body(Function* function, const analysis::Loop* loo
 
   bool exit_condition = false;
   {
-    const auto true_target = header_branch->get_true_target();
-    const auto false_target = header_branch->get_false_target();
+    const auto true_target = header_branch->true_target();
+    const auto false_target = header_branch->false_target();
 
     if (true_target == header || false_target == header) {
       return nullptr;
@@ -35,7 +35,7 @@ static Block* get_actual_loop_body(Function* function, const analysis::Loop* loo
     }
   }
 
-  return header_branch->get_target(!exit_condition);
+  return header_branch->select_target(!exit_condition);
 }
 
 static std::unordered_set<Instruction*> get_header_instructions_that_escape_loop(
@@ -107,8 +107,8 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
       if (!cond_branch) {
         return false;
       }
-      return !loop->contains_block(cond_branch->get_true_target()) ||
-             !loop->contains_block(cond_branch->get_false_target());
+      return !loop->contains_block(cond_branch->true_target()) ||
+             !loop->contains_block(cond_branch->false_target());
     });
   if (all_back_edge_blocks_exit_loop) {
     return false;
@@ -215,7 +215,7 @@ static bool rotate_loop(Function* function, const analysis::Loop* loop) {
   // Update all Phi instructions in the exit target block. Previously the only loop block that
   // predecessed it was loop header. Now `jump_back_block` predecesses it too.
   for (Phi& phi : exit_target->instructions<Phi>()) {
-    const auto incoming = phi.get_incoming_by_block(header);
+    const auto incoming = phi.incoming_for_block(header);
     verify(incoming, "Phis in exit target block must contain header as incoming block");
 
     // Add incoming value for `jump_back_block`. If there is no mapping available that means that

@@ -46,7 +46,7 @@ class Type {
   virtual ~Type();
 
   Context* context() const { return context_; }
-  Kind get_kind() const { return kind_; }
+  Kind kind() const { return kind_; }
 
   PointerType* ref(uint32_t indirection = 1) const;
 

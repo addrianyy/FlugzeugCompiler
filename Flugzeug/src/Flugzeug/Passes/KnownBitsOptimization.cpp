@@ -190,16 +190,16 @@ class BitOptimizer : InstructionVisitor {
   BitOptimizationResult visit_unary_instr(Argument<UnaryInstr> unary) {
     KnownBits computed{};
 
-    switch (unary->get_op()) {
+    switch (unary->op()) {
       case UnaryOp::Not: {
         // Invert all known bits.
-        computed = bits_database.get(unary->get_val());
+        computed = bits_database.get(unary->value());
         computed.value = ~computed.value & computed.mask;
         break;
       }
 
       case UnaryOp::Neg: {
-        computed = bitops::neg(bits_database.get(unary->get_val()), unary->type());
+        computed = bitops::neg(bits_database.get(unary->value()), unary->type());
         break;
       }
     }
@@ -211,10 +211,10 @@ class BitOptimizer : InstructionVisitor {
 
   BitOptimizationResult visit_binary_instr(Argument<BinaryInstr> binary) {
     const auto type = binary->type();
-    const auto op = binary->get_op();
+    const auto op = binary->op();
 
-    auto a = bits_database.get(binary->get_lhs());
-    auto b = bits_database.get(binary->get_rhs());
+    auto a = bits_database.get(binary->lhs());
+    auto b = bits_database.get(binary->rhs());
 
     KnownBits computed{};
 
@@ -273,11 +273,11 @@ class BitOptimizer : InstructionVisitor {
             // Get fully known value and partially known value.
             if (a.mask == type->bit_mask()) {
               known_value = a.value;
-              partial_value = binary->get_rhs();
+              partial_value = binary->rhs();
               partial_bits = b;
             } else if (b.mask == type->bit_mask()) {
               known_value = b.value;
-              partial_value = binary->get_lhs();
+              partial_value = binary->lhs();
               partial_bits = a;
             } else {
               unreachable();
@@ -327,7 +327,7 @@ class BitOptimizer : InstructionVisitor {
       case BinaryOp::Shl:
       case BinaryOp::Shr:
       case BinaryOp::Sar: {
-        const auto shift_amount_constant = cast<Constant>(binary->get_rhs());
+        const auto shift_amount_constant = cast<Constant>(binary->rhs());
         if (shift_amount_constant) {
           const auto shift_amount = shift_amount_constant->value_u();
 
@@ -432,8 +432,8 @@ class BitOptimizer : InstructionVisitor {
   }
 
   BitOptimizationResult visit_select(Argument<Select> select) {
-    const auto bits = bitops::combine(bits_database.get(select->get_true_val()),
-                                      bits_database.get(select->get_false_val()));
+    const auto bits = bitops::combine(bits_database.get(select->true_value()),
+                                      bits_database.get(select->false_value()));
     bits_database.set(select, bits);
 
     return BitOptimizationResult::CalculatedBits;
@@ -453,11 +453,11 @@ class BitOptimizer : InstructionVisitor {
   }
 
   BitOptimizationResult visit_int_compare(Argument<IntCompare> int_compare) {
-    const auto type = int_compare->get_lhs()->type();
-    const auto pred = int_compare->get_pred();
+    const auto type = int_compare->lhs()->type();
+    const auto pred = int_compare->predicate();
 
-    auto a = bits_database.get(int_compare->get_lhs());
-    auto b = bits_database.get(int_compare->get_rhs());
+    auto a = bits_database.get(int_compare->lhs());
+    auto b = bits_database.get(int_compare->rhs());
 
     std::optional<bool> result;
 
@@ -536,17 +536,17 @@ class BitOptimizer : InstructionVisitor {
   }
 
   BitOptimizationResult visit_cast(Argument<Cast> cast_instr) {
-    const auto input_type = cast_instr->get_val()->type();
+    const auto input_type = cast_instr->casted_value()->type();
     const auto input_bitmask = input_type->bit_mask();
 
     const auto output_type = cast_instr->type();
     const auto output_bitmask = output_type->bit_mask();
 
-    const auto input = bits_database.get(cast_instr->get_val());
+    const auto input = bits_database.get(cast_instr->casted_value());
 
     KnownBits computed{};
 
-    switch (cast_instr->get_cast_kind()) {
+    switch (cast_instr->cast_kind()) {
       case CastKind::Truncate:
       case CastKind::Bitcast: {
         // Just carry over previous known value and mask off truncated part.
@@ -561,7 +561,7 @@ class BitOptimizer : InstructionVisitor {
         std::optional<bool> extension_bit;
 
         // Try to get the value of extension bit.
-        if (cast_instr->get_cast_kind() == CastKind::SignExtend) {
+        if (cast_instr->cast_kind() == CastKind::SignExtend) {
           extension_bit = input.sign(input_type);
         } else {
           extension_bit = false;

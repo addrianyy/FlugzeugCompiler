@@ -52,30 +52,30 @@ enum class CastKind {
 class UnaryInstr final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::UnaryInstr)
 
-  UnaryOp op;
+  UnaryOp op_;
 
  public:
-  UnaryInstr(Context* context, UnaryOp op, Value* val)
-      : Instruction(context, Value::Kind::UnaryInstr, val->type()), op(op) {
+  UnaryInstr(Context* context, UnaryOp op, Value* value)
+      : Instruction(context, Value::Kind::UnaryInstr, value->type()), op_(op) {
     set_operand_count(1);
-    set_val(val);
+    set_value(value);
   }
 
-  UnaryOp get_op() const { return op; }
-  bool is(UnaryOp other) const { return op == other; }
+  UnaryOp op() const { return op_; }
+  bool is(UnaryOp other) const { return op_ == other; }
 
-  Value* get_val() { return operand(0); }
-  const Value* get_val() const { return operand(0); }
+  Value* value() { return operand(0); }
+  const Value* value() const { return operand(0); }
 
-  void set_val(Value* val) { return set_operand(0, val); }
-  void set_op(UnaryOp new_op) { op = new_op; }
+  void set_value(Value* value) { return set_operand(0, value); }
+  void set_op(UnaryOp new_op) { op_ = new_op; }
 
-  void set_new_operands(UnaryOp new_op, Value* val) {
+  void set_new_operands(UnaryOp new_op, Value* value) {
     set_op(new_op);
-    set_val(val);
+    set_value(value);
   }
 
-  Instruction* clone() override { return new UnaryInstr(context(), get_op(), get_val()); }
+  Instruction* clone() override { return new UnaryInstr(context(), op(), value()); }
 
  protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
@@ -87,28 +87,28 @@ class UnaryInstr final : public Instruction {
 class BinaryInstr final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::BinaryInstr)
 
-  BinaryOp op;
+  BinaryOp op_;
 
  public:
   BinaryInstr(Context* context, Value* lhs, BinaryOp op, Value* rhs)
-      : Instruction(context, Value::Kind::BinaryInstr, lhs->type()), op(op) {
+      : Instruction(context, Value::Kind::BinaryInstr, lhs->type()), op_(op) {
     set_operand_count(2);
     set_lhs(lhs);
     set_rhs(rhs);
   }
 
-  BinaryOp get_op() const { return op; }
-  bool is(BinaryOp other) const { return op == other; }
+  BinaryOp op() const { return op_; }
+  bool is(BinaryOp other) const { return op_ == other; }
 
-  Value* get_lhs() { return operand(0); }
-  const Value* get_lhs() const { return operand(0); }
+  Value* lhs() { return operand(0); }
+  const Value* lhs() const { return operand(0); }
 
-  Value* get_rhs() { return operand(1); }
-  const Value* get_rhs() const { return operand(1); }
+  Value* rhs() { return operand(1); }
+  const Value* rhs() const { return operand(1); }
 
   void set_lhs(Value* lhs) { return set_operand(0, lhs); }
   void set_rhs(Value* rhs) { return set_operand(1, rhs); }
-  void set_op(BinaryOp new_op) { op = new_op; }
+  void set_op(BinaryOp new_op) { op_ = new_op; }
 
   void set_new_operands(Value* lhs, BinaryOp new_op, Value* rhs) {
     set_lhs(lhs);
@@ -116,9 +116,7 @@ class BinaryInstr final : public Instruction {
     set_rhs(rhs);
   }
 
-  Instruction* clone() override {
-    return new BinaryInstr(context(), get_lhs(), get_op(), get_rhs());
-  }
+  Instruction* clone() override { return new BinaryInstr(context(), lhs(), op(), rhs()); }
 
   static bool is_binary_op_commutative(BinaryOp op);
 
@@ -132,38 +130,36 @@ class BinaryInstr final : public Instruction {
 class IntCompare final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::IntCompare)
 
-  IntPredicate pred;
+  IntPredicate predicate_;
 
  public:
-  IntCompare(Context* context, Value* lhs, IntPredicate pred, Value* rhs)
-      : Instruction(context, Value::Kind::IntCompare, context->i1_ty()), pred(pred) {
+  IntCompare(Context* context, Value* lhs, IntPredicate predicate, Value* rhs)
+      : Instruction(context, Value::Kind::IntCompare, context->i1_ty()), predicate_(predicate) {
     set_operand_count(2);
     set_lhs(lhs);
     set_rhs(rhs);
   }
 
-  IntPredicate get_pred() const { return pred; }
-  bool is(IntPredicate other) const { return pred == other; }
+  IntPredicate predicate() const { return predicate_; }
+  bool is(IntPredicate other) const { return predicate_ == other; }
 
-  Value* get_lhs() { return operand(0); }
-  const Value* get_lhs() const { return operand(0); }
+  Value* lhs() { return operand(0); }
+  const Value* lhs() const { return operand(0); }
 
-  Value* get_rhs() { return operand(1); }
-  const Value* get_rhs() const { return operand(1); }
+  Value* rhs() { return operand(1); }
+  const Value* rhs() const { return operand(1); }
 
   void set_lhs(Value* lhs) { return set_operand(0, lhs); }
   void set_rhs(Value* rhs) { return set_operand(1, rhs); }
-  void set_pred(IntPredicate new_pred) { pred = new_pred; }
+  void set_predicate(IntPredicate new_predicate) { predicate_ = new_predicate; }
 
-  void set_new_operands(Value* lhs, IntPredicate new_pred, Value* rhs) {
+  void set_new_operands(Value* lhs, IntPredicate new_predicate, Value* rhs) {
     set_lhs(lhs);
-    set_pred(new_pred);
+    set_predicate(new_predicate);
     set_rhs(rhs);
   }
 
-  Instruction* clone() override {
-    return new IntCompare(context(), get_lhs(), get_pred(), get_rhs());
-  }
+  Instruction* clone() override { return new IntCompare(context(), lhs(), predicate(), rhs()); }
 
   static IntPredicate inverted_predicate(IntPredicate pred);
   static IntPredicate swapped_order_predicate(IntPredicate pred);
@@ -179,20 +175,20 @@ class Load final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Load)
 
  public:
-  explicit Load(Context* context, Value* ptr)
-      : Instruction(context, Value::Kind::Load, cast<PointerType>(ptr->type())->deref()) {
+  explicit Load(Context* context, Value* address)
+      : Instruction(context, Value::Kind::Load, cast<PointerType>(address->type())->deref()) {
     set_operand_count(1);
-    set_ptr(ptr);
+    set_address(address);
   }
 
-  Value* get_ptr() { return operand(0); }
-  const Value* get_ptr() const { return operand(0); }
+  Value* address() { return operand(0); }
+  const Value* address() const { return operand(0); }
 
-  void set_ptr(Value* ptr) { return set_operand(0, ptr); }
+  void set_address(Value* address) { return set_operand(0, address); }
 
-  void set_new_operands(Value* ptr) { set_ptr(ptr); }
+  void set_new_operands(Value* address) { set_address(address); }
 
-  Instruction* clone() override { return new Load(context(), get_ptr()); }
+  Instruction* clone() override { return new Load(context(), address()); }
 
  protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
@@ -205,28 +201,28 @@ class Store final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Store)
 
  public:
-  Store(Context* context, Value* ptr, Value* val)
+  Store(Context* context, Value* address, Value* stored_value)
       : Instruction(context, Value::Kind::Store, context->void_ty()) {
     set_operand_count(2);
-    set_ptr(ptr);
-    set_val(val);
+    set_address(address);
+    set_stored_value(stored_value);
   }
 
-  Value* get_ptr() { return operand(0); }
-  const Value* get_ptr() const { return operand(0); }
+  Value* address() { return operand(0); }
+  const Value* address() const { return operand(0); }
 
-  Value* get_val() { return operand(1); }
-  const Value* get_val() const { return operand(1); }
+  Value* value() { return operand(1); }
+  const Value* value() const { return operand(1); }
 
-  void set_ptr(Value* ptr) { return set_operand(0, ptr); }
-  void set_val(Value* val) { return set_operand(1, val); }
+  void set_address(Value* address) { return set_operand(0, address); }
+  void set_stored_value(Value* stored_value) { return set_operand(1, stored_value); }
 
-  void set_new_operands(Value* ptr, Value* val) {
-    set_ptr(ptr);
-    set_val(val);
+  void set_new_operands(Value* address, Value* stored_value) {
+    set_address(address);
+    set_stored_value(stored_value);
   }
 
-  Instruction* clone() override { return new Store(context(), get_ptr(), get_val()); }
+  Instruction* clone() override { return new Store(context(), address(), value()); }
 
  protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
@@ -241,21 +237,21 @@ class Call final : public Instruction {
  public:
   Call(Context* context, Function* function, const std::vector<Value*>& arguments);
 
-  size_t get_arg_count() const { return operand_count() - 1; }
+  size_t argument_count() const { return operand_count() - 1; }
 
-  Value* get_arg(size_t i) { return operand(i + 1); }
-  const Value* get_arg(size_t i) const { return operand(i + 1); }
+  Value* argument(size_t i) { return operand(i + 1); }
+  const Value* argument(size_t i) const { return operand(i + 1); }
 
-  Function* get_callee();
-  const Function* get_callee() const;
+  Function* callee();
+  const Function* callee() const;
 
   Instruction* clone() override {
     std::vector<Value*> arguments;
-    arguments.reserve(get_arg_count());
-    for (size_t i = 0; i < get_arg_count(); ++i) {
-      arguments.push_back(get_arg(i));
+    arguments.reserve(argument_count());
+    for (size_t i = 0; i < argument_count(); ++i) {
+      arguments.push_back(argument(i));
     }
-    return new Call(context(), get_callee(), arguments);
+    return new Call(context(), callee(), arguments);
   }
 
  protected:
@@ -275,14 +271,14 @@ class Branch final : public Instruction {
     set_target(target);
   }
 
-  Block* get_target() { return cast<Block>(operand(0)); }
-  const Block* get_target() const { return cast<Block>(operand(0)); }
+  Block* target() { return cast<Block>(operand(0)); }
+  const Block* target() const { return cast<Block>(operand(0)); }
 
   void set_target(Block* target) { set_operand(0, target); }
 
   void set_new_operands(Block* target) { set_target(target); }
 
-  Instruction* clone() override { return new Branch(context(), get_target()); }
+  Instruction* clone() override { return new Branch(context(), target()); }
 
  protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
@@ -295,38 +291,38 @@ class CondBranch final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::CondBranch)
 
  public:
-  explicit CondBranch(Context* context, Value* cond, Block* true_target, Block* false_target)
+  explicit CondBranch(Context* context, Value* condition, Block* true_target, Block* false_target)
       : Instruction(context, Value::Kind::CondBranch, context->void_ty()) {
     set_operand_count(3);
-    set_cond(cond);
+    set_condition(condition);
     set_true_target(true_target);
     set_false_target(false_target);
   }
 
-  Value* get_cond() { return operand(0); }
-  const Value* get_cond() const { return operand(0); }
+  Value* condition() { return operand(0); }
+  const Value* condition() const { return operand(0); }
 
-  Block* get_true_target() { return cast<Block>(operand(1)); }
-  const Block* get_true_target() const { return cast<Block>(operand(1)); }
+  Block* true_target() { return cast<Block>(operand(1)); }
+  const Block* true_target() const { return cast<Block>(operand(1)); }
 
-  Block* get_false_target() { return cast<Block>(operand(2)); }
-  const Block* get_false_target() const { return cast<Block>(operand(2)); }
+  Block* false_target() { return cast<Block>(operand(2)); }
+  const Block* false_target() const { return cast<Block>(operand(2)); }
 
-  Block* get_target(bool b) { return b ? get_true_target() : get_false_target(); }
-  const Block* get_target(bool b) const { return b ? get_true_target() : get_false_target(); }
+  Block* select_target(bool b) { return b ? true_target() : false_target(); }
+  const Block* select_target(bool b) const { return b ? true_target() : false_target(); }
 
-  void set_cond(Value* cond) { set_operand(0, cond); }
+  void set_condition(Value* condition) { set_operand(0, condition); }
   void set_true_target(Block* true_target) { set_operand(1, true_target); }
   void set_false_target(Block* false_target) { set_operand(2, false_target); }
 
-  void set_new_operands(Value* cond, Block* true_target, Block* false_target) {
-    set_cond(cond);
+  void set_new_operands(Value* condition, Block* true_target, Block* false_target) {
+    set_condition(condition);
     set_true_target(true_target);
     set_false_target(false_target);
   }
 
   Instruction* clone() override {
-    return new CondBranch(context(), get_cond(), get_true_target(), get_false_target());
+    return new CondBranch(context(), condition(), true_target(), false_target());
   }
 
  protected:
@@ -339,18 +335,18 @@ class CondBranch final : public Instruction {
 class StackAlloc final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::StackAlloc)
 
-  size_t size;
+  size_t size_;
 
  public:
   explicit StackAlloc(Context* context, Type* type, size_t size = 1)
-      : Instruction(context, Value::Kind::StackAlloc, type->ref()), size(size) {}
+      : Instruction(context, Value::Kind::StackAlloc, type->ref()), size_(size) {}
 
-  size_t get_size() const { return size; }
-  Type* get_allocated_type() const { return cast<PointerType>(type())->deref(); }
+  bool is_scalar() const { return size_ == 1; }
 
-  Instruction* clone() override {
-    return new StackAlloc(context(), get_allocated_type(), get_size());
-  }
+  size_t size() const { return size_; }
+  Type* allocated_type() const { return cast<PointerType>(type())->deref(); }
+
+  Instruction* clone() override { return new StackAlloc(context(), allocated_type(), size()); }
 
  protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
@@ -363,27 +359,27 @@ class Ret final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Ret)
 
  public:
-  explicit Ret(Context* context, Value* val = nullptr)
+  explicit Ret(Context* context, Value* return_value = nullptr)
       : Instruction(context, Value::Kind::Ret, context->void_ty()) {
-    if (val) {
+    if (return_value) {
       set_operand_count(1);
-      set_val(val);
+      set_return_value(return_value);
     }
   }
 
-  bool is_ret_void() const { return operand_count() == 0; }
+  bool returns_void() const { return operand_count() == 0; }
 
-  Value* get_val() { return is_ret_void() ? nullptr : operand(0); }
-  const Value* get_val() const { return is_ret_void() ? nullptr : operand(0); }
+  Value* return_value() { return returns_void() ? nullptr : operand(0); }
+  const Value* return_value() const { return returns_void() ? nullptr : operand(0); }
 
-  void set_val(Value* val) {
-    verify(!is_ret_void(), "Cannot set value for ret void.");
-    return set_operand(0, val);
+  void set_return_value(Value* return_value) {
+    verify(!returns_void(), "Cannot set value for ret void.");
+    return set_operand(0, return_value);
   }
 
-  void set_new_operands(Value* val) { set_val(val); }
+  void set_new_operands(Value* return_value) { set_return_value(return_value); }
 
-  Instruction* clone() override { return new Ret(context(), get_val()); }
+  Instruction* clone() override { return new Ret(context(), return_value()); }
 
  protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
@@ -403,11 +399,11 @@ class Offset final : public Instruction {
     set_index(index);
   }
 
-  Value* get_base() { return operand(0); }
-  const Value* get_base() const { return operand(0); }
+  Value* base() { return operand(0); }
+  const Value* base() const { return operand(0); }
 
-  Value* get_index() { return operand(1); }
-  const Value* get_index() const { return operand(1); }
+  Value* index() { return operand(1); }
+  const Value* index() const { return operand(1); }
 
   void set_base(Value* base) { return set_operand(0, base); }
   void set_index(Value* index) { return set_operand(1, index); }
@@ -417,7 +413,7 @@ class Offset final : public Instruction {
     set_index(index);
   }
 
-  Instruction* clone() override { return new Offset(context(), get_base(), get_index()); }
+  Instruction* clone() override { return new Offset(context(), base(), index()); }
 
  protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
@@ -429,27 +425,25 @@ class Offset final : public Instruction {
 class Cast final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Cast)
 
-  CastKind cast_kind;
+  CastKind cast_kind_;
 
  public:
-  Cast(Context* context, CastKind cast_kind, Value* val, Type* target_type)
-      : Instruction(context, Value::Kind::Cast, target_type), cast_kind(cast_kind) {
+  Cast(Context* context, CastKind cast_kind, Value* casted_value, Type* target_type)
+      : Instruction(context, Value::Kind::Cast, target_type), cast_kind_(cast_kind) {
     set_operand_count(1);
-    set_val(val);
+    set_casted_value(casted_value);
   }
 
-  CastKind get_cast_kind() const { return cast_kind; }
-  bool is(CastKind other) const { return cast_kind == other; }
+  CastKind cast_kind() const { return cast_kind_; }
+  bool is(CastKind other) const { return cast_kind_ == other; }
 
-  Value* get_val() { return operand(0); }
-  const Value* get_val() const { return operand(0); }
+  Value* casted_value() { return operand(0); }
+  const Value* casted_value() const { return operand(0); }
 
-  void set_val(Value* val) { return set_operand(0, val); }
-  void set_cast_kind(CastKind new_cast_kind) { cast_kind = new_cast_kind; }
+  void set_casted_value(Value* casted_value) { return set_operand(0, casted_value); }
+  void set_cast_kind(CastKind new_cast_kind) { cast_kind_ = new_cast_kind; }
 
-  Instruction* clone() override {
-    return new Cast(context(), get_cast_kind(), get_val(), type());
-  }
+  Instruction* clone() override { return new Cast(context(), cast_kind(), casted_value(), type()); }
 
  protected:
   void print_instruction_internal(IRPrinter::LinePrinter& printer) const override;
@@ -462,38 +456,38 @@ class Select final : public Instruction {
   DEFINE_INSTANCEOF(Value, Value::Kind::Select)
 
  public:
-  Select(Context* context, Value* cond, Value* true_val, Value* false_val)
-      : Instruction(context, Value::Kind::Select, true_val->type()) {
+  Select(Context* context, Value* condition, Value* true_value, Value* false_value)
+      : Instruction(context, Value::Kind::Select, true_value->type()) {
     set_operand_count(3);
-    set_cond(cond);
-    set_true_val(true_val);
-    set_false_val(false_val);
+    set_condition(condition);
+    set_true_value(true_value);
+    set_false_value(false_value);
   }
 
-  Value* get_cond() { return operand(0); }
-  const Value* get_cond() const { return operand(0); }
+  Value* condition() { return operand(0); }
+  const Value* condition() const { return operand(0); }
 
-  Value* get_true_val() { return operand(1); }
-  const Value* get_true_val() const { return operand(1); }
+  Value* true_value() { return operand(1); }
+  const Value* true_value() const { return operand(1); }
 
-  Value* get_false_val() { return operand(2); }
-  const Value* get_false_val() const { return operand(2); }
+  Value* false_value() { return operand(2); }
+  const Value* false_value() const { return operand(2); }
 
-  Value* get_val(bool b) { return b ? get_true_val() : get_false_val(); }
-  const Value* get_val(bool b) const { return b ? get_true_val() : get_false_val(); }
+  Value* select_value(bool b) { return b ? true_value() : false_value(); }
+  const Value* select_value(bool b) const { return b ? true_value() : false_value(); }
 
-  void set_cond(Value* cond) { return set_operand(0, cond); }
-  void set_true_val(Value* true_val) { return set_operand(1, true_val); }
-  void set_false_val(Value* false_val) { return set_operand(2, false_val); }
+  void set_condition(Value* condition) { return set_operand(0, condition); }
+  void set_true_value(Value* true_value) { return set_operand(1, true_value); }
+  void set_false_value(Value* false_value) { return set_operand(2, false_value); }
 
-  void set_new_operands(Value* cond, Value* true_val, Value* false_val) {
-    set_cond(cond);
-    set_true_val(false_val);
-    set_false_val(false_val);
+  void set_new_operands(Value* condition, Value* true_value, Value* false_value) {
+    set_condition(condition);
+    set_true_value(true_value);
+    set_false_value(false_value);
   }
 
   Instruction* clone() override {
-    return new Select(context(), get_cond(), get_true_val(), get_false_val());
+    return new Select(context(), condition(), true_value(), false_value());
   }
 
  protected:
@@ -528,7 +522,7 @@ class Phi final : public Instruction {
     size_t incoming_index = 0;
 
     void load_incoming() {
-      if (incoming_index < phi->get_incoming_count()) {
+      if (incoming_index < phi->incoming_count()) {
         incoming = phi->get_incoming(incoming_index);
       } else {
         incoming = TIncoming{};
@@ -594,10 +588,10 @@ class Phi final : public Instruction {
     }
   }
 
-  size_t get_incoming_count() const { return operand_count() / 2; }
-  bool is_empty() const { return operand_count() == 0; }
+  size_t incoming_count() const { return operand_count() / 2; }
+  bool empty() const { return operand_count() == 0; }
 
-  Value* get_single_incoming_value();
+  Value* single_incoming_value();
 
   Value* remove_incoming_opt(const Block* block);
   Value* remove_incoming(const Block* block);
@@ -609,22 +603,22 @@ class Phi final : public Instruction {
   bool replace_incoming_block_opt(const Block* old_incoming, Block* new_incoming);
   void replace_incoming_block(const Block* old_incoming, Block* new_incoming);
 
-  Value* get_incoming_by_block(const Block* block);
-  const Value* get_incoming_by_block(const Block* block) const;
+  Value* incoming_for_block(const Block* block);
+  const Value* incoming_for_block(const Block* block) const;
 
   using const_iterator = IncomingIteratorInternal<const Phi, ConstIncoming>;
   using iterator = IncomingIteratorInternal<Phi, Incoming>;
 
   iterator begin() { return iterator(this, 0); }
-  iterator end() { return iterator(this, get_incoming_count()); }
+  iterator end() { return iterator(this, incoming_count()); }
 
   const_iterator begin() const { return const_iterator(this, 0); }
-  const_iterator end() const { return const_iterator(this, get_incoming_count()); }
+  const_iterator end() const { return const_iterator(this, incoming_count()); }
 
   Instruction* clone() override {
     std::vector<Incoming> incoming;
-    incoming.reserve(get_incoming_count());
-    for (size_t i = 0; i < get_incoming_count(); ++i) {
+    incoming.reserve(incoming_count());
+    for (size_t i = 0; i < incoming_count(); ++i) {
       incoming.push_back(get_incoming(i));
     }
     return new Phi(context(), incoming);

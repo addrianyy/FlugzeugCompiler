@@ -25,15 +25,15 @@ class CommonOperation {
       case Kind::Unknown: {
         if (const auto unary = cast<UnaryInstr>(value)) {
           kind = Kind::Unary;
-          unary_op = unary->get_op();
+          unary_op = unary->op();
 
           return true;
         }
 
         if (const auto binary = cast<BinaryInstr>(value)) {
           kind = Kind::Binary;
-          binary_op = binary->get_op();
-          binary_rhs = binary->get_rhs();
+          binary_op = binary->op();
+          binary_rhs = binary->rhs();
 
           return true;
         }
@@ -43,12 +43,12 @@ class CommonOperation {
 
       case Kind::Unary: {
         const auto unary = cast<UnaryInstr>(value);
-        return unary && unary->get_op() == unary_op;
+        return unary && unary->op() == unary_op;
       }
 
       case Kind::Binary: {
         const auto binary = cast<BinaryInstr>(value);
-        return binary && binary->get_op() == binary_op && binary->get_rhs() == binary_rhs;
+        return binary && binary->op() == binary_op && binary->rhs() == binary_rhs;
       }
 
       default:
@@ -58,11 +58,11 @@ class CommonOperation {
 
   Value* extract_argument(Value* value) {
     if (const auto unary = cast<UnaryInstr>(value)) {
-      return unary->get_val();
+      return unary->value();
     }
 
     if (const auto binary = cast<BinaryInstr>(value)) {
-      return binary->get_lhs();
+      return binary->lhs();
     }
 
     unreachable();
@@ -106,19 +106,19 @@ static Instruction* handle_phi(Phi* phi) {
 static Instruction* handle_select(Select* select) {
   CommonOperation operation;
 
-  if (!operation.add_case(select->get_true_val()) || !operation.add_case(select->get_false_val())) {
+  if (!operation.add_case(select->true_value()) || !operation.add_case(select->false_value())) {
     return nullptr;
   }
 
   {
-    const auto instruction = cast<Instruction>(select->get_true_val());
-    select->set_true_val(operation.extract_argument(instruction));
+    const auto instruction = cast<Instruction>(select->true_value());
+    select->set_true_value(operation.extract_argument(instruction));
     instruction->destroy_if_unused();
   }
 
   {
-    const auto instruction = cast<Instruction>(select->get_false_val());
-    select->set_false_val(operation.extract_argument(instruction));
+    const auto instruction = cast<Instruction>(select->false_value());
+    select->set_false_value(operation.extract_argument(instruction));
     instruction->destroy_if_unused();
   }
 

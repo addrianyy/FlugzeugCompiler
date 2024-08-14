@@ -97,7 +97,7 @@ static bool evaluate_int_compare_generic(uint64_t lhs, IntPredicate pred, uint64
 }
 
 uint64_t utils::evaluate_unary_instr(Type* type, UnaryOp op, uint64_t value) {
-  switch (type->get_kind()) {
+  switch (type->kind()) {
     case Type::Kind::I8:
       return uint64_t(evaluate_unary_generic<uint8_t>(op, value));
     case Type::Kind::I16:
@@ -112,7 +112,7 @@ uint64_t utils::evaluate_unary_instr(Type* type, UnaryOp op, uint64_t value) {
 }
 
 uint64_t utils::evaluate_binary_instr(Type* type, uint64_t lhs, BinaryOp op, uint64_t rhs) {
-  switch (type->get_kind()) {
+  switch (type->kind()) {
     case Type::Kind::I8:
       return uint64_t(evaluate_binary_generic<uint8_t>(lhs, op, rhs));
     case Type::Kind::I16:
@@ -127,7 +127,7 @@ uint64_t utils::evaluate_binary_instr(Type* type, uint64_t lhs, BinaryOp op, uin
 }
 
 bool utils::evaluate_int_compare(Type* type, uint64_t lhs, IntPredicate predicate, uint64_t rhs) {
-  switch (type->get_kind()) {
+  switch (type->kind()) {
     case Type::Kind::I8:
       return evaluate_int_compare_generic<uint8_t>(lhs, predicate, rhs);
     case Type::Kind::I16:

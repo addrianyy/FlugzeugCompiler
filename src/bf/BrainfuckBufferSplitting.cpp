@@ -19,7 +19,7 @@ static bool process_pointer(Instruction* pointer,
     }
 
     if (const auto offset = cast<Offset>(user)) {
-      const auto constant_index = cast<Constant>(offset->get_index());
+      const auto constant_index = cast<Constant>(offset->index());
       if (!constant_index) {
         return false;
       }
@@ -32,11 +32,11 @@ static bool process_pointer(Instruction* pointer,
       Value* accessed_pointer = nullptr;
 
       if (const auto load = cast<Load>(user)) {
-        accessed_pointer = load->get_ptr();
+        accessed_pointer = load->address();
       }
 
       if (const auto store = cast<Store>(user)) {
-        accessed_pointer = store->get_ptr();
+        accessed_pointer = store->address();
       }
 
       if (accessed_pointer != pointer) {
@@ -49,11 +49,11 @@ static bool process_pointer(Instruction* pointer,
 }
 
 static bool split_stackalloc(StackAlloc* stackalloc) {
-  const auto type = stackalloc->get_allocated_type();
+  const auto type = stackalloc->allocated_type();
 
   auto zero_buffer_call = cast<Call>(stackalloc->next());
-  if (zero_buffer_call && (zero_buffer_call->get_callee()->name() != "zero_buffer" ||
-                           zero_buffer_call->get_arg(0) != stackalloc)) {
+  if (zero_buffer_call && (zero_buffer_call->callee()->name() != "zero_buffer" ||
+                           zero_buffer_call->argument(0) != stackalloc)) {
     zero_buffer_call = nullptr;
   }
 
@@ -106,7 +106,7 @@ bool bf::BrainfuckBufferSplitting::run(Function* function) {
   std::vector<StackAlloc*> stackallocs;
 
   for (StackAlloc& stackalloc : function->instructions<StackAlloc>()) {
-    if (stackalloc.get_size() > 1) {
+    if (stackalloc.size() > 1) {
       stackallocs.push_back(&stackalloc);
     }
   }

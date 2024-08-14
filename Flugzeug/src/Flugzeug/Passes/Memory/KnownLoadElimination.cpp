@@ -16,12 +16,12 @@ using namespace flugzeug;
 
 static bool handle_out_of_bounds_stackalloc_load(Load* load,
                                                  const analysis::PointerAliasing& alias_analysis) {
-  const auto const_offset = alias_analysis.get_constant_offset_from_stackalloc(load->get_ptr());
+  const auto const_offset = alias_analysis.get_constant_offset_from_stackalloc(load->address());
   if (!const_offset) {
     return false;
   }
 
-  const auto size = int64_t(const_offset->first->get_size());
+  const auto size = int64_t(const_offset->first->size());
   const auto offset = const_offset->second;
   if (offset < 0 || offset >= size) {
     load->replace_uses_with_and_destroy(load->type()->undef());
@@ -44,7 +44,7 @@ bool opt::memory::eliminate_known_loads_local(Function* function,
     for (Instruction& instruction : advance_early(block)) {
       if (const auto store = cast<Store>(instruction)) {
         // The newest known value for the pointer is now defined by this store.
-        stores[store->get_ptr()] = store;
+        stores[store->address()] = store;
         continue;
       }
 
@@ -54,7 +54,7 @@ bool opt::memory::eliminate_known_loads_local(Function* function,
           continue;
         }
 
-        const auto it = stores.find(load->get_ptr());
+        const auto it = stores.find(load->address());
         if (it == stores.end()) {
           continue;
         }
@@ -62,11 +62,11 @@ bool opt::memory::eliminate_known_loads_local(Function* function,
         // Make sure that nothing inbetween can modify the pointer.
         const auto store = it->second;
         const auto stored_to_inbetween = alias_analysis.is_pointer_accessed_inbetween(
-          load->get_ptr(), store->next(), load, analysis::PointerAliasing::AccessType::Store);
+          load->address(), store->next(), load, analysis::PointerAliasing::AccessType::Store);
 
         if (!stored_to_inbetween) {
           // Alias load instruction with recently stored value.
-          load->replace_uses_with_and_destroy(store->get_val());
+          load->replace_uses_with_and_destroy(store->value());
           did_something = true;
         }
       }
@@ -86,7 +86,7 @@ bool opt::memory::eliminate_known_loads_global(Function* function,
 
   // Create a database of all stores in the function.
   for (Store& store : function->instructions<Store>()) {
-    stores_to_pointers[store.get_ptr()].push_back(&store);
+    stores_to_pointers[store.address()].push_back(&store);
   }
 
   for (Load& load : advance_early(function->instructions<Load>())) {
@@ -95,7 +95,7 @@ bool opt::memory::eliminate_known_loads_global(Function* function,
       continue;
     }
 
-    const auto pointer = load.get_ptr();
+    const auto pointer = load.address();
     const auto it = stores_to_pointers.find(pointer);
     if (it == stores_to_pointers.end()) {
       continue;
@@ -115,7 +115,7 @@ bool opt::memory::eliminate_known_loads_global(Function* function,
         });
 
       if (result) {
-        replacement = store->get_val();
+        replacement = store->value();
         break;
       }
     }

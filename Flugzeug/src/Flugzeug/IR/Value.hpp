@@ -79,7 +79,7 @@ class Value {
 
   virtual ~Value();
 
-  Kind get_kind() const { return kind_; }
+  Kind kind() const { return kind_; }
 
   Context* context() { return context_; }
   const Context* context() const { return context_; }

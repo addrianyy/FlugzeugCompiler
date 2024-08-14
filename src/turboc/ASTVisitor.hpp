@@ -53,7 +53,7 @@ inline auto visit_statement(TStmt* stmt, TVisitor& visitor) {
 
   using flugzeug::relaxed_cast;
 
-  switch (stmt->get_kind()) {
+  switch (stmt->kind()) {
     case Stmt::Kind::Assign:
       return visitor.visit_assign_stmt(relaxed_cast<AssignStmt>(stmt));
     case Stmt::Kind::BinaryAssign:

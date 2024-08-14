@@ -13,7 +13,7 @@ static Block* get_intermediate_block_target(Block* block) {
   }
 
   if (const auto branch = cast<Branch>(block->last_instruction())) {
-    const auto target = branch->get_target();
+    const auto target = branch->target();
 
     // Skip infinite loops.
     if (target != block) {
@@ -28,8 +28,8 @@ static bool do_phis_depend_on_predecessors(const Block* block, const Block* p1, 
   verify(p1 != p2 && block != p1 && block != p2, "Invalid blocks");
 
   for (const Phi& phi : block->instructions<Phi>()) {
-    const auto p1_value = phi.get_incoming_by_block(p1);
-    const auto p2_value = phi.get_incoming_by_block(p2);
+    const auto p1_value = phi.incoming_for_block(p1);
+    const auto p2_value = phi.incoming_for_block(p2);
 
     if ((p1_value && p2_value) && p1_value != p2_value) {
       return true;
@@ -51,7 +51,7 @@ static Block* thread_jump(Block* block, Block* target, bool* did_something) {
 
     if (!do_phis_depend_on_predecessors(actual_target, block, target)) {
       for (Phi& phi : actual_target->instructions<Phi>()) {
-        phi.add_incoming(block, phi.get_incoming_by_block(target));
+        phi.add_incoming(block, phi.incoming_for_block(target));
       }
 
       *did_something = true;
@@ -75,17 +75,17 @@ static bool thread_jumps(Function* function) {
     const auto last_instruction = block.last_instruction();
 
     if (const auto branch = cast<Branch>(last_instruction)) {
-      if (const auto new_target = thread_jump(&block, branch->get_target(), &did_something)) {
+      if (const auto new_target = thread_jump(&block, branch->target(), &did_something)) {
         branch->set_target(new_target);
       }
     } else if (const auto cond_branch = cast<CondBranch>(last_instruction)) {
       if (const auto new_target =
-            thread_jump(&block, cond_branch->get_true_target(), &did_something)) {
+            thread_jump(&block, cond_branch->true_target(), &did_something)) {
         cond_branch->set_true_target(new_target);
       }
 
       if (const auto new_target =
-            thread_jump(&block, cond_branch->get_false_target(), &did_something)) {
+            thread_jump(&block, cond_branch->false_target(), &did_something)) {
         cond_branch->set_false_target(new_target);
       }
     }
