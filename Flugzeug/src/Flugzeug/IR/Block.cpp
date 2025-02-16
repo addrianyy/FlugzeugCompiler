@@ -5,6 +5,7 @@
 #include "Instructions.hpp"
 #include "Internal/DebugIRPrinter.hpp"
 
+#include <algorithm>
 #include <deque>
 
 using namespace flugzeug;

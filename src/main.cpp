@@ -136,6 +136,7 @@ int main() {
   module->validate(ValidationBehaviour::ErrorsAreFatal);
   module->print(printing_method);
 
+
   if (false) {
     FileIRPrinter file_printer("TestResults/result.flug");
     ConsoleIRPrinter console_printer(ConsoleIRPrinter::Variant::ColorfulIfSupported);
